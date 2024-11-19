@@ -22,6 +22,17 @@ impl State {
             time: 0.0,
         }
     }
+    pub(crate) fn copy(&self) -> State {
+        State {
+            height: self.height,
+            velocity: self.velocity,
+            dhdt: f64::NAN,
+            dvdt: f64::NAN,
+            rocket: self.rocket.copy(),
+            is_current: false,
+            time: self.time,
+        }
+    }
     pub(crate) fn get_velocity(&self) -> f64 {
         self.velocity
     }

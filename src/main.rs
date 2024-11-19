@@ -33,12 +33,17 @@ fn main() {
 
     // iteration/calculation Parameters
     const MAXITER: u64 = 1e5 as u64;
-    const DT: f64 = 1e-3 as f64;
-    const ITERMETHOD: i32 = 1;
-    let euler_method = ODE::new(DT, ITERMETHOD);
+    const DT: f64 = 1e-2 as f64;
+    let euler_method = ODE::new(DT, 1);
+    let rk3 = ODE::new(DT,2);
 
     //Assemble Simulation Struct
-    let mut case: Simulation = Simulation::new(state, euler_method, 1, MAXITER);
+    let mut case_euler: Simulation = Simulation::new(state.copy(), euler_method, 1, MAXITER);
+    let mut case_rk3: Simulation = Simulation::new(state.copy(), rk3, 1, MAXITER);
 
-    case.run();
+    case_euler.run();
+    case_rk3.run();
+
+    println!("Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",case_euler.apogee(), case_rk3.apogee());
+
 }

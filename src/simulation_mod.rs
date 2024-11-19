@@ -25,9 +25,9 @@ impl Simulation {
             self.iter = i;
 
             if self.is_done() {
-                println!("\n========== Calculation complete! ==========\n");
+                println!("\n==================== Calculation complete! ====================");
                 println!(
-                    "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
+                    "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)\n",
                     i,
                     self.state.get_time(),
                     self.state.get_height(),
@@ -39,7 +39,7 @@ impl Simulation {
 
             self.ode.timestep(&mut self.state);
 
-            if i % 300 == 0 {
+            if i % 100 == 0 {
                 println!(
                     "Iter:{:6},    Time:{:5.2},    Altitude:{:8.2},    Velocity:{:8.2}    Acceleration:{:8.2}",
                     i,
@@ -50,6 +50,15 @@ impl Simulation {
                 );
             }
         }
+    }
+    pub(crate) fn apogee(&mut self) -> f64 {
+        if !self.is_done() {
+            println!("Apogee requested before simulation has been run!!!\n");
+            f64::NAN
+        } else {
+            self.state.get_height()
+        }
+
     }
     //
     //
