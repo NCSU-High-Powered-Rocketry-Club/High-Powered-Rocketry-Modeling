@@ -29,18 +29,16 @@ fn main() {
     // Initial Conditions
     let v0: f64 = 100.0; // m/s
     let h0: f64 = 0.0; // m
+    let state = State::new(h0, v0, test_rocket);
 
-    // iteration Parameters
-    let maxiter: u64 = 1e5 as u64;
+    // iteration/calculation Parameters
+    const MAXITER: u64 = 1e5 as u64;
     const DT: f64 = 1e-3 as f64;
     const ITERMETHOD: i32 = 1;
-
-    //Setup for Calculation
-    let state = State::new(h0, v0, test_rocket);
     let euler_method = ODE::new(DT, ITERMETHOD);
 
     //Assemble Simulation Struct
-    let mut case: Simulation = Simulation::new(state, euler_method, 1, maxiter);
+    let mut case: Simulation = Simulation::new(state, euler_method, 1, MAXITER);
 
     case.run();
 }
