@@ -37,7 +37,7 @@ impl State {
         }
         (self.dhdt, self.dvdt)
     }
-    pub(crate) fn update(&mut self, dh: f64, dv: f64, dt :f64) {
+    pub(crate) fn update(&mut self, dh: f64, dv: f64, dt: f64) {
         self.height += dh;
         self.velocity += dv;
         self.time += dt;
@@ -48,7 +48,8 @@ impl State {
 impl State {
     //Private Routines
     fn update_state_derivatives(&mut self) {
-        let force_drag = physics_module::calc_drag_force(self.velocity, self.rocket.cd, self.rocket.area);
+        let force_drag =
+            physics_module::calc_drag_force(self.velocity, self.rocket.cd, self.rocket.area);
         let g = physics_module::gravity();
 
         // dhdt = velocity
