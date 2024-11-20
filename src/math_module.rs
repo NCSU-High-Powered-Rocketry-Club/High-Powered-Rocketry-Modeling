@@ -7,8 +7,8 @@ pub(crate) struct ODE {
 }
 
 impl ODE {
-    pub(crate) fn new(deltat: f64, integration_method: i32) -> ODE {
-        ODE {
+    pub(crate) fn new(deltat: f64, integration_method: i32) -> Self {
+        Self {
             deltat,
             integration_method,
         }
@@ -34,7 +34,7 @@ impl ODE {
 
     fn runge_kutta_3(&self, state: &mut State) {
         //Based off Strong Stability Preserving (SSP) aka. Total variation Diminishing (TVD) RK3
-        let mut state_rk: State = state.copy();
+        let mut state_rk: State = state.clone();
 
         //Stage 1       dt = 1 * DT
         let (dhdt, dvdt) = state.get_derivs();
@@ -46,7 +46,7 @@ impl ODE {
         let (dhdt2, dvdt2) = state_rk.get_derivs();
         dh = (dhdt*0.25 + dhdt2*0.25) * self.deltat;
         dv = (dvdt * 0.25 + dvdt2*0.25) * self.deltat;
-        state_rk = state.copy();
+        state_rk = state.clone();
         state_rk.update(dh,dv, 0.0);
 
         //Stage 3

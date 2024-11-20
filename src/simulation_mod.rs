@@ -22,33 +22,20 @@ impl Simulation {
     pub(crate) fn run(&mut self) {
         //Executes the simulation
         for i in 0..self.maxiter {
-            self.iter = i;
-
+            //Check for Exit Condition
             if self.is_done() {
+                self.iter = i;
                 println!("\n==================== Calculation complete! ====================");
-                println!(
-                    "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)\n",
-                    i,
-                    self.state.get_time(),
-                    self.state.get_height(),
-                    self.state.get_velocity(),
-                    self.state.get_derivs().1
-                );
+                self.state.print_state(i);
                 break;
             }
-
-            self.ode.timestep(&mut self.state);
-
+            //Output Simulation Info
             if i % 100 == 0 {
-                println!(
-                    "Iter:{:6},    Time:{:5.2},    Altitude:{:8.2},    Velocity:{:8.2}    Acceleration:{:8.2}",
-                    i,
-                    self.state.get_time(),
-                    self.state.get_height(),
-                    self.state.get_velocity(),
-                    self.state.get_derivs().1
-                );
+                self.state.print_state(i);
             }
+
+            //Advance the calculation
+            self.ode.timestep(&mut self.state);
         }
     }
     pub(crate) fn apogee(&mut self) -> f64 {
@@ -74,7 +61,7 @@ impl Simulation {
     }
     fn condition_one(&self) -> bool {
         // Stop calculation when apogee is reached
-        if self.state.get_velocity() < 0.0 {
+        if self.state.get_vertical_velocity() < 0.0 {
             true
         } else {
             false

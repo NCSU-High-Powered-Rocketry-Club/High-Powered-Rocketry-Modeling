@@ -7,7 +7,7 @@ mod state_module;
 use crate::math_module::ODE;
 use crate::rocket_mod::Rocket;
 use crate::simulation_mod::Simulation;
-use crate::state_module::State;
+use crate::state_module::{Dof1, State};
 
 #[macro_export]
 macro_rules! throw_error {
@@ -29,7 +29,7 @@ fn main() {
     // Initial Conditions
     let v0: f64 = 100.0; // m/s
     let h0: f64 = 0.0; // m
-    let state = State::new(h0, v0, test_rocket);
+    let state = State::S1D(Dof1::new(h0, v0, test_rocket));
 
     // iteration/calculation Parameters
     const MAXITER: u64 = 1e5 as u64;
@@ -38,12 +38,13 @@ fn main() {
     let rk3 = ODE::new(DT,2);
 
     //Assemble Simulation Struct
-    let mut case_euler: Simulation = Simulation::new(state.copy(), euler_method, 1, MAXITER);
-    let mut case_rk3: Simulation = Simulation::new(state.copy(), rk3, 1, MAXITER);
+    let mut case_euler: Simulation = Simulation::new(state.clone(), euler_method, 1, MAXITER);
+    let mut case_rk3: Simulation = Simulation::new(state.clone(), rk3, 1, MAXITER);
 
     case_euler.run();
     case_rk3.run();
 
     println!("Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",case_euler.apogee(), case_rk3.apogee());
+    println!("Try different timestep sizes and see how the different methods' accuracy behaves!")
 
 }
