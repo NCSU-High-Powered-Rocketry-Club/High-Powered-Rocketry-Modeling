@@ -14,7 +14,7 @@ impl State {
     // State enum down into what they mean for each individual state
     pub(crate) fn print_state(&self, i: u64) {
         match self {
-            State::S1D(_Dof1) => self.print_state_dof1(i),
+            State::S1D(Dof1) => Dof1.print_state_dof1(i),
             _ => println!(
                 "Undefined Operation(print_state) for given State({:?})",
                 self
@@ -24,7 +24,7 @@ impl State {
     pub(crate) fn get_height(&self) -> f64 {
         //This returns the altitude of the rocket
         match self {
-            State::S1D(_Dof1) => self.get_height(),
+            State::S1D(Dof1) => Dof1.get_height(),
             _ => {
                 println!(
                     "Undefined Operation(get_height) for given State({:?})",
@@ -37,7 +37,7 @@ impl State {
     pub(crate) fn get_vertical_velocity(&self) -> f64 {
         //This returns the altitude of the rocket
         match self {
-            State::S1D(_Dof1) => self.get_velocity(),
+            State::S1D(Dof1) => Dof1.get_velocity(),
             _ => {
                 println!(
                     "Undefined Operation(get_height) for given State({:?})",
@@ -50,6 +50,12 @@ impl State {
     pub(crate) fn get_time(&self) -> f64 {
         match self {
             State::S1D(_Dof1) => self.get_time(),
+            _ => f64::NAN,
+        }
+    }
+    pub(crate) fn update(&self) {
+        match self {
+            State::S1D(mut Dof1) => Dof1.update_dof1(),
             _ => f64::NAN,
         }
     }
@@ -93,7 +99,7 @@ impl Dof1 {
         }
         self.dudt
     }
-    pub(crate) fn print_state_dof1(&self, i: i64) {
+    pub(crate) fn print_state_dof1(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)\n",
             i,
