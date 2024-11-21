@@ -172,9 +172,9 @@ impl Dof1 {
     fn get_time_1dof(&self) -> f64 {
         self.time
     }
-    fn print_state_1dof(&self, i: u64) {
+    fn print_state_1dof(self, i: u64) {
         println!(
-            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)\n",
+            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
             i,
             self.get_time_1dof(),
             self.get_height(),

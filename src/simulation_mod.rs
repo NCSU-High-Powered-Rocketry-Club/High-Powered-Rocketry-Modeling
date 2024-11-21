@@ -25,6 +25,8 @@ impl Simulation {
 
         //Executes the simulation
         for i in 0..self.maxiter {
+            self.state.get_derivs();
+
             //Check for Exit Condition
             if self.is_done() {
                 self.iter = i;

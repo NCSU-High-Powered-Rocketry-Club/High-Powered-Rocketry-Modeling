@@ -27,7 +27,7 @@ fn main() {
     let test_rocket: Rocket = Rocket::new(mass, cd, area);
 
     // Initial Conditions
-    let u0: [f64; 2] = [100.0, 0.0]; // m, m/s
+    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
     let state = State::__1DOF(Dof1::new(u0, test_rocket));
 
     // iteration/calculation Parameters
