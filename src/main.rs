@@ -4,7 +4,7 @@ mod rocket_mod;
 mod simulation_mod;
 mod state_module;
 
-use crate::math_module::ODE;
+use crate::math_module::{OdeIterators};
 use crate::rocket_mod::Rocket;
 use crate::simulation_mod::Simulation;
 use crate::state_module::{Dof1, State};
@@ -27,15 +27,14 @@ fn main() {
     let test_rocket: Rocket = Rocket::new(mass, cd, area);
 
     // Initial Conditions
-    let v0: f64 = 100.0; // m/s
-    let h0: f64 = 0.0; // m
-    let state = State::S1D(Dof1::new(h0, v0, test_rocket));
+    let u0: [f64; 2] = [100.0, 0.0]; // m, m/s
+    let state = State::__1DOF(Dof1::new(u0, test_rocket));
 
     // iteration/calculation Parameters
     const MAXITER: u64 = 1e5 as u64;
     const DT: f64 = 1e-2 as f64;
-    let euler_method = ODE::new(DT, 1);
-    let rk3 = ODE::new(DT,2);
+    let euler_method = OdeIterators::Euler(DT);
+    let rk3 = OdeIterators::RK3(DT);
 
     //Assemble Simulation Struct
     let mut case_euler: Simulation = Simulation::new(state.clone(), euler_method, 1, MAXITER);

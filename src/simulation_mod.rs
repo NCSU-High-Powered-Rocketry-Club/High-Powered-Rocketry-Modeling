@@ -1,17 +1,19 @@
-use crate::math_module::ODE;
-use crate::state_module::State;
+use crate::math_module::OdeIterators;
+use crate::state_module::{State};
 
 pub(crate) struct Simulation {
     state: State,
-    ode: ODE,
+    nvar: usize,
+    ode: OdeIterators,
     exit_condition: i32,
     iter: u64,
     maxiter: u64,
 }
 impl Simulation {
-    pub(crate) fn new(state: State, ode: ODE, exit_condition: i32, maxiter: u64) -> Simulation {
+    pub(crate) fn new(state: State, ode: OdeIterators, exit_condition: i32, maxiter: u64) -> Simulation {
         Simulation {
             state,
+            nvar: state.get_ndim(),
             ode,
             exit_condition,
             iter: 0,
@@ -20,6 +22,7 @@ impl Simulation {
     }
 
     pub(crate) fn run(&mut self) {
+
         //Executes the simulation
         for i in 0..self.maxiter {
             //Check for Exit Condition
@@ -43,7 +46,7 @@ impl Simulation {
             println!("Apogee requested before simulation has been run!!!\n");
             f64::NAN
         } else {
-            self.state.get_height()
+            self.state.get_altitude()
         }
 
     }
