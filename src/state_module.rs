@@ -7,9 +7,6 @@ pub(crate) enum State {
     __3DOF(Dof3),
 }
 
-//trait StateVecType {
-//    type StateVec;
-//}
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {
     __1DOF([f64; 2]),
@@ -117,13 +114,6 @@ impl State {
 //##################################################################################################
 //##################################################################################################
 
-
-//impl StateVecType for Dof1 {
-//    type StateVec = [f64; 2];
-//}
-//impl StateVecType for Dof3 {
-//    type StateVec = [f64; 6];
-//}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof1 {
