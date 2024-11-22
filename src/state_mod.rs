@@ -1,5 +1,6 @@
 use crate::{physics_mod, Rocket};
 use std::process::exit;
+use crate::simdata_mod::SimulationData;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
@@ -19,6 +20,12 @@ impl State {
             State::__1DOF(dof1) => dof1.print_state_1dof(i),
             State::__3DOF(dof3) => dof3.print_state_3dof(i),
             _ => println!("Ignoring, State:print_state"),
+        }
+    }
+    pub(crate) fn get_state_vec(&self) -> StateVector {
+        match self {
+            State::__1DOF(dof1) => StateVector::__1DOF(dof1.u),
+            State::__3DOF(dof3) => StateVector::__3DOF(dof3.u),
         }
     }
     pub(crate) fn get_ndim(&self) -> usize {
