@@ -30,8 +30,9 @@ impl Simulation {
             //Check for Exit Condition
             if self.is_done() {
                 self.iter = i;
-                println!("\n==================== Calculation complete! ====================");
+                println!("\n==================== Calculation complete! ================================================================================");
                 self.state.print_state(i);
+                println!("===========================================================================================================================\n");
                 break;
             }
             //Output Simulation Info

@@ -1,39 +1,33 @@
 use crate::{physics_module, Rocket};
 use std::process::exit;
-/*
-pub(crate) trait StateSpaceFunctions<T> {
-    fn print_state(&self, i: u64) -> ();
-    fn get_altitude(&self) -> f64;
-    fn get_vertical_velocity(&self) -> f64;
-    fn get_time(&self) -> f64;
-    fn get_derivs(&mut self) -> T;
-    fn update(&mut self, du: T, dt: f64);
-}
-*/
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
     __1DOF(Dof1),
-    __3DOF(),
+    __3DOF(Dof3),
 }
 
+//trait StateVecType {
+//    type StateVec;
+//}
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {
     __1DOF([f64; 2]),
+    __3DOF([f64; 6]),
 }
-
-const NDIM1DOF: usize = 2;
 
 impl State {
     pub(crate) fn print_state(&self, i: u64) {
         match self {
             State::__1DOF(dof1) => dof1.print_state_1dof(i),
+            State::__3DOF(dof3) => dof3.print_state_3dof(i),
             _ => println!("Ignoring, State:print_state"),
         }
     }
     pub(crate) fn get_ndim(&self) -> usize {
         match self {
-            State::__1DOF(_dof1) => NDIM1DOF,
+            State::__1DOF(_dof1) => 2usize,
+            State::__3DOF(_dof3) => 6usize,
             _ => {
                 println!("Ignoring, State:get_ndim");
                 0usize
@@ -43,6 +37,7 @@ impl State {
     pub(crate) fn get_altitude(&self) -> f64 {
         match self {
             State::__1DOF(dof1) => dof1.get_height(),
+            State::__3DOF(dof3) => dof3.get_height(),
             _ => {
                 println!("Ignoring, State:get_altitude");
                 f64::NAN
@@ -52,6 +47,7 @@ impl State {
     pub(crate) fn get_vertical_velocity(&self) -> f64 {
         match self {
             State::__1DOF(dof1) => dof1.get_velocity(),
+            State::__3DOF(dof3) => dof3.get_y_velocity(),
             _ => {
                 println!("Ignoring Invalid State, State:get_vertical_velocity");
                 f64::NAN
@@ -61,6 +57,7 @@ impl State {
     pub(crate) fn get_time(&self) -> f64 {
         match self {
             State::__1DOF(dof1) => dof1.get_time_1dof(),
+            State::__3DOF(dof3) => dof3.get_time_3dof(),
             _ => {
                 println!("Ignoring Invalid State, State:get_altitude");
                 f64::NAN
@@ -70,6 +67,7 @@ impl State {
     pub(crate) fn get_derivs(&mut self) -> StateVector {
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.get_derivs_1dof()),
+            State::__3DOF(dof3) => StateVector::__3DOF(dof3.get_derivs_3dof()),
             _ => {
                 println!("Unrecoverable Invalid State, State:get_derivs"); //This could be improved w/ option
                 exit(0)
@@ -79,8 +77,9 @@ impl State {
     pub(crate) fn update(&mut self, du_vec: StateVector, dt: f64) -> () {
         match (self, du_vec) {
             (State::__1DOF(dof1), StateVector::__1DOF(du)) => dof1.update_state(du, dt),
+            (State::__3DOF(dof3), StateVector::__3DOF(du)) => dof3.update_state(du, dt),
             _ => {
-                println!("Ignoring Invalid State, State:multiply");
+                println!("Ignoring Invalid State, State:update");
             }
         }
     }
@@ -88,6 +87,9 @@ impl State {
         match (self, u_vec) {
             (State::__1DOF(dof1), StateVector::__1DOF(u)) => {
                 StateVector::__1DOF(dof1.multiply(u, k))
+            }
+            (State::__3DOF(dof3), StateVector::__3DOF(u)) => {
+                StateVector::__3DOF(dof3.multiply(u, k))
             }
             _ => {
                 println!("Ignoring Invalid State, State:multiply");
@@ -100,8 +102,11 @@ impl State {
             (State::__1DOF(dof1), StateVector::__1DOF(u), StateVector::__1DOF(v)) => {
                 StateVector::__1DOF(dof1.add(u, v))
             }
+            (State::__3DOF(dof3), StateVector::__3DOF(u), StateVector::__3DOF(v)) => {
+                StateVector::__3DOF(dof3.add(u, v))
+            }
             _ => {
-                println!("Ignoring Invalid State, State:multiply");
+                println!("Ignoring Invalid State, State:add");
                 exit(1)
             }
         }
@@ -112,6 +117,14 @@ impl State {
 //##################################################################################################
 //##################################################################################################
 
+
+//impl StateVecType for Dof1 {
+//    type StateVec = [f64; 2];
+//}
+//impl StateVecType for Dof3 {
+//    type StateVec = [f64; 6];
+//}
+
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof1 {
     u: [f64; 2],    // (height, velocity)
@@ -121,40 +134,17 @@ pub(crate) struct Dof1 {
     time: f64,
     ndim: u32,
 }
-/*
-impl StateSpaceFunctions<[f64; 2]> for Dof1{
-    fn print_state(&self, i: u64) -> (){
-        self.print_state_1dof(i)
-    }
-    fn get_altitude(&self) -> f64{
-        self.get_height()
-    }
-    fn get_vertical_velocity(&self) -> f64{
-        self.get_velocity()
-    }
-    fn get_time(&self) -> f64{
-        self.get_time_1dof()
-    }
-    fn get_derivs(&mut self) -> [f64; 2]{
-        self.get_derivs_1dof()
-    }
-    fn update(&mut self, du: [f64; 2], dt: f64) {
-        self.update_state(du,dt)
-    }
-}
-*/
 
 impl Dof1 {
     //Private Routines
     pub(crate) fn new(u: [f64; 2], rocket: Rocket) -> Self {
-        const NDIM2: u32 = 2;
         Self {
             u,
             dudt: [f64::NAN, f64::NAN],
             rocket,
             is_current: false,
             time: 0.0,
-            ndim: NDIM2,
+            ndim: 2,
         }
     }
     fn get_velocity(&self) -> f64 {
@@ -209,3 +199,85 @@ impl Dof1 {
         self.is_current = true;
     }
 }
+//##################################################################################################
+//##################################################################################################
+//##################################################################################################
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Dof3 {
+    u: [f64; 6],    // (x position, y position, angle, x velocity, y velocity, angular veloicty)
+    dudt: [f64; 6], // (dx, dy, dang, dvx, dvy, dvang)
+    rocket: Rocket,
+    is_current: bool,
+    time: f64,
+    ndim: u32,
+}
+
+impl Dof3 {
+    //Private Routines
+    pub(crate) fn new(u: [f64; 6], rocket: Rocket) -> Self {
+        Self {
+            u,
+            dudt: [f64::NAN; 6],
+            rocket,
+            is_current: false,
+            time: 0.0,
+            ndim: 6,
+        }
+    }
+    fn get_y_velocity(&self) -> f64 {
+        self.u[4]
+    }
+    fn get_height(&self) -> f64 {
+        self.u[1]
+    }
+    fn get_derivs_3dof(&mut self) -> [f64; 6] {
+        if !self.is_current {
+            self.update_state_derivatives();
+        }
+        self.dudt
+    }
+    fn get_time_3dof(&self) -> f64 {
+        self.time
+    }
+    fn print_state_3dof(self, i: u64) {
+        println!(
+            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Y Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
+            i,
+            self.get_time_3dof(),
+            self.get_height(),
+            self.get_y_velocity(),
+            self.dudt[4]
+        );
+    }
+    fn multiply(&self, u: [f64; 6], k: f64) -> [f64; 6] {
+        [u[0] * k, u[1] * k, u[2] * k, u[3] * k, u[4] * k, u[5] * k]
+    }
+    fn add(&self, u: [f64; 6], v: [f64; 6]) -> [f64; 6] {
+        [u[0] + v[0], u[1] + v[1], u[2] + v[2], u[3] + v[3], u[4] + v[4], u[5] + v[5]]
+    }
+    fn update_state(&mut self, du: [f64; 6], dt: f64) {
+        for i in 0..self.ndim {
+            self.u[i as usize] += du[i as usize]
+        }
+        self.time += dt;
+        self.is_current = false;
+    }
+    fn update_state_derivatives(&mut self) {
+        let force_drag =
+            physics_module::calc_drag_force(self.u[4], self.rocket.cd, self.rocket.area);
+        let g = physics_module::gravity();
+
+        // dhdt = velocity
+        let dxdt = self.u[3];
+        let dydt = self.u[4];
+        let dadt = self.u[5];
+
+        //a = F/m + g
+        let dvdt = force_drag / self.rocket.mass + g;
+
+        self.dudt = [dxdt, dydt, dadt, 0.0, dvdt, 0.0];
+        self.is_current = true;
+    }
+}
+

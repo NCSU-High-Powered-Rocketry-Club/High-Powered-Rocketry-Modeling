@@ -7,7 +7,7 @@ mod state_module;
 use crate::math_module::{OdeIterators};
 use crate::rocket_mod::Rocket;
 use crate::simulation_mod::Simulation;
-use crate::state_module::{Dof1, State};
+use crate::state_module::{Dof1, Dof3, State};
 
 #[macro_export]
 macro_rules! throw_error {
@@ -27,8 +27,11 @@ fn main() {
     let test_rocket: Rocket = Rocket::new(mass, cd, area);
 
     // Initial Conditions
-    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
-    let state = State::__1DOF(Dof1::new(u0, test_rocket));
+//    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
+//    let state = State::__1DOF(Dof1::new(u0, test_rocket));
+    
+    let u0: [f64; 6] = [0.0, 0.0, 0.0, 0.0, 100.0, 0.0]; // m, m/s
+    let state = State::__3DOF(Dof3::new(u0, test_rocket));
 
     // iteration/calculation Parameters
     const MAXITER: u64 = 1e5 as u64;
