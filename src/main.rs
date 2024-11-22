@@ -1,13 +1,14 @@
-mod math_module;
-mod physics_module;
+mod math_mod;
+mod physics_mod;
 mod rocket_mod;
 mod simulation_mod;
-mod state_module;
+mod state_mod;
+mod simdata_mod;
 
-use crate::math_module::{OdeIterators};
+use crate::math_mod::OdeIterators;
 use crate::rocket_mod::Rocket;
 use crate::simulation_mod::Simulation;
-use crate::state_module::{Dof1, Dof3, State};
+use crate::state_mod::{Dof1, Dof3, State};
 
 #[macro_export]
 macro_rules! throw_error {
@@ -27,9 +28,9 @@ fn main() {
     let test_rocket: Rocket = Rocket::new(mass, cd, area);
 
     // Initial Conditions
-//    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
-//    let state = State::__1DOF(Dof1::new(u0, test_rocket));
-    
+    //    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
+    //    let state = State::__1DOF(Dof1::new(u0, test_rocket));
+
     let u0: [f64; 6] = [0.0, 0.0, 0.0, 0.0, 100.0, 0.0]; // m, m/s
     let state = State::__3DOF(Dof3::new(u0, test_rocket));
 
@@ -46,7 +47,10 @@ fn main() {
     case_euler.run();
     case_rk3.run();
 
-    println!("Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",case_euler.apogee(), case_rk3.apogee());
+    println!(
+        "Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",
+        case_euler.apogee(),
+        case_rk3.apogee()
+    );
     println!("Try different timestep sizes and see how the different methods' accuracy behaves!")
-
 }

@@ -1,4 +1,4 @@
-use crate::{physics_module, Rocket};
+use crate::{physics_mod, Rocket};
 use std::process::exit;
 
 #[derive(Debug, Clone, Copy)]
@@ -114,7 +114,6 @@ impl State {
 //##################################################################################################
 //##################################################################################################
 
-
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof1 {
     u: [f64; 2],    // (height, velocity)
@@ -175,9 +174,8 @@ impl Dof1 {
         self.is_current = false;
     }
     fn update_state_derivatives(&mut self) {
-        let force_drag =
-            physics_module::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area);
-        let g = physics_module::gravity();
+        let force_drag = physics_mod::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area);
+        let g = physics_mod::gravity();
 
         // dhdt = velocity
         let dhdt = self.u[1];
@@ -195,7 +193,7 @@ impl Dof1 {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof3 {
-    u: [f64; 6],    // (x position, y position, angle, x velocity, y velocity, angular veloicty)
+    u: [f64; 6], // (x position, y position, angle, x velocity, y velocity, angular veloicty)
     dudt: [f64; 6], // (dx, dy, dang, dvx, dvy, dvang)
     rocket: Rocket,
     is_current: bool,
@@ -244,7 +242,14 @@ impl Dof3 {
         [u[0] * k, u[1] * k, u[2] * k, u[3] * k, u[4] * k, u[5] * k]
     }
     fn add(&self, u: [f64; 6], v: [f64; 6]) -> [f64; 6] {
-        [u[0] + v[0], u[1] + v[1], u[2] + v[2], u[3] + v[3], u[4] + v[4], u[5] + v[5]]
+        [
+            u[0] + v[0],
+            u[1] + v[1],
+            u[2] + v[2],
+            u[3] + v[3],
+            u[4] + v[4],
+            u[5] + v[5],
+        ]
     }
     fn update_state(&mut self, du: [f64; 6], dt: f64) {
         for i in 0..self.ndim {
@@ -254,9 +259,8 @@ impl Dof3 {
         self.is_current = false;
     }
     fn update_state_derivatives(&mut self) {
-        let force_drag =
-            physics_module::calc_drag_force(self.u[4], self.rocket.cd, self.rocket.area);
-        let g = physics_module::gravity();
+        let force_drag = physics_mod::calc_drag_force(self.u[4], self.rocket.cd, self.rocket.area);
+        let g = physics_mod::gravity();
 
         // dhdt = velocity
         let dxdt = self.u[3];
@@ -270,4 +274,3 @@ impl Dof3 {
         self.is_current = true;
     }
 }
-

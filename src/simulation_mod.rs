@@ -1,5 +1,5 @@
-use crate::math_module::OdeIterators;
-use crate::state_module::{State};
+use crate::math_mod::OdeIterators;
+use crate::state_mod::State;
 
 pub(crate) struct Simulation {
     state: State,
@@ -10,7 +10,12 @@ pub(crate) struct Simulation {
     maxiter: u64,
 }
 impl Simulation {
-    pub(crate) fn new(state: State, ode: OdeIterators, exit_condition: i32, maxiter: u64) -> Simulation {
+    pub(crate) fn new(
+        state: State,
+        ode: OdeIterators,
+        exit_condition: i32,
+        maxiter: u64,
+    ) -> Simulation {
         Simulation {
             state,
             nvar: state.get_ndim(),
@@ -22,7 +27,6 @@ impl Simulation {
     }
 
     pub(crate) fn run(&mut self) {
-
         //Executes the simulation
         for i in 0..self.maxiter {
             self.state.get_derivs();
@@ -51,7 +55,6 @@ impl Simulation {
         } else {
             self.state.get_altitude()
         }
-
     }
     //
     //
