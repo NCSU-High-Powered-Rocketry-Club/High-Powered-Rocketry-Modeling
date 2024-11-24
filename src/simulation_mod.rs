@@ -7,9 +7,9 @@ pub(crate) struct Simulation {
     nvar: usize,
     ode: OdeIterators,
     exit_condition: i32,
-    iter: u64,
+    pub(crate) iter: u64,
     maxiter: u64,
-    data : SimulationData
+    pub(crate) data : SimulationData
 }
 impl Simulation {
     pub(crate) fn new(
