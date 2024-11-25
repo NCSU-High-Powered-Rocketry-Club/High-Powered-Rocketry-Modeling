@@ -3,6 +3,10 @@ use crate::state_mod::{State, StateVector};
 use crate::simdata_mod::SimulationData;
 
 pub(crate) struct Simulation {
+    // Struct used to coordinate the execution of a simulation. It is supplied with a
+    // State space/model, and a timestepping method, and will carry out iterations until a stopping
+    // criterea is reached, or the maximum number of iterations have been carried out.
+
     state: State,
     nvar: usize,
     ode: OdeIterators,
@@ -35,7 +39,7 @@ impl Simulation {
             let dudt = self.state.get_derivs();
             let u = self.state.get_state_vec();
             
-            //log data
+            //Add data to sata struct
             self.data.add_row((u, dudt), self.state.get_time());
                 
             //Check for Exit Condition
@@ -46,8 +50,8 @@ impl Simulation {
                 println!("===========================================================================================================================\n");
                 break;
             }
-            //Output Simulation Info
-            if i % 100 == 0 {
+            //Output simulation info to terminal
+            if i % 1 == 0 {
                 self.state.print_state(i);
             }
 
@@ -56,6 +60,7 @@ impl Simulation {
         }
     }
     pub(crate) fn apogee(&mut self) -> f64 {
+        // Getter to obtain the apogee of aa flight after the simulation is complete
         if !self.is_done() {
             println!("Apogee requested before simulation has been run!!!\n");
             f64::NAN

@@ -1,6 +1,8 @@
 use crate::state_mod::{State, StateVector};
 #[derive(Debug, Clone)]
 pub(crate) enum SimulationData {
+    //Enumeration to unify the different types of simulation data, each corresponding to a certain
+    // state space / model.
     __1DOF(SimData1Dof, usize),
     __3DOF(SimData3Dof, usize),
 }
@@ -12,6 +14,7 @@ impl SimulationData {
         }
     }
     pub(crate) fn add_row(&mut self, new_data_vec: (StateVector, StateVector), time: f64) {
+        // This function is used for adding entries to the data each iteration
         //new_data_vec = (u, dudt) = (state variables, state derivatives)
         match (self, new_data_vec.0, new_data_vec.1) {
             (SimulationData::__1DOF(sim_data, _),
@@ -24,6 +27,7 @@ impl SimulationData {
         }
     }
     pub(crate) fn col(&mut self, col: usize) -> &mut Self {
+        // A setter which is used to specify which field of data the user wants to retrieve
         match self {
             SimulationData::__1DOF(dof1, _) => dof1.set_col(col),
             SimulationData::__3DOF(dof3, _) => dof3.set_col(col),
@@ -31,6 +35,8 @@ impl SimulationData {
         self
     }
     pub(crate) fn get_val(&mut self, ind: usize) -> f64 {
+        // A getter which returns the value at the given index
+        //      (and in whatever col the data object has been set to)
         match self {
             SimulationData::__1DOF(dof1, _) => dof1.get_value(ind).unwrap_or_else(|| {f64::NAN}),
             SimulationData::__3DOF(dof3, _) => dof3.get_value(ind).unwrap_or_else(|| {f64::NAN}),
@@ -39,6 +45,8 @@ impl SimulationData {
     }
 }
 impl Iterator for SimulationData {
+    // A barebones implimintation of the Iterator trait for Simulation Data. Currently unused,
+    // but could be useful in the future.
     type Item = f64;
 
     fn next(&mut self) -> Option<Self::Item> {

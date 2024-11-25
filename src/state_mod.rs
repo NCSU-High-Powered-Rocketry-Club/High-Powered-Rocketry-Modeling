@@ -4,12 +4,16 @@ use crate::simdata_mod::SimulationData;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
+    // Enumeration to unify the different available state spaces / ODE models
+    // Each of these specifies what the simulation is really all about: what equations you are
+    //         actually solving, what data types, and the number of variables that are needed,...
     __1DOF(Dof1),
     __3DOF(Dof3),
 }
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {
+    // Data type which represents an actual vector(rust::array) of the state space for a given model
     __1DOF([f64; 2]),
     __3DOF([f64; 6]),
 }
@@ -17,18 +21,21 @@ pub(crate) enum StateVector {
 impl State {
     pub(crate) fn print_state(&self, i: u64) {
         match self {
+            // Custom printout to let the user know the status of the state during iterations
             State::__1DOF(dof1) => dof1.print_state_1dof(i),
             State::__3DOF(dof3) => dof3.print_state_3dof(i),
             _ => println!("Ignoring, State:print_state"),
         }
     }
     pub(crate) fn get_state_vec(&self) -> StateVector {
+        // Return the current values of the state variables using that StateVector enum
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.u),
             State::__3DOF(dof3) => StateVector::__3DOF(dof3.u),
         }
     }
     pub(crate) fn get_ndim(&self) -> usize {
+        // Get number of dimensions
         match self {
             State::__1DOF(_dof1) => 2usize,
             State::__3DOF(_dof3) => 6usize,
@@ -39,6 +46,7 @@ impl State {
         }
     }
     pub(crate) fn get_altitude(&self) -> f64 {
+        // get the current elevation/height
         match self {
             State::__1DOF(dof1) => dof1.get_height(),
             State::__3DOF(dof3) => dof3.get_height(),
@@ -49,6 +57,7 @@ impl State {
         }
     }
     pub(crate) fn get_vertical_velocity(&self) -> f64 {
+        // get the velocity in the vertical direction
         match self {
             State::__1DOF(dof1) => dof1.get_velocity(),
             State::__3DOF(dof3) => dof3.get_y_velocity(),
@@ -59,6 +68,7 @@ impl State {
         }
     }
     pub(crate) fn get_time(&self) -> f64 {
+        // return the value of the time variable
         match self {
             State::__1DOF(dof1) => dof1.get_time_1dof(),
             State::__3DOF(dof3) => dof3.get_time_3dof(),
@@ -69,6 +79,7 @@ impl State {
         }
     }
     pub(crate) fn get_derivs(&mut self) -> StateVector {
+        // Return a vector which contains the derivatives of the model/state variables
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.get_derivs_1dof()),
             State::__3DOF(dof3) => StateVector::__3DOF(dof3.get_derivs_3dof()),
@@ -79,6 +90,8 @@ impl State {
         }
     }
     pub(crate) fn update(&mut self, du_vec: StateVector, dt: f64) -> () {
+        // Used by the math module to modify the value of the current state once the timestep has
+        //  been calculated by the OdeIterator
         match (self, du_vec) {
             (State::__1DOF(dof1), StateVector::__1DOF(du)) => dof1.update_state(du, dt),
             (State::__3DOF(dof3), StateVector::__3DOF(du)) => dof3.update_state(du, dt),
@@ -88,6 +101,7 @@ impl State {
         }
     }
     pub(crate) fn multiply(&self, u_vec: StateVector, k: f64) -> StateVector {
+        // Function for multiplying a state vector by a scalar
         match (self, u_vec) {
             (State::__1DOF(dof1), StateVector::__1DOF(u)) => {
                 StateVector::__1DOF(dof1.multiply(u, k))
@@ -102,6 +116,7 @@ impl State {
         }
     }
     pub(crate) fn add(&self, u_vec: StateVector, v_vec: StateVector) -> StateVector {
+        // Function for adding two state vectors to each other
         match (self, u_vec, v_vec) {
             (State::__1DOF(dof1), StateVector::__1DOF(u), StateVector::__1DOF(v)) => {
                 StateVector::__1DOF(dof1.add(u, v))
@@ -123,6 +138,9 @@ impl State {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof1 {
+    // This model is a simple 1D, (position,velocity) model
+    // The assumtion is that the rocket is flying perfectly vertical and that there are no
+    // considerations about rotation or anything which would not be 1D in nature.
     u: [f64; 2],    // (height, velocity)
     dudt: [f64; 2], // (d_height, d_velocity)
     rocket: Rocket,
@@ -200,6 +218,9 @@ impl Dof1 {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof3 {
+    // This model is a 3 Degrees of Freedom model which has 2 spatial dimensions
+    // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
+    // within that 2D space.
     u: [f64; 6], // (x position, y position, angle, x velocity, y velocity, angular veloicty)
     dudt: [f64; 6], // (dx, dy, dang, dvx, dvy, dvang)
     rocket: Rocket,

@@ -4,6 +4,8 @@ mod rocket_mod;
 mod simdata_mod;
 mod simulation_mod;
 mod state_mod;
+
+use std::io::BufRead;
 use plotters::prelude::*;
 
 use crate::math_mod::OdeIterators;
@@ -31,12 +33,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initial Conditions
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
     let state_euler = State::__1DOF(Dof1::new(u0, test_rocket));
-    let u0: [f64; 6] = [0.0, 0.0, 0.0, 0.0, 100.0, 0.0]; // m, m/s
+
+    let u0: [f64; 6] = [0.0, 0.0, 0.0, 0.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
     let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket));
 
     // iteration/calculation Parameters
-    const MAXITER: u64 = 1e5 as u64;
-    const DT: f64 = 1e-1 as f64;
+    const MAXITER: u64 = 1e5 as u64;        //Maximum number of iterations before stopping calculation
+    const DT: f64 = 1e-1 as f64;            //Timestep size to use when integrating ODE
     let euler_method = OdeIterators::Euler(DT);
     let rk3 = OdeIterators::RK3(DT);
 
@@ -54,37 +57,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!("Try different timestep sizes and see how the different methods' accuracy behaves!");
 
-    // ========== Plotting Results (will be moved to module file in the future)
-    let root = BitMapBackend::new("0.png", (640, 480)).into_drawing_area();
+
+    // ========== Plotting Results (will be cleaned up in the future)
+    let file_name = "test.png";
+
+    let xmin = 8f32;
+    let xmax = 10f32;
+    let ymin = 470f32;
+    let ymax = 495f32;
+
+    let plot_title = "Test Rocket Flight";
+    let y_label = "Altitude (m)";
+    let x_label = "Time (s)";
+
+    let series_1_name = "Euler's Method";
+    let series_2_name = "Runge-Kutta 3-stage Method";
+
+
+
+    let root = BitMapBackend::new(file_name, (640, 480)).into_drawing_area();
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
-        .caption("Rokit", ("sans-serif", 50).into_font())
-        .margin(5)
-        .x_label_area_size(30)
-        .y_label_area_size(30)
-        .build_cartesian_2d(0f32..10f32, 0.1f32..500f32)?;
+        .caption(plot_title, ("sans-serif", 50).into_font())
+        .margin(10)
+        .x_label_area_size(40)
+        .y_label_area_size(70)
+        .build_cartesian_2d(xmin..xmax, ymin..ymax)?;
 
-    chart.configure_mesh().draw()?;
+    chart.configure_mesh()
+        .x_desc(x_label)
+        .y_desc(y_label)
+        .axis_desc_style(("sans-serif", 20))
+        .draw()?;
 
+
+    // ########## The number in ~~~.col( x ).~~~~ is what determines which variable we are
+    // ########## looking at. Since this is state-dependant, I think it would be nice to get a
+    // ########## string or otherwise more general way of specifying that. But this works for now.
     chart
         .draw_series(LineSeries::new(
             (0..case_euler.iter).map(
                 |ind| (case_euler.data.col(0).get_val(ind as usize)as f32,
-                       case_euler.data.col(1).get_val(ind as usize) as f32)
+                            case_euler.data.col(1).get_val(ind as usize) as f32)
             ),
-            &RED,
+            RED.stroke_width(2),
         ))?
-        .label("Euler")
+        .label(series_1_name)
         .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
     chart
         .draw_series(LineSeries::new(
             (0..case_rk3.iter).map(
                 |ind| (case_rk3.data.col(0).get_val(ind as usize)as f32,
-                       case_rk3.data.col(2).get_val(ind as usize) as f32)
+                            case_rk3.data.col(2).get_val(ind as usize) as f32)
             ),
-            &BLUE,
+            BLUE.stroke_width(2),
         ))?
-        .label("RK3")
+        .label(series_2_name)
         .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
 
     chart
