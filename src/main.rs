@@ -28,7 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mass: f64 = 10.0; //kg
     let cd: f64 = 0.3;
     let area: f64 = 0.005; // m^2
-    let test_rocket: Rocket = Rocket::new(mass, cd, area);
+    let inertia: f64 = 10.0;
+    let stab_mgn: f64 = 0.3;
+    let test_rocket: Rocket = Rocket::new(mass, cd, area, inertia, stab_mgn);
 
     // Initial Conditions
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s

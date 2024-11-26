@@ -221,7 +221,7 @@ pub(crate) struct Dof3 {
     // This model is a 3 Degrees of Freedom model which has 2 spatial dimensions
     // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
     // within that 2D space.
-    u: [f64; 6], // (x position, y position, angle, x velocity, y velocity, angular veloicty)
+    u: [f64; 6], // (x position, y position, angle(ccw), x velocity, y velocity, angular veloicty)
     dudt: [f64; 6], // (dx, dy, dang, dvx, dvy, dvang)
     rocket: Rocket,
     is_current: bool,
@@ -287,18 +287,36 @@ impl Dof3 {
         self.is_current = false;
     }
     fn update_state_derivatives(&mut self) {
+        // Find vector representing the rocket's orientation
+        let ox = -1.0 * f64::sin(self.u[2]);
+        let oy =  1.0 * f64::cos(self.u[2]);
+
+        //Find Angle of attack
+        let vmag = f64::sqrt(self.u[3]*self.u[3] + self.u[4]*self.u[4]);
+        let cross_prod = self.u[3]*oy - self.u[4]*ox;
+        let alpha = ((self.u[3]*ox + self.u[4]*oy) / vmag) * cross_prod.signum();
+        // Will give radians, with the convention being that orientation CCW of velocity is positive
+
+        // get forces and moments
         let force_drag = physics_mod::calc_drag_force(self.u[4], self.rocket.cd, self.rocket.area);
+        let force_lift = 0.0;
+        let moment_air = 0.0;
+
         let g = physics_mod::gravity();
 
-        // dhdt = velocity
+        //Apply forces
+        let dvxdt = ((self.u[0]/vmag)*force_drag - (self.u[1]/vmag)*force_lift) / self.rocket.mass;
+        let dvydt = ((self.u[1]/vmag)*force_drag + (self.u[0]/vmag)*force_lift) / self.rocket.mass + g;
+
+        //Apply moments
+        let domegadt = moment_air / self.rocket.inertia_z;
+
+        // 1st order terms
         let dxdt = self.u[3];
         let dydt = self.u[4];
         let dadt = self.u[5];
 
-        //a = F/m + g
-        let dvdt = force_drag / self.rocket.mass + g;
-
-        self.dudt = [dxdt, dydt, dadt, 0.0, dvdt, 0.0];
+        self.dudt = [dxdt, dydt, dadt, dvydt, dvxdt, domegadt];
         self.is_current = true;
     }
 }
