@@ -34,13 +34,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initial Conditions
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
-    let state_euler = State::__1DOF(Dof1::new(u0, test_rocket));
+    let state_euler = State::__1DOF(Dof1::new(u0, test_rocket.clone()));
 
     let u0: [f64; 6] = [0.0, 0.0, 0.0, 0.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
-    let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket));
+    let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket.clone()));
 
     // iteration/calculation Parameters
-    const MAXITER: u64 = 1e5 as u64;        //Maximum number of iterations before stopping calculation
+    const MAXITER: u64 = 1e4 as u64;        //Maximum number of iterations before stopping calculation
     const DT: f64 = 1e-1 as f64;            //Timestep size to use when integrating ODE
     let euler_method = OdeIterators::Euler(DT);
     let rk3 = OdeIterators::RK3(DT);
@@ -63,9 +63,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ========== Plotting Results (will be cleaned up in the future)
     let file_name = "test.png";
 
-    let xmin = 8f32;
+    let xmin = 0f32;
     let xmax = 10f32;
-    let ymin = 470f32;
+    let ymin = 0f32;
     let ymax = 495f32;
 
     let plot_title = "Test Rocket Flight";

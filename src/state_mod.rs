@@ -316,7 +316,7 @@ impl Dof3 {
         let dydt = self.u[4];
         let dadt = self.u[5];
 
-        self.dudt = [dxdt, dydt, dadt, dvydt, dvxdt, domegadt];
+        self.dudt = [dxdt, dydt, dadt, dvxdt, dvydt, domegadt];
         self.is_current = true;
     }
 }
