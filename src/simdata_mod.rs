@@ -38,8 +38,8 @@ impl SimulationData {
         // A getter which returns the value at the given index
         //      (and in whatever col the data object has been set to)
         match self {
-            SimulationData::__1DOF(dof1, _) => dof1.get_value(ind).unwrap_or_else(|| {f64::NAN}),
-            SimulationData::__3DOF(dof3, _) => dof3.get_value(ind).unwrap_or_else(|| {f64::NAN}),
+            SimulationData::__1DOF(dof1, _) => dof1.get_value(ind).unwrap_or_else(|| f64::NAN),
+            SimulationData::__3DOF(dof3, _) => dof3.get_value(ind).unwrap_or_else(|| f64::NAN),
             _ => (f64::NAN),
         }
     }

@@ -1,24 +1,23 @@
-use crate::math_mod::OdeIterators;
-use crate::state_mod::{State, StateVector};
+use crate::math::ode::OdeMethod;
 use crate::simdata_mod::SimulationData;
+use crate::state_mod::{State, StateVector};
 
 pub(crate) struct Simulation {
     // Struct used to coordinate the execution of a simulation. It is supplied with a
     // State space/model, and a timestepping method, and will carry out iterations until a stopping
     // criterea is reached, or the maximum number of iterations have been carried out.
-
     state: State,
     nvar: usize,
-    ode: OdeIterators,
+    ode: OdeMethod,
     exit_condition: i32,
     pub(crate) iter: u64,
     maxiter: u64,
-    pub(crate) data : SimulationData
+    pub(crate) data: SimulationData,
 }
 impl Simulation {
     pub(crate) fn new(
         state: State,
-        ode: OdeIterators,
+        ode: OdeMethod,
         exit_condition: i32,
         maxiter: u64,
     ) -> Simulation {
@@ -29,7 +28,7 @@ impl Simulation {
             exit_condition,
             iter: 0,
             maxiter,
-            data : SimulationData::new(&state)
+            data: SimulationData::new(&state),
         }
     }
 
@@ -38,10 +37,10 @@ impl Simulation {
         for i in 0..self.maxiter {
             let dudt = self.state.get_derivs();
             let u = self.state.get_state_vec();
-            
+
             //Add data to sata struct
             self.data.add_row((u, dudt), self.state.get_time());
-                
+
             //Check for Exit Condition
             if self.is_done() {
                 self.iter = i;

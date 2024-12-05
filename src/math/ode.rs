@@ -1,18 +1,18 @@
 use crate::state_mod::{State, StateVector};
 
-pub(crate) enum OdeIterators {
+pub(crate) enum OdeMethod {
     //1st argument = timestep size
     Euler(f64),
     RK3(f64),
 }
 
-impl OdeIterators {
+impl OdeMethod {
     pub(crate) fn timestep(&self, state: &mut State) {
         //Wrapper function. Used to execute an iteration, or timestep,
         // given a state/ODE, and a timestepping method
         match self {
-            OdeIterators::Euler(delta_time) => Self::explicit_euler(state, *delta_time),
-            OdeIterators::RK3(delta_time) => Self::runge_kutta_3(state, *delta_time),
+            OdeMethod::Euler(delta_time) => Self::explicit_euler(state, *delta_time),
+            OdeMethod::RK3(delta_time) => Self::runge_kutta_3(state, *delta_time),
             _ => {
                 println!("Invalid ODE Integration Method");
                 std::process::exit(1);

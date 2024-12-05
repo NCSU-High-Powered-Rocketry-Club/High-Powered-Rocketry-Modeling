@@ -1,6 +1,7 @@
-use crate::{physics_mod, Rocket};
+use crate::math::Norm;
+use crate::{math::vec_ops::MathVector, physics_mod, Rocket};
+use std::f64::consts::PI;
 use std::process::exit;
-use crate::simdata_mod::SimulationData;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
@@ -176,7 +177,7 @@ impl Dof1 {
     fn get_time_1dof(&self) -> f64 {
         self.time
     }
-    fn print_state_1dof(self, i: u64) {
+    fn print_state_1dof(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
             i,
@@ -199,7 +200,8 @@ impl Dof1 {
         self.is_current = false;
     }
     fn update_state_derivatives(&mut self) {
-        let force_drag = physics_mod::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area);
+        let force_drag =
+            physics_mod::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area_drag);
         let g = physics_mod::gravity();
 
         // dhdt = velocity
@@ -218,7 +220,7 @@ impl Dof1 {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof3 {
-    // This model is a 3 Degrees of Freedom model which has 2 spatial dimensions
+    // This model is a 3 Degree of Freedom model which has 2 spatial dimensions
     // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
     // within that 2D space.
     u: [f64; 6], // (x position, y position, angle(ccw), x velocity, y velocity, angular veloicty)
@@ -256,28 +258,23 @@ impl Dof3 {
     fn get_time_3dof(&self) -> f64 {
         self.time
     }
-    fn print_state_3dof(self, i: u64) {
+    fn print_state_3dof(&self, i: u64) {
         println!(
-            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Y Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
+            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    X Velocity:{:8.2}(m/s)    Y Velocity::{:8.2}(m/s)    AngularVelo:{:8.2}(rad/s)",
             i,
             self.get_time_3dof(),
             self.get_height(),
+            self.u[3],
             self.get_y_velocity(),
-            self.dudt[4]
+            self.u[5]
         );
     }
     fn multiply(&self, u: [f64; 6], k: f64) -> [f64; 6] {
-        [u[0] * k, u[1] * k, u[2] * k, u[3] * k, u[4] * k, u[5] * k]
+        MathVector::scale(&MathVector::new(u), k).data
+        //[u[0] * k, u[1] * k, u[2] * k, u[3] * k, u[4] * k, u[5] * k]
     }
     fn add(&self, u: [f64; 6], v: [f64; 6]) -> [f64; 6] {
-        [
-            u[0] + v[0],
-            u[1] + v[1],
-            u[2] + v[2],
-            u[3] + v[3],
-            u[4] + v[4],
-            u[5] + v[5],
-        ]
+        (MathVector::new(u) + MathVector::new(v)).data
     }
     fn update_state(&mut self, du: [f64; 6], dt: f64) {
         for i in 0..self.ndim {
@@ -287,36 +284,62 @@ impl Dof3 {
         self.is_current = false;
     }
     fn update_state_derivatives(&mut self) {
-        // Find vector representing the rocket's orientation
+        // Find vector representing the rocket's orientation cand velocity
         let ox = -1.0 * f64::sin(self.u[2]);
-        let oy =  1.0 * f64::cos(self.u[2]);
+        let oy = 1.0 * f64::cos(self.u[2]);
+        let orientation = MathVector::new([ox, oy]);
+        let velocity = MathVector::new([self.u[3], self.u[4]]);
 
-        //Find Angle of attack
-        let vmag = f64::sqrt(self.u[3]*self.u[3] + self.u[4]*self.u[4]);
-        let cross_prod = self.u[3]*oy - self.u[4]*ox;
-        let alpha = ((self.u[3]*ox + self.u[4]*oy) / vmag) * cross_prod.signum();
-        // Will give radians, with the convention being that orientation CCW of velocity is positive
+        // ========== Find Angle of attack
+        //
+        let vmag = velocity.norm_2();
+        //
+        // used to get the direction of angle of attack (pos = orientation ccw of velocity)
+        let cross_prod = MathVector::cross_2d(&velocity, &orientation);
+        let alpha_dir = cross_prod.signum();
+        //
+        // find component of velocity in direction of rocket
+        let vel_comp_in_ori = MathVector::dot(&velocity, &orientation);
+        //
+        // Use trig to find the angle between the two vectors
+        // Will give radians, with the convention being that the rocket pointing CCW of the velocity
+        // is positive.
+        let alpha = (vel_comp_in_ori / vmag).acos() * alpha_dir;
 
-        // get forces and moments
-        let force_drag = physics_mod::calc_drag_force(self.u[4], self.rocket.cd, self.rocket.area);
-        let force_lift = 0.0;
-        let moment_air = 0.0;
+        // ========== Forces
+        //
+        let force_drag =
+            physics_mod::calc_drag_force(vmag, self.rocket.cd, self.rocket.area_drag);
+        let drag_vec = velocity.scale(force_drag / vmag);
+        //
+        let force_lift =
+            physics_mod::calc_lift_force(vmag, self.rocket.cl_a, alpha, self.rocket.area_drag);
+        let lift_vec = velocity
+            .rotate_2d(&(0.5 * PI * alpha_dir))
+            .scale(force_lift / vmag);
+        //
+        let sum_force = lift_vec + drag_vec;
 
-        let g = physics_mod::gravity();
+        // ========== Moments
+        // assuming that all aerodynamic forces are acting on the center of pressure of the rocket
+        let moment_arm = orientation.scale(self.rocket.stab_margin_dimensional);
+        let sum_moment = MathVector::cross_2d(&sum_force, &moment_arm);
 
-        //Apply forces
-        let dvxdt = ((self.u[0]/vmag)*force_drag - (self.u[1]/vmag)*force_lift) / self.rocket.mass;
-        let dvydt = ((self.u[1]/vmag)*force_drag + (self.u[0]/vmag)*force_lift) / self.rocket.mass + g;
+        // ========== 2nd Order Derivatives of ODE System
+        //Linear Acceleration
+        let accel = sum_force.scale(1.0/self.rocket.mass);
+        let dvxdt = accel.data[0] / self.rocket.mass;
+        let dvydt = accel.data[1] / self.rocket.mass + physics_mod::gravity();
 
-        //Apply moments
-        let domegadt = moment_air / self.rocket.inertia_z;
+        //Angular Acceleration
+        let domegadt = sum_moment / self.rocket.inertia_z;
 
         // 1st order terms
         let dxdt = self.u[3];
         let dydt = self.u[4];
-        let dadt = self.u[5];
+        let omega = self.u[5];
 
-        self.dudt = [dxdt, dydt, dadt, dvxdt, dvydt, domegadt];
+        self.dudt = [dxdt, dydt, omega, dvxdt, dvydt, domegadt];
         self.is_current = true;
     }
 }
