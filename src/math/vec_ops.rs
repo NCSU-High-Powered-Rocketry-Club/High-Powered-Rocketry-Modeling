@@ -1,12 +1,23 @@
 // Doing operations on math vectors of unknown size and floating point type
 use super::{Max, Norm, Sum};
-use std::ops::{Add, AddAssign, Deref, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Deref, Div, Mul, MulAssign, Sub, SubAssign};
 use std::os::unix::fs::lchown;
 
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct MathVector<const L: usize> {
     pub(crate) len : usize,
     pub(crate) data: [f64; L],
 }
+
+
+pub(crate) trait VectorOperations: Add+AddAssign + Mul+MulAssign + Sized {
+    fn dot(&self, b: &Self) -> f64;
+    fn scale(&self, k: f64) -> Self;
+    fn cross_2d(&self, in2: &MathVector<2>) -> f64;
+    fn cross_3d(&self, in2: &MathVector<3>) -> MathVector<3>;
+    fn rotate_2d(&self, angle: &f64) -> MathVector<2>;
+}
+
 
 // Associated Method Implimentations
 impl<const L: usize> MathVector<L> {
@@ -21,14 +32,16 @@ impl<const L: usize> MathVector<L> {
     pub(crate) fn copy(&self) -> Self {
         Self { len: self.len, data: self.data.clone() }
     }
-    //
-    pub(crate) fn dot(a: &Self, b: &Self) -> f64 {
-        let aa = a.copy();
+    //\
+}
+impl<const L: usize> VectorOperations for MathVector<L> {
+    fn dot(&self, b: &Self) -> f64 {
+        let aa = self.copy();
         let bb = b.copy();
         (aa * bb).sum()
     }
     //
-    pub(crate) fn scale(&self, b: f64) -> Self {
+    fn scale(&self, b: f64) -> Self {
         let mut out = [0.0f64; L];
         //
         for i in 0..L {
@@ -38,38 +51,37 @@ impl<const L: usize> MathVector<L> {
         Self { len: L, data: out }
     }
     //
-    pub(crate) fn cross_2d(in1: &Self, in2: &Self) -> f64 {
+    fn cross_2d(&self, in2: &MathVector<2>) -> f64 {
         assert_eq!(L, 2);
-        let a = in1.data;
+        let a = self.data;
         let b = in2.data;
         a[0] * b[1] - a[1] * b[0]
     }
     //
-    pub(crate) fn cross_3d(in1: &Self, in2: &Self) -> Self {
+    fn cross_3d(&self, in2: &MathVector<3>) -> MathVector<3> {
         assert_eq!(L, 3);
-        let a = in1.data;
+        let a = self.data;
         let b = in2.data;
-        let mut out = [0.0f64; L];
+        let mut out = [0.0f64; 3];
 
         out[0] = a[1] * b[2] - a[2] * b[1];
         out[1] = a[2] * b[0] - a[0] * b[2];
         out[2] = a[0] * b[1] - a[1] * b[0];
 
-        Self { len: L, data: out }
+        MathVector { len: 3, data: out }
     }
     //
-    pub(crate) fn rotate_2d(&self, angle: &f64) -> Self {
+    fn rotate_2d(&self, angle: &f64) -> MathVector<2> {
         assert_eq!(L, 2);
         let a = self.data;
-        let mut out = [0.0f64; L];
+        let mut out = [0.0f64; 2];
         //
         out[0] = a[0] * angle.cos() - a[1] * angle.sin();
         out[1] = a[0] * angle.sin() + a[1] * angle.cos();
         //
-        Self{len: L, data: out}
+        MathVector::<2> {len: 2, data: out}
     }
 }
-
 // Custom Trait Implimentations
 impl<const L: usize> Sum<f64> for MathVector<L> {
     fn sum(self: &Self) -> f64 {
@@ -159,5 +171,12 @@ impl<const L: usize> MulAssign for MathVector<L> {
         for i in 0..L {
             self.data[i] *= other.data[i];
         }
+    }
+}
+impl<const L: usize> Deref for MathVector<L> {
+    type Target = [f64;L];
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
     }
 }

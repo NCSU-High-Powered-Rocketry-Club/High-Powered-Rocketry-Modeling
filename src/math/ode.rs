@@ -1,3 +1,4 @@
+use crate::math::vec_ops::{MathVector, VectorOperations};
 use crate::state_mod::{State, StateVector};
 
 pub(crate) enum OdeMethod {
@@ -23,8 +24,8 @@ impl OdeMethod {
     fn explicit_euler(state: &mut State, dt: f64) {
         //The Explicit euler method is the most basic,
         // just multiplying th derivative by the timestep
-        let dudt: StateVector = state.get_derivs();
-        let du = state.multiply(dudt, dt);
+        let dudt = state.get_derivs();
+        let du = dudt.scale(dt);
         state.update(du, dt)
     }
 
@@ -38,26 +39,24 @@ impl OdeMethod {
         let mut state_rk: State = state.clone();
 
         //Stage 1       dt = 1 * DT
-        let dudt: StateVector = state_rk.get_derivs();
-        let mut du = state_rk.multiply(dudt.clone(), dt);
+        let dudt = state_rk.get_derivs();
+        let mut du = dudt.clone().scale(dt);
         state_rk.update(du, 0.0);
 
         //Stage 2       dt = 0.5 * DT
         let dudt2 = state_rk.get_derivs();
         let coeff: f64 = 0.25 * dt;
-        du = state_rk.add(
-            state_rk.multiply(dudt.clone(), coeff),
-            state_rk.multiply(dudt2.clone(), coeff),
-        );
+        du = dudt.clone().scale(coeff) + dudt2.clone().scale(coeff);
+
         state_rk = state.clone();
         state_rk.update(du, 0.0);
 
         //Stage 3
         let dudt3 = state_rk.get_derivs();
         let coeff = dt * 1.0 / 6.0;
-        du = state_rk.multiply(dudt, coeff);
-        du = state_rk.add(du, state_rk.multiply(dudt2, coeff));
-        du = state_rk.add(du, state_rk.multiply(dudt3, 4.0 * coeff));
+        du = dudt.scale(coeff);
+        du = du + dudt2.scale(coeff);
+        du = du + dudt3.scale(4.0 * coeff);
         state.update(du, dt);
     }
 }

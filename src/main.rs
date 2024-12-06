@@ -10,6 +10,7 @@ use std::io::BufRead;
 
 use crate::math::ode::OdeMethod;
 use crate::rocket_mod::Rocket;
+use crate::simdata_mod::SimulationData;
 use crate::simulation_mod::Simulation;
 use crate::state_mod::{Dof1, Dof3, State};
 
@@ -23,7 +24,7 @@ macro_rules! throw_error {
     };
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> () {
     // Rocket Parameters
     let mass: f64 = 10.0; //kg
     let cd: f64 = 0.3;
@@ -51,8 +52,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut case_euler: Simulation = Simulation::new(state_euler.clone(), euler_method, 1, MAXITER);
     let mut case_rk3: Simulation = Simulation::new(state_rk3.clone(), rk3, 1, MAXITER);
 
-    case_euler.run();
-    case_rk3.run();
+    //Create Data Structures
+    let mut data_euler: SimulationData<[f64; 2]> = SimulationData::new();
+    let mut data_rk3: SimulationData<[f64; 6]> = SimulationData::new();
+
+    case_euler.run(&data_euler);
+    case_rk3.run(&data_rk3);
 
     println!(
         "Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",
@@ -60,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         case_rk3.apogee()
     );
     println!("Try different timestep sizes and see how the different methods' accuracy behaves!");
-
+    /*
     // ========== Plotting Results (will be cleaned up in the future)
     let file_name = "test.png";
 
@@ -129,4 +134,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     root.present()?;
 
     Ok(())
+    */
+
 }
