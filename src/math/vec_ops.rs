@@ -16,7 +16,7 @@ pub(crate) trait VectorOperations: Add + AddAssign + Mul + MulAssign + Sized {
     fn rotate_2d(&self, angle: &f64) -> MathVector<2>;
 }
 
-// Associated Method Implimentations
+ // Associated Method Implimentations
 impl<const L: usize> MathVector<L> {
     //
     pub(crate) fn new(data: [f64; L]) -> Self {

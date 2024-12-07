@@ -1,6 +1,7 @@
 pub(crate) mod state_vector;
 pub(crate) mod model_1dof;
 pub(crate) mod model_3dof;
+mod model_6dof;
 
 use crate::math::vec_ops::VectorOperations;
 use crate::math::Norm;

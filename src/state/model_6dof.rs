@@ -5,64 +5,62 @@ use crate::physics_mod;
 use crate::rocket_mod::Rocket;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Dof3 {
-    // This model is a 3 Degree of Freedom model which has 2 spatial dimensions
-    // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
-    // within that 2D space.
-    pub(super) u: MathVector<6>, //[f64; 6], // (x position, y position, angle(ccw), x velocity, y velocity, angular veloicty)
-    pub(super) dudt: MathVector<6>, // (dx, dy, dang, dvx, dvy, dvang)
-    pub(crate) rocket: Rocket,
-    pub(crate) is_current: bool,
+pub(crate) struct Dof6 {
+    // This model is a 6 Degree of Freedom model which has 2 spatial dimensions
+    pub(super) u: MathVector<12>, //[f64; 12], // (x y z, angle x y z;;; x y z velocity, anfgle x y z velocity)
+    pub(super) dudt: MathVector<12>, // (dx, dy, dang, dvx, dvy, dvang)
+    rocket: Rocket,
+    is_current: bool,
     pub(super) time: f64,
     pub(super) ndim: u32,
 }
 
-impl Dof3 {
-    pub(crate) const NLOG: usize = 9;
+impl Dof6 {
+    pub(crate) const NLOG: usize = 18;
     //Private Routines
-    pub(crate) fn new(u: [f64; 6], rocket: Rocket) -> Self {
+    pub(crate) fn new(u: [f64; 12], rocket: Rocket) -> Self {
         Self {
             u: MathVector::new(u),
-            dudt: MathVector::new([f64::NAN; 6]),
+            dudt: MathVector::new([f64::NAN; 12]),
             rocket,
             is_current: false,
             time: 0.0,
-            ndim: 6,
+            ndim: 12,
         }
     }
     pub(super) fn get_y_velocity(&self) -> f64 {
-        self.u.data[4]
+        self.u.data[7]
     }
     pub(super) fn get_height(&self) -> f64 {
         self.u.data[1]
     }
-    pub(super) fn get_derivs_3dof(&mut self) -> MathVector<6> {
+    pub(super) fn get_derivs_6dof(&mut self) -> MathVector<12> {
         if !self.is_current {
             self.update_state_derivatives();
         }
         self.dudt
     }
-    pub(super) fn get_time_3dof(&self) -> f64 {
+    pub(super) fn get_time_6dof(&self) -> f64 {
         self.time
     }
-    pub(super) fn print_state_3dof(&self, i: u64) {
+    pub(super) fn print_state_6dof(&self, i: u64) {
         println!(
-            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    X Velocity:{:8.2}(m/s)    Y Velocity::{:8.2}(m/s)    AngularVelo:{:8.2}(rad/s)",
+            "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    X Velocity:{:8.2}(m/s)    Y Velocity::{:8.2}(m/s)    Z Velocity:{:8.2}(rad/s)",
             i,
-            self.get_time_3dof(),
+            self.get_time_6dof(),
             self.get_height(),
-            self.u.data[3],
+            self.u.data[7],
             self.get_y_velocity(),
-            self.u.data[5]
+            self.u.data[9]
         );
     }
-    pub(super) fn get_logrow(&self) -> MathVector<9> {
-        let mut row = [0.0; 9];
-        row[0..6].copy_from_slice(&self.u.data[..]);
-        row[6..9].copy_from_slice(&self.dudt.data[3..6]);
+    pub(super) fn get_logrow(&self) -> MathVector<18> {
+        let mut row = [0.0; 18];
+        row[0..12].copy_from_slice(&self.u.data[..]);
+        row[12..18].copy_from_slice(&self.dudt.data[7..12]);
         MathVector::new(row)
     }
-    pub(super) fn update_state(&mut self, du: MathVector<6>, dt: f64) {
+    pub(super) fn update_state(&mut self, du: MathVector<12>, dt: f64) {
         self.u += du;
         self.time += dt;
         self.is_current = false;
@@ -70,18 +68,16 @@ impl Dof3 {
     //
     pub(super) fn update_state_derivatives(&mut self) {
         // Find vector representing the rocket's orientation cand velocity
-        let ox = -1.0 * f64::sin(self.u[2]);
-        let oy = 1.0 * f64::cos(self.u[2]);
-        let orientation = MathVector::new([ox, oy]);
-        let velocity = MathVector::new([self.u[3], self.u[4]]);
+        let orientation = MathVector::new([self.u[3], self.u[4], self.u[5]]);
+        let velocity = MathVector::new([self.u[6], self.u[7], self.u[8]]);
 
-        // ========== Find Angle of attack
+        // ========== Find Anglqe of attack
         //
         let vmag = velocity.norm_2();
         //
         // used to get the direction of angle of attack (pos = orientation ccw of velocity)
-        let cross_prod = velocity.cross_2d(&orientation);
-        let alpha_dir = cross_prod.signum();
+        let cross_prod = velocity.cross_3d(&orientation);
+        // Need sub for alpha direction
         //
         // find component of velocity in direction of rocket
         let vel_comp_in_ori = velocity.dot(&orientation);
@@ -89,19 +85,19 @@ impl Dof3 {
         // Use trig to find the angle between the two vectors
         // Will give radians, with the convention being that the rocket pointing CCW of the velocity
         // is positive.
-        let alpha = (vel_comp_in_ori / vmag).acos() * alpha_dir;
+        let alpha = //(vel_comp_in_ori / vmag).acos() * alpha_dir;
 
         // ========== Forces
         //
         let force_drag = physics_mod::calc_drag_force(vmag, self.rocket.cd, self.rocket.area_drag);
-        let drag_vec = velocity.scale(force_drag / vmag);
+        let drag_vec = //velocity.scale(force_drag / vmag);
         //
         let force_lift =
             physics_mod::calc_lift_force(vmag, self.rocket.cl_a, alpha, self.rocket.area_drag);
-        let lift_vec = velocity
+        let lift_vec = /*velocity
             .rotate_2d(&(0.5 * PI * alpha_dir))
             .scale(force_lift / vmag);
-        //
+        //    */
         let sum_force = lift_vec + drag_vec;
 
         // ========== Moments
