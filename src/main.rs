@@ -3,7 +3,7 @@ mod physics_mod;
 mod rocket_mod;
 mod simdata_mod;
 mod simulation_mod;
-mod state_mod;
+mod state;
 
 use plotters::prelude::*;
 use std::io::BufRead;
@@ -12,7 +12,7 @@ use crate::math::ode::OdeMethod;
 use crate::rocket_mod::Rocket;
 use crate::simdata_mod::SimulationData;
 use crate::simulation_mod::Simulation;
-use crate::state_mod::{Dof1, Dof3, State};
+use crate::state::{model_1dof::Dof1, model_3dof::Dof3, State};
 
 #[macro_export]
 macro_rules! throw_error {
@@ -24,7 +24,7 @@ macro_rules! throw_error {
     };
 }
 
-fn main() -> () {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Rocket Parameters
     let mass: f64 = 10.0; //kg
     let cd: f64 = 0.3;
@@ -33,7 +33,8 @@ fn main() -> () {
     let area_lift: f64 = 0.05;
     let inertia: f64 = 10.0;
     let stab_mgn: f64 = 0.3;
-    let test_rocket: Rocket = Rocket::new(mass, cd, area_drag, area_lift, inertia, stab_mgn, cl_alpha);
+    let test_rocket: Rocket =
+        Rocket::new(mass, cd, area_drag, area_lift, inertia, stab_mgn, cl_alpha);
 
     // Initial Conditions
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
@@ -53,11 +54,11 @@ fn main() -> () {
     let mut case_rk3: Simulation = Simulation::new(state_rk3.clone(), rk3, 1, MAXITER);
 
     //Create Data Structures
-    let mut data_euler: SimulationData<[f64; 2]> = SimulationData::new();
-    let mut data_rk3: SimulationData<[f64; 6]> = SimulationData::new();
+    let mut data_euler: SimulationData<{ Dof1::NLOG }> = SimulationData::new();
+    let mut data_rk3: SimulationData<{ Dof3::NLOG }> = SimulationData::new();
 
-    case_euler.run(&data_euler);
-    case_rk3.run(&data_rk3);
+    case_euler.run(&mut data_euler);
+    case_rk3.run(&mut data_rk3);
 
     println!(
         "Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",
@@ -65,7 +66,7 @@ fn main() -> () {
         case_rk3.apogee()
     );
     println!("Try different timestep sizes and see how the different methods' accuracy behaves!");
-    /*
+
     // ========== Plotting Results (will be cleaned up in the future)
     let file_name = "test.png";
 
@@ -104,8 +105,8 @@ fn main() -> () {
         .draw_series(LineSeries::new(
             (0..case_euler.iter).map(|ind| {
                 (
-                    case_euler.data.col(0).get_val(ind as usize) as f32,
-                    case_euler.data.col(1).get_val(ind as usize) as f32,
+                    data_euler.get_val(ind as usize, 0) as f32,
+                    data_euler.get_val(ind as usize, 1) as f32,
                 )
             }),
             RED.stroke_width(2),
@@ -116,8 +117,8 @@ fn main() -> () {
         .draw_series(LineSeries::new(
             (0..case_rk3.iter).map(|ind| {
                 (
-                    case_rk3.data.col(0).get_val(ind as usize) as f32,
-                    case_rk3.data.col(2).get_val(ind as usize) as f32,
+                    data_rk3.get_val(ind as usize, 0) as f32,
+                    data_rk3.get_val(ind as usize, 2) as f32,
                 )
             }),
             BLUE.stroke_width(2),
@@ -134,6 +135,4 @@ fn main() -> () {
     root.present()?;
 
     Ok(())
-    */
-
 }

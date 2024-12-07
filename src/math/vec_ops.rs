@@ -1,23 +1,20 @@
 // Doing operations on math vectors of unknown size and floating point type
 use super::{Max, Norm, Sum};
-use std::ops::{Add, AddAssign, Deref, Div, Mul, MulAssign, Sub, SubAssign};
-use std::os::unix::fs::lchown;
+use std::ops::{Add, AddAssign, Deref, Div, Mul, MulAssign, Sub};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct MathVector<const L: usize> {
-    pub(crate) len : usize,
+    pub(crate) len: usize,
     pub(crate) data: [f64; L],
 }
 
-
-pub(crate) trait VectorOperations: Add+AddAssign + Mul+MulAssign + Sized {
+pub(crate) trait VectorOperations: Add + AddAssign + Mul + MulAssign + Sized {
     fn dot(&self, b: &Self) -> f64;
     fn scale(&self, k: f64) -> Self;
     fn cross_2d(&self, in2: &MathVector<2>) -> f64;
     fn cross_3d(&self, in2: &MathVector<3>) -> MathVector<3>;
     fn rotate_2d(&self, angle: &f64) -> MathVector<2>;
 }
-
 
 // Associated Method Implimentations
 impl<const L: usize> MathVector<L> {
@@ -30,7 +27,10 @@ impl<const L: usize> MathVector<L> {
     }
     //
     pub(crate) fn copy(&self) -> Self {
-        Self { len: self.len, data: self.data.clone() }
+        Self {
+            len: self.len,
+            data: self.data.clone(),
+        }
     }
     //\
 }
@@ -79,7 +79,7 @@ impl<const L: usize> VectorOperations for MathVector<L> {
         out[0] = a[0] * angle.cos() - a[1] * angle.sin();
         out[1] = a[0] * angle.sin() + a[1] * angle.cos();
         //
-        MathVector::<2> {len: 2, data: out}
+        MathVector::<2> { len: 2, data: out }
     }
 }
 // Custom Trait Implimentations
@@ -98,7 +98,11 @@ impl<const L: usize> Max<f64> for MathVector<L> {
         let mut out = 0.0f64;
         //
         for i in 0..L {
-            out = if self.data[i] > out { self.data[i] } else { out };
+            out = if self.data[i] > out {
+                self.data[i]
+            } else {
+                out
+            };
         }
         out
     }
@@ -106,7 +110,11 @@ impl<const L: usize> Max<f64> for MathVector<L> {
         let mut out = 0.0f64;
         //
         for i in 0..L {
-            out = if  self.data[i].abs() > out {  self.data[i].abs() } else { out };
+            out = if self.data[i].abs() > out {
+                self.data[i].abs()
+            } else {
+                out
+            };
         }
         out
     }
@@ -122,7 +130,7 @@ impl<const L: usize> Norm<f64> for MathVector<L> {
         let mut out = 0.0f64;
         //
         for i in 0..L {
-            out +=  self.data[i] * self.data[i];
+            out += self.data[i] * self.data[i];
         }
         //
         out.sqrt()
@@ -139,7 +147,7 @@ impl<const L: usize> Add for MathVector<L> {
         let mut out = [0.0f64; L];
         //
         for i in 0..L {
-            out[i] =  self.data[i] + other.data[i];
+            out[i] = self.data[i] + other.data[i];
         }
         //
         Self { len: L, data: out }
@@ -174,7 +182,7 @@ impl<const L: usize> MulAssign for MathVector<L> {
     }
 }
 impl<const L: usize> Deref for MathVector<L> {
-    type Target = [f64;L];
+    type Target = [f64; L];
 
     fn deref(&self) -> &Self::Target {
         &self.data

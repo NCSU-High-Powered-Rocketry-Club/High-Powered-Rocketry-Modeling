@@ -1,5 +1,5 @@
-use crate::math::vec_ops::{MathVector, VectorOperations};
-use crate::state_mod::{State, StateVector};
+use crate::math::vec_ops::VectorOperations;
+use crate::state::State;
 
 pub(crate) enum OdeMethod {
     //1st argument = timestep size
