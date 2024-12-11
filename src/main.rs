@@ -1,14 +1,17 @@
 mod math;
 mod physics_mod;
+mod plotting;
 mod rocket_mod;
 mod simdata_mod;
 mod simulation_mod;
 mod state;
 
+use std::f64::consts::PI;
 use plotters::prelude::*;
 use std::io::BufRead;
 
 use crate::math::ode::OdeMethod;
+use crate::plotting::{add_line_to_plot, make_line_plot, plot_plot};
 use crate::rocket_mod::Rocket;
 use crate::simdata_mod::SimulationData;
 use crate::simulation_mod::Simulation;
@@ -28,11 +31,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Rocket Parameters
     let mass: f64 = 10.0; //kg
     let cd: f64 = 0.3;
-    let cl_alpha: f64 = 0.5;
+    let cl_alpha: f64 = 0.2;
     let area_drag: f64 = 0.005; // m^2
     let area_lift: f64 = 0.05;
-    let inertia: f64 = 10.0;
-    let stab_mgn: f64 = 0.3;
+    let inertia: f64 = 5.0;
+    let stab_mgn: f64 = 0.5;
     let test_rocket: Rocket =
         Rocket::new(mass, cd, area_drag, area_lift, inertia, stab_mgn, cl_alpha);
 
@@ -40,12 +43,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
     let state_euler = State::__1DOF(Dof1::new(u0, test_rocket.clone()));
 
-    let u0: [f64; 6] = [0.0, 0.0, 0.0, 10.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
+    let u0: [f64; 6] = [0.0, 0.0, PI/2.0, 0.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
     let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket.clone()));
 
     // iteration/calculation Parameters
-    const MAXITER: u64 = 1e4 as u64; //Maximum number of iterations before stopping calculation
-    const DT: f64 = 1e-1 as f64; //Timestep size to use when integrating ODE
+    const MAXITER: u64 = 1e5 as u64; //Maximum number of iterations before stopping calculation
+    const DT: f64 = 1e-2 as f64; //Timestep size to use when integrating ODE
     let euler_method = OdeMethod::Euler(DT);
     let rk3 = OdeMethod::RK3(DT);
 
@@ -61,78 +64,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     case_rk3.run(&mut data_rk3);
 
     println!(
-        "Euler: Apogee {:6.2}\nRK3  : Apogee {:6.2}\n",
+        "Euler, 1Dof: Apogee {:6.2}\nRK3, 3Dof  : Apogee {:6.2}\n",
         case_euler.apogee(),
         case_rk3.apogee()
     );
-    println!("Try different timestep sizes and see how the different methods' accuracy behaves!");
 
-    // ========== Plotting Results (will be cleaned up in the future)
-    let file_name = "test.png";
+    // ========== Plotting Results ==========
 
-    let xmin = 0f32;
-    let xmax = 10f32;
-    let ymin = 0f32;
-    let ymax = 495f32;
+    //Altitude
+    let (mut chart1, root1) = make_line_plot(
+        "test.png",
+        "Altitude Comparison",
+        "Time (s)",
+        0,
+        "Altitude (m)",
+        1,
+        "Euler's Method, 1Dof",
+        &RED,
+        [0.0, 10.0],
+        [0.0, 550.0],
+        &data_euler,
+    )
+    .expect("TODO: panic message");
+    add_line_to_plot(0, 2, "RK3 3Dof", &BLUE, &data_rk3, &mut chart1)?;
+    plot_plot(&mut chart1, &root1);
 
-    let plot_title = "Test Rocket Flight";
-    let y_label = "Altitude (m)";
-    let x_label = "Time (s)";
+    //Flight Path
+    let (mut ch2, rt2) = make_line_plot(
+        "test2.png",
+        "Test Rocket Flight Path 2D",
+        "X (m)",
+        1,
+        "Y (m)",
+        2,
+        "RK3 3Dof",
+        &RED,
+        [-50.0, 50.0],
+        [0.0, 550.0],
+        &data_rk3,
+    ).expect("TODO: panic message");
+    plot_plot(&mut ch2, &rt2);
 
-    let series_1_name = "Euler's Method";
-    let series_2_name = "Runge-Kutta 3-stage Method";
-
-    let root = BitMapBackend::new(file_name, (640, 480)).into_drawing_area();
-    root.fill(&WHITE)?;
-    let mut chart = ChartBuilder::on(&root)
-        .caption(plot_title, ("sans-serif", 50).into_font())
-        .margin(10)
-        .x_label_area_size(40)
-        .y_label_area_size(70)
-        .build_cartesian_2d(xmin..xmax, ymin..ymax)?;
-
-    chart
-        .configure_mesh()
-        .x_desc(x_label)
-        .y_desc(y_label)
-        .axis_desc_style(("sans-serif", 20))
-        .draw()?;
-
-    // ########## The number in ~~~.col( x ).~~~~ is what determines which variable we are
-    // ########## looking at. Since this is state-dependant, I think it would be nice to get a
-    // ########## string or otherwise more general way of specifying that. But this works for now.
-    chart
-        .draw_series(LineSeries::new(
-            (0..case_euler.iter).map(|ind| {
-                (
-                    data_euler.get_val(ind as usize, 0) as f32,
-                    data_euler.get_val(ind as usize, 1) as f32,
-                )
-            }),
-            RED.stroke_width(2),
-        ))?
-        .label(series_1_name)
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
-    chart
-        .draw_series(LineSeries::new(
-            (0..case_rk3.iter).map(|ind| {
-                (
-                    data_rk3.get_val(ind as usize, 0) as f32,
-                    data_rk3.get_val(ind as usize, 2) as f32,
-                )
-            }),
-            BLUE.stroke_width(2),
-        ))?
-        .label(series_2_name)
-        .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &BLUE));
-
-    chart
-        .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
-        .draw()?;
-
-    root.present()?;
+    //Rocket Orientation
+    let (mut ch3, rt3) = make_line_plot(
+        "test3.png",
+        "Test Rocket Flight Angle 2D",
+        "Tims (s)",
+        0,
+        "Orintation (radians CCW)",
+        3,
+        "RK3 3Dof",
+        &RED,
+        [0.0, 11.0],
+        [-5., 5.0],
+        &data_rk3,
+    ).expect("TODO: panic message");
+    plot_plot(&mut ch3, &rt3);
 
     Ok(())
 }

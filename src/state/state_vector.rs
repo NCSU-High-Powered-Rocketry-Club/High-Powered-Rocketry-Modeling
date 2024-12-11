@@ -1,5 +1,5 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign};
 use crate::math::vec_ops::{MathVector, VectorOperations};
+use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {

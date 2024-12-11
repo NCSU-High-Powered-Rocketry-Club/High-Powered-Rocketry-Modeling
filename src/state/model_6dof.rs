@@ -1,8 +1,8 @@
-use std::f64::consts::PI;
-use crate::math::Norm;
 use crate::math::vec_ops::{MathVector, VectorOperations};
+use crate::math::Norm;
 use crate::physics_mod;
 use crate::rocket_mod::Rocket;
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof6 {
@@ -15,6 +15,7 @@ pub(crate) struct Dof6 {
     pub(super) ndim: u32,
 }
 
+/*
 impl Dof6 {
     pub(crate) const NLOG: usize = 18;
     //Private Routines
@@ -123,3 +124,4 @@ impl Dof6 {
         self.is_current = true;
     }
 }
+*/

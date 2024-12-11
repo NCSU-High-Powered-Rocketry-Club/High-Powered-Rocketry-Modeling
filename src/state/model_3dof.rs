@@ -1,8 +1,8 @@
-use std::f64::consts::PI;
-use crate::math::Norm;
 use crate::math::vec_ops::{MathVector, VectorOperations};
+use crate::math::Norm;
 use crate::physics_mod;
 use crate::rocket_mod::Rocket;
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof3 {
@@ -93,11 +93,13 @@ impl Dof3 {
 
         // ========== Forces
         //
-        let force_drag = physics_mod::calc_drag_force(vmag, self.rocket.cd, self.rocket.area_drag);
+        let cd_total = self.rocket.cd + self.rocket.cl_a*alpha.abs();//crappy estimation for drag increasing with AoA
+
+        let force_drag = physics_mod::calc_drag_force(vmag, cd_total, self.rocket.area_drag);
         let drag_vec = velocity.scale(force_drag / vmag);
         //
         let force_lift =
-            physics_mod::calc_lift_force(vmag, self.rocket.cl_a, alpha, self.rocket.area_drag);
+            physics_mod::calc_lift_force(vmag, self.rocket.cl_a, alpha.abs(), self.rocket.area_drag);
         let lift_vec = velocity
             .rotate_2d(&(0.5 * PI * alpha_dir))
             .scale(force_lift / vmag);
@@ -112,8 +114,8 @@ impl Dof3 {
         // ========== 2nd Order Derivatives of ODE System
         //Linear Acceleration
         let accel = sum_force.scale(1.0 / self.rocket.mass);
-        let dvxdt = accel.data[0] / self.rocket.mass;
-        let dvydt = accel.data[1] / self.rocket.mass + physics_mod::gravity();
+        let dvxdt = accel.data[0];
+        let dvydt = accel.data[1] + physics_mod::gravity();
 
         //Angular Acceleration
         let domegadt = sum_moment / self.rocket.inertia_z;

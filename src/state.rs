@@ -1,15 +1,16 @@
-pub(crate) mod state_vector;
 pub(crate) mod model_1dof;
 pub(crate) mod model_3dof;
 mod model_6dof;
+pub(crate) mod state_vector;
 
 use crate::math::vec_ops::VectorOperations;
 use crate::math::Norm;
+use crate::state::model_1dof::Dof1;
+use crate::state::model_3dof::Dof3;
+use crate::state::model_6dof::Dof6;
 use state_vector::StateVector;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 use std::process::exit;
-use crate::state::model_1dof::Dof1;
-use crate::state::model_3dof::Dof3;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
@@ -18,6 +19,7 @@ pub(crate) enum State {
     //         actually solving, what data types, and the number of variables that are needed,...
     __1DOF(Dof1),
     __3DOF(Dof3),
+    __6DOF(Dof6),
 }
 
 impl State {
@@ -26,6 +28,7 @@ impl State {
             // Custom printout to let the user know the status of the state during iterations
             State::__1DOF(dof1) => StateVector::__1DLOG(dof1.get_logrow()),
             State::__3DOF(dof3) => StateVector::__3DLOG(dof3.get_logrow()),
+            _ => panic!("Not a valid State, logrow"),
         }
     }
     pub(crate) fn print_state(&self, i: u64) {
@@ -41,6 +44,7 @@ impl State {
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.u),
             State::__3DOF(dof3) => StateVector::__3DOF(dof3.u),
+            _ => panic!("Not a valid State, get_state_vec"),
         }
     }
     pub(crate) fn get_ndim(&self) -> usize {

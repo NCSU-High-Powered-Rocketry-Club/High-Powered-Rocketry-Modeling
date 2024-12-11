@@ -2,7 +2,7 @@ use crate::state::state_vector::StateVector;
 
 #[derive(Clone, Debug)]
 pub(crate) struct SimulationData<const L: usize> {
-    len: u64,
+    pub(crate) len: u64,
     time: Vec<f64>,
     data: Vec<[f64; L]>,
     index: usize,
