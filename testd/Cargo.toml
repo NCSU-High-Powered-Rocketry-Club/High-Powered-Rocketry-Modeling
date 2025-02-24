@@ -1,0 +1,13 @@
+[package]
+name = "testd"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "testd"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.23.3"
+plotters = "0.3.3"
