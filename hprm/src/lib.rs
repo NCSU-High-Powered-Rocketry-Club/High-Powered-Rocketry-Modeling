@@ -29,17 +29,19 @@ macro_rules! throw_error {
 }
 
 #[pyfunction]
-fn main() -> PyResult<()> {
+fn main(test_rocket : Rocket) -> PyResult<()> {
+    /*
     // Rocket Parameters
     let mass: f64 = 10.0; //kg
     let cd: f64 = 0.3;
-    let cl_alpha: f64 = 0.2;
     let area_drag: f64 = 0.005; // m^2
     let area_lift: f64 = 0.05;
     let inertia: f64 = 5.0;
     let stab_mgn: f64 = 0.5;
+    let cl_alpha: f64 = 0.2;
     let test_rocket: Rocket =
         Rocket::new(mass, cd, area_drag, area_lift, inertia, stab_mgn, cl_alpha);
+     */
 
     // Initial Conditions
     let u0: [f64; 2] = [0.0, 100.0]; // m, m/s

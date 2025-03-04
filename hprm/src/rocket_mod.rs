@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
-#[pyclass]#[derive(Debug, Clone, Copy)]
+#[pyclass(dict,get_all,set_all)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Rocket {
     pub(crate) mass: f64,
     pub(crate) cd: f64,
@@ -13,6 +14,21 @@ pub(crate) struct Rocket {
 
 #[pymethods]
 impl Rocket {
+    // For `__repr__` we want to return a string that Python code could use to recreate
+    // the `Name`, like `Name(5)` for example.
+    fn __repr__(&self) -> String {
+        // We use the `format!` macro to create a string. Its first argument is a
+        // format string, followed by any number of parameters which replace the
+        // `{}`'s in the format string.
+        //
+        // /// Add more details here
+        "Rocket_Structure".to_string()
+    }
+    // `__str__` is generally used to create an "informal" representation, so we
+    // just forward to `ToString` trait implementation to print a bare number.
+    fn __str__(&self) -> String {
+        "Rocket_Structure".to_string()
+    }
     #[new]
     pub(crate) fn new(
         mass: f64,
@@ -33,4 +49,5 @@ impl Rocket {
             cl_a,
         }
     }
+
 }
