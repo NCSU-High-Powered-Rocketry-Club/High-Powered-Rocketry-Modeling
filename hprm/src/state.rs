@@ -12,13 +12,17 @@ use pyo3::prelude::*;
 use state_vector::StateVector;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 use std::process::exit;
+use crate::simdata_mod::{SimulationData};
 
 #[pyclass(dict, get_all, set_all)]
 pub(crate) struct PyState {
     pub ndof: i32,
+    pub nlog: usize,
     pub u1: [f64; 2],
     pub u3: [f64; 6],
-    pub u6: [f64; 12],
+//    pub data1: PySimData1d,     //SimulationData<{ Dof1::NLOG }>,
+//    pub data3: PySimData3d      //SimulationData<{ Dof3::NLOG }>
+//    pub u6: [f64; 12]
 }
 #[pymethods]
 impl PyState {
@@ -30,11 +34,19 @@ impl PyState {
     }
     #[new]
     pub(crate) fn new(ndof: i32) -> Self {
+        let nlog = match ndof{
+            1 => Dof1::NLOG,
+            3 => Dof3::NLOG,
+            _ => {0_usize}
+        };
         Self {
             ndof,
+            nlog,
             u1: [0.0; 2],
             u3: [0.0; 6],
-            u6: [0.0; 12],
+//            data1: PySimData1d::new(),
+//            data3: PySimData3d::new()
+//            u6: [0.0; 12],
         }
     }
 }

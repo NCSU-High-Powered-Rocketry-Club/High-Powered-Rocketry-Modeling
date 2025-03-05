@@ -19,11 +19,15 @@ def main():
 
     ode = hprm.OdeMethod.Euler(1e-2)
 
-    state_info = hprm.PyState(3) # 3DoF
+    state_info = hprm.PyState(1) # 3DoF
+    state_info.u1 = [0.0, 100.0]
     state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
 
     # Run the simulation
     hprm.main(test_vehicle, state_info, ode)
 
+    # Run the simulation
+    state_info.ndof = 3 # 3DoF
+    hprm.main(test_vehicle, state_info, ode)
 main()
