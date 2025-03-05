@@ -1,1 +1,3 @@
-/target
+/hprm/target
+/hprm/.env
+/rocket_sim_rust/target
