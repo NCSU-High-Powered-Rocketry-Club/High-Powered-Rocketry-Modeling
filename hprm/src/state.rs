@@ -8,9 +8,36 @@ use crate::math::Norm;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
 use crate::state::model_6dof::Dof6;
+use pyo3::prelude::*;
 use state_vector::StateVector;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 use std::process::exit;
+
+#[pyclass(dict, get_all, set_all)]
+pub(crate) struct PyState {
+    pub ndof: i32,
+    pub u1: [f64; 2],
+    pub u3: [f64; 6],
+    pub u6: [f64; 12],
+}
+#[pymethods]
+impl PyState {
+    fn __repr__(&self) -> String {
+        "Python Interface for State enum".to_string()
+    }
+    fn __str__(&self) -> String {
+        "Python Interface for State enum".to_string()
+    }
+    #[new]
+    pub(crate) fn new(ndof: i32) -> Self {
+        Self {
+            ndof,
+            u1: [0.0; 2],
+            u3: [0.0; 6],
+            u6: [0.0; 12],
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {

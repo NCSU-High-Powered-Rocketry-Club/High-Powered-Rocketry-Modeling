@@ -1,3 +1,5 @@
+import math
+
 import hprm
 
 
@@ -15,7 +17,13 @@ def main():
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
     )
 
+    ode = hprm.OdeMethod.Euler(1e-2)
+
+    state_info = hprm.PyState(3) # 3DoF
+    state_info.u3 = [0.0, 0.0, math.pi/2.0,
+                     0.0, 100.0, 0.0]
+
     # Run the simulation
-    hprm.main(test_vehicle)
+    hprm.main(test_vehicle, state_info, ode)
 
 main()

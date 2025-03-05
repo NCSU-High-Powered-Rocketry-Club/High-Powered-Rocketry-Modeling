@@ -6,17 +6,18 @@ mod simdata_mod;
 mod simulation_mod;
 mod state;
 
-use std::f64::consts::PI;
 use plotters::prelude::*;
-use std::io::BufRead;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
+use std::f64::consts::PI;
+use std::io::BufRead;
 
 use crate::math::ode::OdeMethod;
 use crate::plotting::{add_line_to_plot, make_line_plot, plot_plot};
 use crate::rocket_mod::Rocket;
 use crate::simdata_mod::SimulationData;
 use crate::simulation_mod::Simulation;
-use crate::state::{model_1dof::Dof1, model_3dof::Dof3, State};
+use crate::state::{model_1dof::Dof1, model_3dof::Dof3, PyState, State};
 
 #[macro_export]
 macro_rules! throw_error {
@@ -29,7 +30,7 @@ macro_rules! throw_error {
 }
 
 #[pyfunction]
-fn main(test_rocket : Rocket) -> PyResult<()> {
+fn main(test_rocket: Rocket, py_state: &PyState, ode_method: &OdeMethod) -> PyResult<()> {
     /*
     // Rocket Parameters
     let mass: f64 = 10.0; //kg
@@ -44,33 +45,43 @@ fn main(test_rocket : Rocket) -> PyResult<()> {
      */
 
     // Initial Conditions
-    let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
-    let state_euler = State::__1DOF(Dof1::new(u0, test_rocket.clone()));
+    let state = match py_state.ndof {
+        1 => State::__1DOF(Dof1::new(py_state.u1, test_rocket.clone())),
+        3 => State::__3DOF(Dof3::new(py_state.u3, test_rocket.clone())),
+        //        6 => State::__6DOF(Dof6::new(pystate.u6, test_rocket.clone())),
+        _ => {
+            return Err(PyErr::new::<PyTypeError, _>(
+                "Invalid State Space Chosen. Must be either 1, or 3 DoF.",
+            ))
+        }
+    };
 
-    let u0: [f64; 6] = [0.0, 0.0, PI/2.0, 0.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
-    let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket.clone()));
+    // let u0: [f64; 2] = [0.0, 100.0]; // m, m/s
+    // let state_euler = State::__1DOF(Dof1::new(u0, test_rocket.clone()));
+    // let u0: [f64; 6] = [0.0, 0.0, PI / 2.0, 0.0, 100.0, 0.0]; // m, m, rad, m/s, m/s, rad/s
+    // let state_rk3 = State::__3DOF(Dof3::new(u0, test_rocket.clone()));
 
     // iteration/calculation Parameters
     const MAXITER: u64 = 1e5 as u64; //Maximum number of iterations before stopping calculation
-    const DT: f64 = 1e-2 as f64; //Timestep size to use when integrating ODE
-    let euler_method = OdeMethod::Euler(DT);
-    let rk3 = OdeMethod::RK3(DT);
+                                     //const DT: f64 = 1e-2 as f64; //Timestep size to use when integrating ODE
+                                     //let euler_method = OdeMethod::Euler(DT);
+                                     //let rk3 = OdeMethod::RK3(DT);
 
     //Assemble Simulation Struct
-    let mut case_euler: Simulation = Simulation::new(state_euler.clone(), euler_method, 1, MAXITER);
-    let mut case_rk3: Simulation = Simulation::new(state_rk3.clone(), rk3, 1, MAXITER);
+    let mut case: Simulation = Simulation::new(state.clone(), ode_method.clone(), 1, MAXITER);
+    //let mut case_rk3: Simulation = Simulation::new(state_rk3.clone(), rk3, 1, MAXITER);
 
     //Create Data Structures
-    let mut data_euler: SimulationData<{ Dof1::NLOG }> = SimulationData::new();
-    let mut data_rk3: SimulationData<{ Dof3::NLOG }> = SimulationData::new();
+    let mut data: SimulationData<{ Dof3::NLOG }> = SimulationData::new();
+    //let mut data_rk3: SimulationData<{ Dof3::NLOG }> = SimulationData::new();
 
-    case_euler.run(&mut data_euler);
-    case_rk3.run(&mut data_rk3);
+    case.run(&mut data);
+    //case_rk3.run(&mut data_rk3);
 
     println!(
-        "Euler, 1Dof: Apogee {:6.2}\nRK3, 3Dof  : Apogee {:6.2}\n",
-        case_euler.apogee(),
-        case_rk3.apogee()
+        "Apogee {:6.2}\n",
+        case.apogee(),
+        //case_rk3.apogee()
     );
 
     // ========== Plotting Results ==========
@@ -83,16 +94,18 @@ fn main(test_rocket : Rocket) -> PyResult<()> {
         0,
         "Altitude (m)",
         1,
-        "Euler's Method, 1Dof",
+        "",
         &RED,
         [0.0, 10.0],
         [0.0, 550.0],
-        &data_euler,
+        &data,
     )
     .expect("TODO: panic message");
-    let _ =add_line_to_plot(0, 2, "RK3 3Dof", &BLUE, &data_rk3, &mut chart1);
+    //let _ = add_line_to_plot(0, 2, "RK3 3Dof", &BLUE, &data_rk3, &mut chart1);
     plot_plot(&mut chart1, &root1);
 
+    // Need to generalize, might just move to python w/ matplotlib
+    /*
     //Flight Path
     let (mut ch2, rt2) = make_line_plot(
         "test2.png",
@@ -106,7 +119,8 @@ fn main(test_rocket : Rocket) -> PyResult<()> {
         [-50.0, 50.0],
         [0.0, 550.0],
         &data_rk3,
-    ).expect("TODO: panic message");
+    )
+    .expect("TODO: panic message");
     plot_plot(&mut ch2, &rt2);
 
     //Rocket Orientation
@@ -122,16 +136,19 @@ fn main(test_rocket : Rocket) -> PyResult<()> {
         [0.0, 11.0],
         [-5., 5.0],
         &data_rk3,
-    ).expect("TODO: panic message");
+    )
+    .expect("TODO: panic message");
     plot_plot(&mut ch3, &rt3);
+    */
 
     Ok(())
 }
-
 
 #[pymodule]
 fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(main, m)?)?;
     m.add_class::<Rocket>()?;
+    m.add_class::<PyState>()?;
+    m.add_class::<OdeMethod>()?;
     Ok(())
 }

@@ -1,6 +1,10 @@
+use pyo3::pyclass;
+
 use crate::math::vec_ops::VectorOperations;
 use crate::state::State;
 
+#[pyclass(dict, get_all, set_all)]
+#[derive(Clone)]
 pub(crate) enum OdeMethod {
     //1st argument = timestep size
     Euler(f64),

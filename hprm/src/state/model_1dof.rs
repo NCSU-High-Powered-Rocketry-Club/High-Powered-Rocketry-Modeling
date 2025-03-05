@@ -6,7 +6,7 @@ use crate::rocket_mod::Rocket;
 pub(crate) struct Dof1 {
     // This model is a simple 1D, (position,velocity) model
     // The assumtion is that the rocket is flying perfectly vertical and that there are no
-    // considerations about rotation or anything which would not be 1D in nature.
+    // considerations about rotation or anything which would not be 3D in nature.
     pub(super) u: MathVector<2>,    // (height, velocity)
     pub(super) dudt: MathVector<2>, // (d_height, d_velocity)
     rocket: Rocket,
