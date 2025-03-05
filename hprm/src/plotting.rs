@@ -9,7 +9,7 @@ use plotters::prelude::{
     IntoDrawingArea, IntoFont, LineSeries, RGBColor, BLACK, BLUE, RED, WHITE,
 };
 
-pub(crate) fn make_line_plot<'a, const L: usize>(
+pub(crate) fn make_line_plot<'a>(
     file_name: &'a str,
     plot_title: &'a str,
     x_label: &'a str,
@@ -20,7 +20,7 @@ pub(crate) fn make_line_plot<'a, const L: usize>(
     line_color: &'a RGBColor,
     xdims: [f32; 2],
     ydims: [f32; 2],
-    data: &SimulationData<L>,
+    data: &SimulationData,
 ) -> Result<
     (
         ChartContext<'a, BitMapBackend<'a>, Cartesian2d<RangedCoordf32, RangedCoordf32>>,
@@ -84,12 +84,12 @@ pub(crate) fn make_line_plot<'a, const L: usize>(
     Ok((chart, root))
 }
 
-pub(crate) fn add_line_to_plot<'a, const L: usize, T: DrawingBackend, TT: CoordTranslate>(
+pub(crate) fn add_line_to_plot<'a, T: DrawingBackend, TT: CoordTranslate>(
     x_var: usize,
     y_var: usize,
     line_series_label: &'a str,
     line_color: &'a RGBColor,
-    data: &SimulationData<L>,
+    data: &SimulationData,
     mut chart: &mut ChartContext<'a, T, TT>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where

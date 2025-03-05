@@ -2,16 +2,6 @@ use crate::state::state_vector::StateVector;
 use pyo3::prelude::*;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-
-#[derive(Clone, Debug)]
-pub(crate) struct SimulationData<const L: usize> {
-    pub(crate) len: u64,
-    time: Vec<f64>,
-    data: Vec<[f64; L]>,
-    index: usize,
-    col: usize,
-}
-
 /*
 #[pyclass(dict, get_all, set_all)]
 #[derive(Clone)]
@@ -56,9 +46,20 @@ impl PySimData3d{
     }
 }
  */
-
-impl<const L: usize> SimulationData<L> {
+const L: usize = 18;
+#[pyclass(dict,get_all,set_all)]
+#[derive(Clone, Debug)]
+pub(crate) struct SimulationData {
+    pub(crate) len: u64,
+    time: Vec<f64>,
+    data: Vec<[f64; L]>,
+    index: usize,
+    col: usize,
+}
+#[pymethods]
+impl SimulationData {
     const INITCAP: usize = 1000;
+    #[new]
     pub(crate) fn new() -> Self {
         Self {
             len: 0,
@@ -68,6 +69,22 @@ impl<const L: usize> SimulationData<L> {
             col: 0,
         }
     }
+    pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
+        if index >= self.len as usize {
+            ()
+        }
+        if col == 0 {
+            self.time[index]
+        } else {
+            self.data[index][col - 1]
+        }
+    }
+    pub(crate) fn get_len(&self) -> usize {
+        self.time.len()
+    }
+}
+
+impl SimulationData {
     pub(crate) fn add_row(&mut self, row: StateVector, time: f64) -> () {
         self.len += 1; // Can maybe speed up by adding this at very end (simulation iter #)
         self.time.push(time);
@@ -81,14 +98,5 @@ impl<const L: usize> SimulationData<L> {
         self.data
             .push(<[f64; L]>::try_from(rowvec).unwrap());
     }
-    pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
-        if index >= self.len as usize {
-            ()
-        }
-        if col == 0 {
-            self.time[index]
-        } else {
-            self.data[index][col - 1]
-        }
-    }
+
 }

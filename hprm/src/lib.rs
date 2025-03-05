@@ -30,7 +30,7 @@ macro_rules! throw_error {
 }
 
 #[pyfunction]
-fn main(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> PyResult<()> {
+fn main(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> PyResult<(SimulationData)> {
 
     // Initial Conditions
     let state = match py_state.ndof {
@@ -47,7 +47,7 @@ fn main(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> 
     const MAXITER: u64 = 1e5 as u64; //Maximum number of iterations before stopping calculation
     //Assemble Simulation Struct
     let mut case: Simulation = Simulation::new(state.clone(), ode_method.clone(), 1, MAXITER);
-    let mut data : SimulationData<18> = SimulationData::new(); //18 is hardcoded as max value
+    let mut data : SimulationData = SimulationData::new(); //18 is hardcoded as max value
     case.run(&mut data);
     println!(
         "Apogee {:6.2}\n",
@@ -109,7 +109,7 @@ fn main(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> 
     .expect("TODO: panic message");
     plot_plot(&mut ch3, &rt3);
     */
-    Ok(())
+    Ok(data)
 }
 
 #[pymodule]
@@ -118,5 +118,6 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Rocket>()?;
     m.add_class::<PyState>()?;
     m.add_class::<OdeMethod>()?;
+    m.add_class::<SimulationData>()?;
     Ok(())
 }

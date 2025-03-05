@@ -30,7 +30,7 @@ impl Simulation {
         }
     }
 
-    pub(crate) fn run<const L: usize>(&mut self, mut log: &mut SimulationData<L>) -> () {
+    pub(crate) fn run(&mut self, mut log: &mut SimulationData) -> () {
         //Executes the simulation
 
         for i in 0..self.maxiter {

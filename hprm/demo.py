@@ -1,5 +1,6 @@
 import math
-
+import numpy as np
+import matplotlib.pyplot as plt
 import hprm
 
 
@@ -23,11 +24,27 @@ def main():
     state_info.u1 = [0.0, 100.0]
     state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
+    
+    simdata = hprm.SimulationData()
 
     # Run the simulation
-    hprm.main(test_vehicle, state_info, ode)
-
+    simdata = hprm.main(test_vehicle, state_info, ode)
+    
     # Run the simulation
-    state_info.ndof = 3 # 3DoF
-    hprm.main(test_vehicle, state_info, ode)
+    #state_info.ndof = 3 # 3DoF
+    #simdata = hprm.main(test_vehicle, state_info, ode)
+    
+    print("Time at iter = 500:", simdata.get_val(500, 0))
+
+    # Extract data and put in np array
+    nrow = simdata.get_len()
+    ncol = state_info.nlog
+    data = np.zeros((nrow, ncol), dtype=float)
+    for icol in range(ncol):
+        for irow in range(nrow):
+            data[irow, icol] = simdata.get_val(irow, icol)
+
+    plt.plot(data[:, 0], data[:, 1])
+    plt.show()
+
 main()
