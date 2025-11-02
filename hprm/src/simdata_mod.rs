@@ -90,7 +90,7 @@ impl SimulationData {
         self.time.push(time);
         let rowdata = row.as_array();
         let mut rowvec = rowdata.to_vec();
-        if (rowdata.len() < L) {
+        if rowdata.len() < L {
             while rowvec.len() < L {
                 rowvec.push(0.0);
             }

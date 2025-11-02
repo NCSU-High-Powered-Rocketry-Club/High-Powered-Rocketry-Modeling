@@ -10,4 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.23.3"
-plotters = "0.3.3"
+
+[lints.rust]
+unused_imports = "allow"

@@ -1,4 +1,5 @@
 /hprm/target
 /hprm/.env
-/rocket_sim_rust/target
-/rocket_sim_rust/.idea
+/hprm/.github
+/rocket_sim_rust_old_standalone/target
+/rocket_sim_rust_old_standalone/.idea

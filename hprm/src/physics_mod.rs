@@ -16,6 +16,6 @@ pub(crate) fn calc_lift_force(velocity: f64, cl_alpha: f64, alpha: f64, area: f6
     0.5 * rho * velocity.powi(2) * cl_alpha * alpha * area
 }
 
-pub(crate) fn calc_moment_2d(force: [f64; 2], moment_arm: [f64; 2]) -> f64 {
-    0.0
-}
+//pub(crate) fn calc_moment_2d(force: [f64; 2], moment_arm: [f64; 2]) -> f64 {
+//    0.0 * force[0] * moment_arm[0]
+//}

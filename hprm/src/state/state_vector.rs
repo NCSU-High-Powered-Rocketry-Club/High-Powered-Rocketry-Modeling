@@ -106,7 +106,7 @@ impl VectorOperations for StateVector {
                 panic!("Requires 3d math vector")
             }
         }
-    }
+    } 
     fn rotate_2d(&self, angle: &f64) -> MathVector<2> {
         match self {
             StateVector::__1DOF(avec) => avec.rotate_2d(angle),

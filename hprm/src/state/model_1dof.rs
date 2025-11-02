@@ -12,7 +12,6 @@ pub(crate) struct Dof1 {
     rocket: Rocket,
     is_current: bool,
     pub(super) time: f64,
-    pub(super) ndim: u32,
 }
 
 impl Dof1 {
@@ -25,7 +24,6 @@ impl Dof1 {
             rocket,
             is_current: false,
             time: 0.0,
-            ndim: 2,
         }
     }
     pub(super) fn get_velocity(&self) -> f64 {

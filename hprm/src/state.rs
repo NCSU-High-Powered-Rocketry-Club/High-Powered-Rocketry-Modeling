@@ -1,13 +1,13 @@
 pub(crate) mod model_1dof;
 pub(crate) mod model_3dof;
-mod model_6dof;
+// pub(crate) mod model_6dof;
 pub(crate) mod state_vector;
 
 use crate::math::vec_ops::VectorOperations;
 use crate::math::Norm;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-use crate::state::model_6dof::Dof6;
+// use crate::state::model_6dof::Dof6;
 use pyo3::prelude::*;
 use state_vector::StateVector;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
@@ -58,7 +58,7 @@ pub(crate) enum State {
     //         actually solving, what data types, and the number of variables that are needed,...
     __1DOF(Dof1),
     __3DOF(Dof3),
-    __6DOF(Dof6),
+    //__6DOF(Dof6),
 }
 
 impl State {
@@ -78,23 +78,12 @@ impl State {
             _ => println!("Ignoring, State:print_state"),
         }
     }
-    pub(crate) fn get_state_vec(&self) -> StateVector {
+    pub(crate) fn _get_state_vec(&self) -> StateVector {
         // Return the current values of the state variables using that StateVector enum
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.u),
             State::__3DOF(dof3) => StateVector::__3DOF(dof3.u),
             _ => panic!("Not a valid State, get_state_vec"),
-        }
-    }
-    pub(crate) fn get_ndim(&self) -> usize {
-        // Get number of dimensions
-        match self {
-            State::__1DOF(_dof1) => 2usize,
-            State::__3DOF(_dof3) => 6usize,
-            _ => {
-                println!("Ignoring, State:get_ndim");
-                0usize
-            }
         }
     }
     pub(crate) fn get_altitude(&self) -> f64 {
