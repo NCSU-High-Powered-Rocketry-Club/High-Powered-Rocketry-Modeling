@@ -25,7 +25,7 @@ def main():
     state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
     
-    simdata = hprm.SimulationData()
+    #simdata = hprm.SimulationData()
 
     # Run the simulation
     simdata = hprm.main(test_vehicle, state_info, ode)
