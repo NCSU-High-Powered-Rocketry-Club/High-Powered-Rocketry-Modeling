@@ -1,6 +1,9 @@
 # Tools for simulating and modeling rockets.
 
-Currently has a 3Dof and 1Dof model, with a 6Dof model planned. Currently this code is just the mathematical solving of a given model (with given parameters). Finding optimal parameters from given data, or implimenting some predictive capability is intended for the future.
+A Python library written in Rust for quick and efficient modeling and analysis of rocket data.
+
+Currently it has a 1D-1Dof, and 2D-3Dof model formats, with a 3D-6Dof model format planned. The model parameters are input conditions; planned functionality is to be able to train a model to data.
+The long-term vision of this project is to be a toolbox for testing out different rocket models with data-fitted and uncertainty-estimated parameters. The primary intended use case is to be a means to do on-the-ground modeling work relavent to past and future rockets; but, it will be performant enough that it could be used in-the-loop in some launch vehicle applications.
 
 
 ## ~Current~ Outdated Structure / Organization
