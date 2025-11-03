@@ -22,7 +22,7 @@ pub(crate) struct PyState {
     pub u3: [f64; 6],
 //    pub data1: PySimData1d,     //SimulationData<{ Dof1::NLOG }>,
 //    pub data3: PySimData3d      //SimulationData<{ Dof3::NLOG }>
-//    pub u6: [f64; 12]
+    pub u6: [f64; 12]
 }
 #[pymethods]
 impl PyState {
@@ -44,10 +44,16 @@ impl PyState {
             nlog,
             u1: [0.0; 2],
             u3: [0.0; 6],
-//            data1: PySimData1d::new(),
-//            data3: PySimData3d::new()
-//            u6: [0.0; 12],
+            u6: [0.0; 12],
         }
+    }
+    pub(crate) fn set_new_ndof(&mut self, new_ndof: i32) -> () {
+        self.nlog = match new_ndof{
+            1 => Dof1::NLOG,
+            3 => Dof3::NLOG,
+            _ => {0_usize}
+        };
+        self.ndof = new_ndof;
     }
 }
 

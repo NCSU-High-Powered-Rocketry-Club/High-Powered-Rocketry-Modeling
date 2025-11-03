@@ -25,16 +25,14 @@ def main():
     state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
     
-    #simdata = hprm.SimulationData()
 
     # Run the simulation
-    simdata = hprm.main(test_vehicle, state_info, ode)
+    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
     
     # Run the simulation
-    #state_info.ndof = 3 # 3DoF
-    #simdata = hprm.main(test_vehicle, state_info, ode)
+    state_info.set_new_ndof(3) # 3DoF
+    simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
     
-    print("Time at iter = 500:", simdata.get_val(500, 0))
 
     # Extract data and put in np array
     nrow = simdata.get_len()
@@ -42,9 +40,17 @@ def main():
     data = np.zeros((nrow, ncol), dtype=float)
     for icol in range(ncol):
         for irow in range(nrow):
-            data[irow, icol] = simdata.get_val(irow, icol)
+            data[irow, icol]  = simdata.get_val(irow, icol)
+
+    nrow = simdata2.get_len()
+    ncol = state_info.nlog
+    data2 = np.zeros((nrow, ncol), dtype=float)
+    for icol in range(ncol):
+        for irow in range(nrow):
+            data2[irow, icol]  = simdata2.get_val(irow, icol)
 
     plt.plot(data[:, 0], data[:, 1])
+    plt.plot(data2[:, 0], data2[:, 2])
     plt.show()
 
 main()
