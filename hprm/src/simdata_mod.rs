@@ -2,50 +2,7 @@ use crate::state::state_vector::StateVector;
 use pyo3::prelude::*;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-/*
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
-pub(crate) struct PySimData1d {
-    pub(crate) data: SimulationData<{ Dof1::NLOG }>,
-}
-#[pymethods]
-impl PySimData1d{
-    #[new]
-    pub(crate) fn new() -> Self {
-        Self {
-            data: SimulationData::new()
-        }
-    }
-    fn __repr__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-    fn __str__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-}
-
-
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
-pub(crate) struct PySimData3d {
-    pub(crate) data: SimulationData<{ Dof3::NLOG }>,
-}
-#[pymethods]
-impl PySimData3d{
-    #[new]
-    pub(crate) fn new() -> Self {
-        Self {
-            data: SimulationData::new()
-        }
-    }
-    fn __repr__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-    fn __str__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-}
- */
+//
 const L: usize = 18;
 #[pyclass(dict,get_all,set_all)]
 #[derive(Clone, Debug)]
