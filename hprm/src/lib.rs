@@ -25,7 +25,29 @@ macro_rules! throw_error {
         )
     };
 }
-
+//
+#[pyclass(dict, get_all, set_all)]
+pub(crate) struct PyID {
+    pub PS_1_DOF: i32,
+    pub PS_3_DOF: i32,
+}
+#[pymethods]
+impl PyID {
+    fn __repr__(&self) -> String {
+        "Textualization of input opeitons which are integers".to_string()
+    }
+    fn __str__(&self) -> String {
+        "Textualization of input opeitons which are integers".to_string()
+    }
+    #[new]
+    pub(crate) fn new() -> Self {
+        Self {
+            PS_1_DOF: 1,
+            PS_3_DOF: 3,
+        }
+    }
+}
+//
 #[pyfunction]
 fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> PyResult<SimulationData> {
 
@@ -60,5 +82,6 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyState>()?;
     m.add_class::<OdeMethod>()?;
     m.add_class::<SimulationData>()?;
+    m.add_class::<PyID>()?;
     Ok(())
 }

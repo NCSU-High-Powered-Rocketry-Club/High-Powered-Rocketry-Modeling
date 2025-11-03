@@ -7,6 +7,8 @@ import hprm
 def main():
     print("Testing out the High Powered Rocket Modeling Program")
 
+    id = hprm.PyID()
+
     # Define the Test Vehicle
     test_vehicle = hprm.Rocket(
         10.0,   # mass kg
@@ -20,7 +22,11 @@ def main():
 
     ode = hprm.OdeMethod.Euler(1e-2)
 
-    state_info = hprm.PyState(1) # 3DoF
+    state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
+
+    # Note: It's hard to make the model imputs general / textual because
+    #           they change with different models. For not intended use case
+    #           is to have a translation table with the different configs
     state_info.u1 = [0.0, 100.0]
     state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
@@ -30,7 +36,7 @@ def main():
     simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
     
     # Run the simulation
-    state_info.set_new_ndof(3) # 3DoF
+    state_info.set_new_model(id.PS_3_DOF) # 3DoF
     simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
     
 

@@ -47,7 +47,7 @@ impl PyState {
             u6: [0.0; 12],
         }
     }
-    pub(crate) fn set_new_ndof(&mut self, new_ndof: i32) -> () {
+    pub(crate) fn set_new_model(&mut self, new_ndof: i32) -> () {
         self.nlog = match new_ndof{
             1 => Dof1::NLOG,
             3 => Dof3::NLOG,
