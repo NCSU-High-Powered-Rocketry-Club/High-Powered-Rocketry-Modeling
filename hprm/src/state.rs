@@ -1,16 +1,12 @@
 pub(crate) mod model_1dof;
 pub(crate) mod model_3dof;
-// pub(crate) mod model_6dof;
 pub(crate) mod state_vector;
 
-use crate::math::vec_ops::VectorOperations;
 use crate::math::Norm;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-// use crate::state::model_6dof::Dof6;
 use pyo3::prelude::*;
 use state_vector::StateVector;
-use std::ops::{Add, AddAssign, Mul, MulAssign};
 use std::process::exit;
 use crate::simdata_mod::{SimulationData};
 
@@ -20,8 +16,6 @@ pub(crate) struct PyState {
     pub nlog: usize,
     pub u1: [f64; 2],
     pub u3: [f64; 6],
-//    pub data1: PySimData1d,     //SimulationData<{ Dof1::NLOG }>,
-//    pub data3: PySimData3d      //SimulationData<{ Dof3::NLOG }>
     pub u6: [f64; 12]
 }
 #[pymethods]

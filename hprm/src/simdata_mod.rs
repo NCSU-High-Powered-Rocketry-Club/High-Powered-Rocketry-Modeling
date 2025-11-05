@@ -1,5 +1,6 @@
 use crate::state::state_vector::StateVector;
 use pyo3::prelude::*;
+use numpy::{ToPyArray, PyArray1, PyArray2};
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
 //
@@ -26,6 +27,8 @@ impl SimulationData {
             col: 0,
         }
     }
+    //
+    //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
         if index >= self.len as usize {
             ()
@@ -36,9 +39,17 @@ impl SimulationData {
             self.data[index][col - 1]
         }
     }
+    //
+    //
     pub(crate) fn get_len(&self) -> usize {
         self.time.len()
     }
+    //
+    //
+    pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
+        (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
+    }
+
 }
 
 impl SimulationData {
