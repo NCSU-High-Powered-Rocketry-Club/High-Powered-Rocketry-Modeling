@@ -1,51 +1,9 @@
 use crate::state::state_vector::StateVector;
 use pyo3::prelude::*;
+use numpy::{ToPyArray, PyArray1, PyArray2};
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-/*
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
-pub(crate) struct PySimData1d {
-    pub(crate) data: SimulationData<{ Dof1::NLOG }>,
-}
-#[pymethods]
-impl PySimData1d{
-    #[new]
-    pub(crate) fn new() -> Self {
-        Self {
-            data: SimulationData::new()
-        }
-    }
-    fn __repr__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-    fn __str__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-}
-
-
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
-pub(crate) struct PySimData3d {
-    pub(crate) data: SimulationData<{ Dof3::NLOG }>,
-}
-#[pymethods]
-impl PySimData3d{
-    #[new]
-    pub(crate) fn new() -> Self {
-        Self {
-            data: SimulationData::new()
-        }
-    }
-    fn __repr__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-    fn __str__(&self) -> String {
-        "Python Struct for Storing Sim Data".to_string()
-    }
-}
- */
+//
 const L: usize = 18;
 #[pyclass(dict,get_all,set_all)]
 #[derive(Clone, Debug)]
@@ -69,6 +27,8 @@ impl SimulationData {
             col: 0,
         }
     }
+    //
+    //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
         if index >= self.len as usize {
             ()
@@ -79,9 +39,17 @@ impl SimulationData {
             self.data[index][col - 1]
         }
     }
+    //
+    //
     pub(crate) fn get_len(&self) -> usize {
         self.time.len()
     }
+    //
+    //
+    pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
+        (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
+    }
+
 }
 
 impl SimulationData {
