@@ -9,6 +9,22 @@ pub(crate) enum OdeMethod {
     //1st argument = timestep size
     Euler(f64),
     RK3(f64),
+    RK45(AdaptiveTimeStep),
+}
+
+#[pyclass(dict, get_all, set_all)]
+#[derive(Clone)]
+pub struct AdaptiveTimeStep {
+    /// Initial timestep guess
+    pub dt: f64,
+    /// Minimum timestep
+    pub dt_min: f64,
+    /// Maximum timestep
+    pub dt_max: f64,
+    /// Absolute error tolerance
+    pub absolute_error_tolerance: f64,
+    /// Relative error tolerance
+    pub relative_error_tolerance: f64,
 }
 
 impl OdeMethod {
@@ -18,6 +34,7 @@ impl OdeMethod {
         match self {
             OdeMethod::Euler(delta_time) => Self::explicit_euler(state, *delta_time),
             OdeMethod::RK3(delta_time) => Self::runge_kutta_3(state, *delta_time),
+            OdeMethod::RK45(adaptive_time_step) => Self::runge_kutta_45(state, adaptive_time_step),
             _ => {
                 println!("Invalid ODE Integration Method");
                 std::process::exit(1);
@@ -62,5 +79,12 @@ impl OdeMethod {
         du = du + dudt2.scale(coeff);
         du = du + dudt3.scale(4.0 * coeff);
         state.update(du, dt);
+    }
+
+    fn runge_kutta_45(state: &mut State, adaptive_time_step: &AdaptiveTimeStep) {
+        // Placeholder for RK45 implementation
+        // Currently not implemented
+        println!("RK45 method is not yet implemented.");
+        std::process::exit(1);
     }
 }
