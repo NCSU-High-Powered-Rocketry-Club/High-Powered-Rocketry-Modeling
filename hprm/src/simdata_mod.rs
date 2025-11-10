@@ -46,9 +46,9 @@ impl SimulationData {
     }
     //
     //
-    pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
-        (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
-    }
+    //pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
+    //    (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
+    //}
 
 }
 
