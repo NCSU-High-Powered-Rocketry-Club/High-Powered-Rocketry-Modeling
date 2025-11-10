@@ -1,5 +1,5 @@
 use crate::math::vec_ops::{MathVector, VectorOperations};
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {
@@ -33,6 +33,36 @@ impl AddAssign for StateVector {
         match (self, rhs) {
             (StateVector::__1DOF(mut avec), StateVector::__1DOF(bvec)) => avec += bvec,
             (StateVector::__3DOF(mut avec), StateVector::__3DOF(bvec)) => avec += bvec,
+            _ => {
+                panic!("Invalid addition, mismatching State Vectors.")
+            }
+        }
+    }
+}
+
+impl Sub for StateVector {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => {
+                StateVector::__1DOF(avec - bvec)
+            }
+            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => {
+                StateVector::__3DOF(avec - bvec)
+            }
+            _ => {
+                panic!("Invalid addition, mismatching State Vectors.")
+            }
+        }
+    }
+}
+
+impl SubAssign for StateVector {
+    fn sub_assign(&mut self, rhs: Self) {
+        match (self, rhs) {
+            (StateVector::__1DOF(mut avec), StateVector::__1DOF(bvec)) => avec -= bvec,
+            (StateVector::__3DOF(mut avec), StateVector::__3DOF(bvec)) => avec -= bvec,
             _ => {
                 panic!("Invalid addition, mismatching State Vectors.")
             }

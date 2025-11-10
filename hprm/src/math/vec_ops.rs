@@ -1,6 +1,6 @@
 // Doing operations on math vectors of unknown size and floating point type
 use super::{Max, Norm, Sum};
-use std::ops::{Add, AddAssign, Deref, Div, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Deref, Div, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct MathVector<const L: usize> {
@@ -8,7 +8,7 @@ pub(crate) struct MathVector<const L: usize> {
     pub(crate) data: [f64; L],
 }
 
-pub(crate) trait VectorOperations: Add + AddAssign + Mul + MulAssign + Sized {
+pub(crate) trait VectorOperations: Add + AddAssign + Sub + SubAssign + Mul + MulAssign + Sized {
     fn dot(&self, b: &Self) -> f64;
     fn scale(&self, k: f64) -> Self;
     fn cross_2d(&self, in2: &MathVector<2>) -> f64;
@@ -157,6 +157,25 @@ impl<const L: usize> AddAssign for MathVector<L> {
     fn add_assign(&mut self, other: Self) -> () {
         for i in 0..L {
             self.data[i] += other.data[i];
+        }
+    }
+}
+impl<const L: usize> Sub for MathVector<L> {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self::Output {
+        let mut out = [0.0f64; L];
+        //
+        for i in 0..L {
+            out[i] = self.data[i] + other.data[i];
+        }
+        //
+        Self { len: L, data: out }
+    }
+}
+impl<const L: usize> SubAssign for MathVector<L> {
+    fn sub_assign(&mut self, other: Self) -> () {
+        for i in 0..L {
+            self.data[i] -= other.data[i];
         }
     }
 }
