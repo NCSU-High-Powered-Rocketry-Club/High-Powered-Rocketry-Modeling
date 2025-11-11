@@ -208,5 +208,3 @@ impl OdeMethod {
         state.update(du5, dt);
     }
 }
-    ats = hprm.AdaptiveTimeStep()
-    ode = hprm.OdeMethod.RK45(ats)
