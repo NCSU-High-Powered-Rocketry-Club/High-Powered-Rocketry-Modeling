@@ -35,8 +35,8 @@ impl AdaptiveTimeStep {
             dt: 0.01,
             dt_min: 1e-6,
             dt_max: 10.0,
-            absolute_error_tolerance: 1.0e-3,
-            relative_error_tolerance: 1.0e-2,
+            absolute_error_tolerance: 1.0e-7,
+            relative_error_tolerance: 1.0e-9,
         }
     }
     pub fn next_dt(&self, error_norm: f64) -> f64 {
@@ -196,13 +196,14 @@ impl OdeMethod {
         // ---------- Error estimate: || du4 - du5 || ----------
         let error_vec = du4.clone() - du5.clone();
 
-        // Normalizes it
+        // Find the soze of the error vector
         //let error_norm: f64 = error_vec.as_array().iter().map(|x| x * x).sum::<f64>().sqrt();
         let error_norm: f64 = error_vec.dot(&error_vec).sqrt();
 
         // ---------- Update timestep adaptively ----------
         let new_dt = adaptive_time_step.next_dt(error_norm);
         adaptive_time_step.dt = new_dt;
+        println!("RK45 Error Norm: {:},     dt: {:}", error_norm, new_dt);
 
         // ---------- Finally, advance the actual state with 5th-order increment ----------
         state.update(du5, dt);

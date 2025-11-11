@@ -31,8 +31,8 @@ def main():
     #           they change with different models. For not intended use case
     #           is to have a translation table with the different configs
     state_info.u1 = [0.0, 100.0]
-    state_info.u3 = [0.0, 0.0, math.pi/2.0,
-                     0.0, 100.0, 0.0]
+    #state_info.u3 = [0.0, 0.0, math.pi/2.0,
+    #                 0.0, 100.0, 0.0]
     
 
     # Run the simulation
