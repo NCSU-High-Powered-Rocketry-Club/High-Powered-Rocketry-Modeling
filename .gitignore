@@ -1,5 +1,5 @@
-/hprm/target
-/hprm/.env
-/hprm/.github
-/rocket_sim_rust_old_standalone/target
-/rocket_sim_rust_old_standalone/.idea
+/target
+/.env
+/.github
+/.idea
+.venv/
