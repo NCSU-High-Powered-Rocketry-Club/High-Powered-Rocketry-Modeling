@@ -23,4 +23,4 @@ maturin build                   # Builds rust and creates wheel in your target f
 pip install target/wheels/...   # Tells python about the package
 
 === To run code
-python3 demoy.py                # sample script meant to showcase the library's functionality
+python3 demo.py                # sample script meant to showcase the library's functionality

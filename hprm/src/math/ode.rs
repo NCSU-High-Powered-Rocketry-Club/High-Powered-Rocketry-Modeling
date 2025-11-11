@@ -1,4 +1,4 @@
-use pyo3::pyclass;
+use pyo3::prelude::*;
 
 use crate::math::vec_ops::VectorOperations;
 use crate::state::State;
@@ -27,18 +27,29 @@ pub struct AdaptiveTimeStep {
     pub relative_error_tolerance: f64,
 }
 
+#[pymethods]
 impl AdaptiveTimeStep {
-    pub fn next_dt(&self, error_norm: f64) -> f64 {
-    let dt = self.dt;
-
-    // Account for edge case where error norm is extremely small or 0
-    if error_norm <= 1e-30 {
-        return (dt * 2.0).clamp(self.dt_min, self.dt_max);
+    #[new]
+    pub(crate) fn new() -> Self {
+        Self{
+            dt: 0.01,
+            dt_min: 1e-6,
+            dt_max: 10.0,
+            absolute_error_tolerance: 1.0e-3,
+            relative_error_tolerance: 1.0e-2,
+        }
     }
-
-    (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * 0.5 / error_norm).powf(0.25))
-        .clamp(0.5, 2.0))
-        .clamp(self.dt_min, self.dt_max)
+    pub fn next_dt(&self, error_norm: f64) -> f64 {
+        let dt = self.dt;
+ 
+        // Account for edge case where error norm is extremely small or 0
+        if error_norm <= 1e-30 {
+            return (dt * 2.0).clamp(self.dt_min, self.dt_max);
+        }
+ 
+        (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * 0.5 / error_norm).powf(0.25))
+            .clamp(0.5, 2.0))
+            .clamp(self.dt_min, self.dt_max)
     }
 }
 
@@ -186,7 +197,8 @@ impl OdeMethod {
         let error_vec = du4.clone() - du5.clone();
 
         // Normalizes it
-        let error_norm: f64 = error_vec.as_array().iter().map(|x| x * x).sum::<f64>().sqrt();
+        //let error_norm: f64 = error_vec.as_array().iter().map(|x| x * x).sum::<f64>().sqrt();
+        let error_norm: f64 = error_vec.dot(&error_vec).sqrt();
 
         // ---------- Update timestep adaptively ----------
         let new_dt = adaptive_time_step.next_dt(error_norm);
@@ -196,3 +208,5 @@ impl OdeMethod {
         state.update(du5, dt);
     }
 }
+    ats = hprm.AdaptiveTimeStep()
+    ode = hprm.OdeMethod.RK45(ats)

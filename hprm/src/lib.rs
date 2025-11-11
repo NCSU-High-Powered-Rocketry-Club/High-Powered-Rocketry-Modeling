@@ -10,7 +10,7 @@ use pyo3::prelude::*;
 use std::f64::consts::PI;
 use std::io::BufRead;
 
-use crate::math::ode::OdeMethod;
+use crate::math::ode::{AdaptiveTimeStep, OdeMethod};
 use crate::rocket_mod::Rocket;
 use crate::simdata_mod::{SimulationData};
 use crate::simulation::Simulation;
@@ -72,6 +72,7 @@ fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMetho
         "Apogee {:6.2}\n",
         case.apogee(),
     );
+
     Ok(data)
 }
 
@@ -83,5 +84,6 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<OdeMethod>()?;
     m.add_class::<SimulationData>()?;
     m.add_class::<PyID>()?;
+    m.add_class::<AdaptiveTimeStep>()?;
     Ok(())
 }

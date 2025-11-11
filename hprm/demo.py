@@ -20,7 +20,10 @@ def main():
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
     )
 
-    ode = hprm.OdeMethod.Euler(1e-2)
+    #ode = hprm.OdeMethod.Euler(1e-2)
+
+    ats = hprm.AdaptiveTimeStep()
+    ode = hprm.OdeMethod.RK45(ats)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
 
@@ -34,7 +37,12 @@ def main():
 
     # Run the simulation
     simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
-    
+    quit()
+   
+
+
+
+
     # Run the simulation
     state_info.set_new_model(id.PS_3_DOF) # 3DoF
     simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
