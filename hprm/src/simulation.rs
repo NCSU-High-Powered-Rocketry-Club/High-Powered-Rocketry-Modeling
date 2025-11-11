@@ -43,7 +43,7 @@ impl Simulation {
                 break;
             }
             //Output simulation info to terminal
-            if i % 1 == 9999999990 {
+            if i % 10 == 0 {
                 self.state.print_state(i);
             }
 

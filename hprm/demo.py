@@ -23,6 +23,9 @@ def main():
     #ode = hprm.OdeMethod.Euler(1e-2)
 
     ats = hprm.AdaptiveTimeStep()
+    ats.absolute_error_tolerance = 0.1
+    ats.relative_error_tolerance = 0.1
+
     ode = hprm.OdeMethod.RK45(ats)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
@@ -31,14 +34,12 @@ def main():
     #           they change with different models. For not intended use case
     #           is to have a translation table with the different configs
     state_info.u1 = [0.0, 100.0]
-    #state_info.u3 = [0.0, 0.0, math.pi/2.0,
-    #                 0.0, 100.0, 0.0]
+    state_info.u3 = [0.0, 0.0, math.pi/2.0,
+                     0.0, 100.0, 0.0]
     
 
     # Run the simulation
     simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
-    quit()
-   
 
 
 
