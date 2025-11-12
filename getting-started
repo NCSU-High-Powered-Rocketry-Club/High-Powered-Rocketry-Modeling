@@ -1,0 +1,26 @@
+========== Setup ==========
+
+=== 1st time
+install rust:            https://rust-lang.org/tools/install/
+cd to whichever directory you want this guy in
+git clone https://github.com/NCSU-High-Powered-Rocketry-Club/High-Powered-Rocketry-Modeling.git
+cd High-Powered-Rocketry-Modeling/hprm
+uv tool install maturin                       # maturin can build rust crate as a python library
+python -m venv .env                           # Python virtual environment for this project
+
+=== every time
+source .env/bin/activate        # Gets you into the local python virtual environmant
+
+
+========== Use ==========
+
+=== To compile code
+(for fast developmentV)
+maturin develop                 # Builds and adds to python venv automatically
+    --OR--
+(for a persistent library)
+maturin build                   # Builds rust and creates wheel in your target folder
+pip install target/wheels/...   # Tells python about the package
+
+=== To run code
+python3 demoy.py                # sample script meant to showcase the library's functionality

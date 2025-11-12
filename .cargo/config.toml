@@ -1,0 +1,3 @@
+[alias]
+fix-all = "clippy --fix --allow-dirty --allow-staged"
+check-all = "clippy -- -D warnings"
