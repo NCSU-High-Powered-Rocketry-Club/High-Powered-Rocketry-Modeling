@@ -20,6 +20,9 @@ We use `uv` to handle the python side of this project. It's like pip but better,
 uv sync --all-extras
 
 # Build Rust extension
-uv run maturin develop
+uv run maturin develop --uv
+
+# Run the Demo
+uv run examples/demo.py
 ```
 
