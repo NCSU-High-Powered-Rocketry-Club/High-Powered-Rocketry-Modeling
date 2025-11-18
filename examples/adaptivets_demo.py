@@ -52,26 +52,16 @@ def main():
     ode = hprm.OdeMethod.RK45(ats)
     state_info.set_new_model(id.PS_1_DOF) # 3DoF
     state_info.u1 = [0.0, 100.0]
-    simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
+    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
     
 
-    # Extract data and put in np array
-    nrow = simdata.get_len()
-    ncol = state_info.nlog
-    data = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data[irow, icol]  = simdata.get_val(irow, icol)
-
-    nrow = simdata2.get_len()
-    ncol = state_info.nlog
-    data2 = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data2[irow, icol]  = simdata2.get_val(irow, icol)
-
-    plt.plot(data[:, 0], data[:, 1])
-    plt.plot(data2[:, 0], data2[:, 1])
-    plt.show()
+    print("Third Run: both tolerances are set at 0.01")
+    # Run the simulation
+    ats.absolute_error_tolerance = 0.01
+    ats.relative_error_tolerance = 0.01
+    ode = hprm.OdeMethod.RK45(ats)
+    state_info.set_new_model(id.PS_1_DOF) # 3DoF
+    state_info.u1 = [0.0, 100.0]
+    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
 
 main()
