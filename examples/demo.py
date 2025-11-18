@@ -23,9 +23,9 @@ def main():
     #ode = hprm.OdeMethod.Euler(1e-2)
 
     ats = hprm.AdaptiveTimeStep()
-    ats.absolute_error_tolerance = 0.1
-    ats.relative_error_tolerance = 0.1
 
+    ats.absolute_error_tolerance = 1.0
+    ats.relative_error_tolerance = 1.0
     ode = hprm.OdeMethod.RK45(ats)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
