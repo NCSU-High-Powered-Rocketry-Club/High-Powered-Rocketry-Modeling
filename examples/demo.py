@@ -1,71 +1,27 @@
-import math
-import numpy as np
-import matplotlib.pyplot as plt
-import hprm
-
+from hprm import Rocket, ModelType, IntegrationMethod
 
 def main():
-    print("Testing out the High Powered Rocket Modeling Program")
+    # Make a rocket with all its parameters/constants
+    # Filled in: Mass=10.0, Cd=0.3, A_ref=0.005, A_lift=0.05, Inertia=5.0, Margin=0.5, CLa=0.2
+    rocket = Rocket(10.0, 0.3, 0.005, 0.05, 5.0, 0.5, 0.2)
 
-    id = hprm.PyID()
+    initial_height = 0.0
+    initial_velocity = 100.0 # Starting at 0 won't fly without a motor model, assuming coast start
 
-    # Define the Test Vehicle
-    test_vehicle = hprm.Rocket(
-        10.0,   # mass kg
-        0.3,    # drag coefficient
-        0.005,  # cross-sectional refference area
-        0.05,   # lifting-surface refference area
-        5.0,    # Moment of Inertia (for a 3DoF rocket)
-        0.5,    # Dimensional stability margin (distance between cp and cg)
-        0.2     # Derivative of lift coefficient with alpha(angle of attack)
-    )
-
-    #ode = hprm.OdeMethod.Euler(1e-2)
-
-    ats = hprm.AdaptiveTimeStep()
-    ats.absolute_error_tolerance = 0.1
-    ats.relative_error_tolerance = 0.1
-
-    ode = hprm.OdeMethod.RK45(ats)
-
-    state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
-
-    # Note: It's hard to make the model imputs general / textual because
-    #           they change with different models. For not intended use case
-    #           is to have a translation table with the different configs
-    state_info.u1 = [0.0, 100.0]
-    state_info.u3 = [0.0, 0.0, math.pi/2.0,
-                     0.0, 100.0, 0.0]
+    # This would get you the entire flight data
+    sim_data = rocket.simulate_flight(initial_height, initial_velocity, ModelType.OneDOF, IntegrationMethod.RK45)
     
+    # Verification print
+    print(f"Full Sim Data Points: {sim_data.get_len()}")
 
-    # Run the simulation
-    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
+    current_height = 124.3
+    current_velocity = 182.1
 
-
-
-
-    # Run the simulation
-    state_info.set_new_model(id.PS_3_DOF) # 3DoF
-    simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
+    # This would just get you apogee
+    apogee = rocket.predict_apogee(current_height, current_velocity, ModelType.OneDOF, IntegrationMethod.RK45)
     
+    # Verification print
+    print(f"Predicted Apogee: {apogee}")
 
-    # Extract data and put in np array
-    nrow = simdata.get_len()
-    ncol = state_info.nlog
-    data = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data[irow, icol]  = simdata.get_val(irow, icol)
-
-    nrow = simdata2.get_len()
-    ncol = state_info.nlog
-    data2 = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data2[irow, icol]  = simdata2.get_val(irow, icol)
-
-    plt.plot(data[:, 0], data[:, 1])
-    plt.plot(data2[:, 0], data2[:, 2])
-    plt.show()
-
-main()
+if __name__ == "__main__":
+    main()
