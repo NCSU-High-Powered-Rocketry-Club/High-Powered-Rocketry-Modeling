@@ -1,0 +1,24 @@
+===========================
+========== Setup ==========
+===========================
+
+=== 1st time
+install rust:  https://rust-lang.org/tools/install/
+uv tool install maturin         # maturin can build rust crate as a python library
+python -m venv .env             # Python virtual environment for this project
+
+=== every time
+source .env/bin/activate        # Gets you into the local python virtual environmant
+
+
+=========================
+========== Use ==========
+=========================
+
+maturin build                   # Builds rust and creates wheel in your target folder
+pip install target/wheels/...   # Tells python about the package
+.OR.
+maturin develop                 # Builds and adds to python venv automatically
+
+python3 demoy.py            # Run that bad boy
+
