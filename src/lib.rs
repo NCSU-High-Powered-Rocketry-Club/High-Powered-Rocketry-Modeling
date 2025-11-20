@@ -49,7 +49,7 @@ impl PyID {
 }
 //
 #[pyfunction]
-fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> PyResult<SimulationData> {
+fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMethod) -> PyResult<f64> {
 
     // Initial Conditions
     let state = match py_state.ndof {
@@ -66,14 +66,14 @@ fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMetho
     const MAXITER: u64 = 1e5 as u64; //Maximum number of iterations before stopping calculation
     //Assemble Simulation Struct
     let mut case: Simulation = Simulation::new(state.clone(), ode_method.clone(), 1, MAXITER);
-    let mut data : SimulationData = SimulationData::new();
-    case.run(&mut data);
-    println!(
-        "Apogee {:6.2}\n",
-        case.apogee(),
-    );
+    //let mut data : SimulationData = SimulationData::new();
+    case.run();
+    //println!(
+    //    "Apogee {:6.2}\n",
+    //    case.apogee(),
+    //);
 
-    Ok(data)
+    Ok(case.apogee())
 }
 
 #[pymodule]

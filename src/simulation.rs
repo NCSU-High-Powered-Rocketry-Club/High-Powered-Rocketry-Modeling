@@ -28,29 +28,31 @@ impl Simulation {
         }
     }
 
-    pub(crate) fn run(&mut self, mut log: &mut SimulationData) -> () {
+    //pub(crate) fn run(&mut self, mut log: &mut SimulationData) -> () {
+    pub(crate) fn run(&mut self) -> () {
         //Executes the simulation
 
         for i in 0..self.maxiter {
-            log.add_row(self.state.get_logrow(), self.state.get_time());
+            //log.add_row(self.state.get_logrow(), self.state.get_time());
 
             //Check for Exit Condition
             if self.is_done() {
                 self.iter = i;
-                println!("\n==================== Calculation complete! ================================================================================");
-                self.state.print_state(i);
-                println!("===========================================================================================================================\n");
+                //println!("\n==================== Calculation complete! ================================================================================");
+                //self.state.print_state(i);
+                //println!("===========================================================================================================================\n");
                 break;
             }
             //Output simulation info to terminal
-            if i % 10 == 0 {
-                self.state.print_state(i);
-            }
+            //if i % 10 == 0 {
+            //    self.state.print_state(i);
+            //}
 
             //Advance the calculation
             self.ode.timestep(&mut self.state);
         }
     }
+    //
     pub(crate) fn apogee(&mut self) -> f64 {
         // Getter to obtain the apogee of aa flight after the simulation is complete
         if !self.is_done() {
