@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 
-use crate::math::vec_ops::VectorOperations;
 use crate::state::State;
 
 #[pyclass(dict, get_all, set_all)]

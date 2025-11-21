@@ -2,7 +2,6 @@
 pub(crate) mod ode;
 
 //Module file which contains functions to do operations on (math)vectors, represented as
-pub(crate) mod vec_ops;
 
 pub trait Sum<T> {
     // Sum of all elements of a vector
