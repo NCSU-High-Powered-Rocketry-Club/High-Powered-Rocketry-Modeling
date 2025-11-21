@@ -127,13 +127,7 @@ impl<const L: usize> Norm<f64> for MathVector<L> {
         self.sum()
     }
     fn norm_2(self: &Self) -> f64 {
-        let mut out = 0.0f64;
-        //
-        for i in 0..L {
-            out += self.data[i] * self.data[i];
-        }
-        //
-        out.sqrt()
+        self.norm()
     }
     fn norm_infinity(self: &Self) -> f64 {
         self.max_mag()

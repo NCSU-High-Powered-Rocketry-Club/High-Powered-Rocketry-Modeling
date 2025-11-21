@@ -13,8 +13,8 @@ def main():
     test_vehicle = hprm.Rocket(
         10.0,   # mass kg
         0.3,    # drag coefficient
-        0.005,  # cross-sectional refference area
-        0.05,   # lifting-surface refference area
+        0.005,  # cross-sectional reference area
+        0.05,   # lifting-surface reference area
         5.0,    # Moment of Inertia (for a 3DoF rocket)
         0.5,    # Dimensional stability margin (distance between cp and cg)
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
