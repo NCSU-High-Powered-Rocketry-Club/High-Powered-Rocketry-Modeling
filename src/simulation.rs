@@ -67,8 +67,7 @@ impl Simulation {
         match self.exit_condition {
             1 => self.condition_one(),
             _ => {
-                crate::throw_error!("Invalid Simulation End Criterion", self.exit_condition);
-                true
+                panic!("Invalid Simulation End Criterion: {}", self.exit_condition);
             }
         }
     }

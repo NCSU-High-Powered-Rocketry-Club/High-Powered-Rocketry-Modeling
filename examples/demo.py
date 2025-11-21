@@ -1,27 +1,44 @@
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 from hprm import Rocket, ModelType, IntegrationMethod
 
 def main():
-    # Make a rocket with all its parameters/constants
-    # Filled in: Mass=10.0, Cd=0.3, A_ref=0.005, A_lift=0.05, Inertia=5.0, Margin=0.5, CLa=0.2
-    rocket = Rocket(10.0, 0.3, 0.005, 0.05, 5.0, 0.5, 0.2)
+    print("Testing out the High Powered Rocket Modeling Program")
+
+    # Define the Test Vehicle
+    test_vehicle = Rocket(
+        10.0,   # mass kg
+        0.3,    # drag coefficient
+        0.005,  # cross-sectional refference area
+        0.05,   # lifting-surface refference area
+        5.0,    # Moment of Inertia (for a 3DoF rocket)
+        0.5,    # Dimensional stability margin (distance between cp and cg)
+        0.2     # Derivative of lift coefficient with alpha(angle of attack)
+    )
 
     initial_height = 0.0
-    initial_velocity = 100.0 # Starting at 0 won't fly without a motor model, assuming coast start
+    initial_velocity = 100.0
 
+    # Run the simulation
     # This would get you the entire flight data
-    sim_data = rocket.simulate_flight(initial_height, initial_velocity, ModelType.OneDOF, IntegrationMethod.RK45)
-    
-    # Verification print
-    print(f"Full Sim Data Points: {sim_data.get_len()}")
+    simdata = test_vehicle.simulate_flight(
+        initial_height, 
+        initial_velocity, 
+        ModelType.OneDOF, 
+        IntegrationMethod.RK45
+    )
 
-    current_height = 124.3
-    current_velocity = 182.1
+    # # Extract data and put in np array
+    # nrow = simdata.get_len()
+    # ncol = 3 # NLOG for 1DOF
+    # data = np.zeros((nrow, ncol), dtype=float)
+    # for icol in range(ncol):
+    #     for irow in range(nrow):
+    #         data[irow, icol]  = simdata.get_val(irow, icol)
 
-    # This would just get you apogee
-    apogee = rocket.predict_apogee(current_height, current_velocity, ModelType.OneDOF, IntegrationMethod.RK45)
-    
-    # Verification print
-    print(f"Predicted Apogee: {apogee}")
+    # plt.plot(data[:, 0], data[:, 1])
+    # plt.show()
 
 if __name__ == "__main__":
     main()

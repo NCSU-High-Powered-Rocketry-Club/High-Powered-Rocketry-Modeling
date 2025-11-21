@@ -1,7 +1,6 @@
 use crate::math::vec_ops::{MathVector, VectorOperations};
 use crate::math::Norm;
-use crate::physics_mod;
-use crate::rocket_mod::Rocket;
+use crate::{Rocket, physics_mod};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
