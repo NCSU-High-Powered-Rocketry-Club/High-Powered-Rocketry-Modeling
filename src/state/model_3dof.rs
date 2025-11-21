@@ -1,4 +1,3 @@
-use crate::math::vec_ops::{MathVector, VectorOperations};
 use crate::math::Norm;
 use crate::physics_mod;
 use crate::rocket_mod::Rocket;
