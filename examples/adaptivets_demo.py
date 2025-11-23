@@ -6,6 +6,7 @@ import hprm
 
 def main():
     print("Testing out the High Powered Rocket Modeling Program")
+    print("First Run: both tolerances are set at 1.0")
 
     id = hprm.PyID()
 
@@ -13,8 +14,8 @@ def main():
     test_vehicle = hprm.Rocket(
         10.0,   # mass kg
         0.3,    # drag coefficient
-        0.005,  # cross-sectional reference area
-        0.05,   # lifting-surface reference area
+        0.005,  # cross-sectional refference area
+        0.05,   # lifting-surface refference area
         5.0,    # Moment of Inertia (for a 3DoF rocket)
         0.5,    # Dimensional stability margin (distance between cp and cg)
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
@@ -23,11 +24,10 @@ def main():
     #ode = hprm.OdeMethod.Euler(1e-2)
 
     ats = hprm.AdaptiveTimeStep()
-    ats.absolute_error_tolerance = 1e-8
-    ats.relative_error_tolerance = 1e-8
-    
+
+    ats.absolute_error_tolerance = 1.0
+    ats.relative_error_tolerance = 1.0
     ode = hprm.OdeMethod.RK45(ats)
-    # ode = hprm.OdeMethod.RK3(0.1)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
 
@@ -35,7 +35,7 @@ def main():
     #           they change with different models. For not intended use case
     #           is to have a translation table with the different configs
     state_info.u1 = [0.0, 100.0]
-    state_info.u3 = [0.0, 0.0, 5.0 * math.pi / 180.0,
+    state_info.u3 = [0.0, 0.0, math.pi/2.0,
                      0.0, 100.0, 0.0]
     
 
@@ -45,28 +45,23 @@ def main():
 
 
 
+    print("Second Run: both tolerances are set at 0.1")
     # Run the simulation
-    state_info.set_new_model(id.PS_3_DOF) # 3DoF
-    simdata2 = hprm.sim_apogee(test_vehicle, state_info, ode)
+    ats.absolute_error_tolerance = 0.1
+    ats.relative_error_tolerance = 0.1
+    ode = hprm.OdeMethod.RK45(ats)
+    state_info.set_new_model(id.PS_1_DOF) # 3DoF
+    state_info.u1 = [0.0, 100.0]
+    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
     
 
-    # Extract data and put in np array
-    nrow = simdata.get_len()
-    ncol = state_info.nlog
-    data = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data[irow, icol]  = simdata.get_val(irow, icol)
-
-    nrow = simdata2.get_len()
-    ncol = state_info.nlog
-    data2 = np.zeros((nrow, ncol), dtype=float)
-    for icol in range(ncol):
-        for irow in range(nrow):
-            data2[irow, icol]  = simdata2.get_val(irow, icol)
-
-    plt.plot(data[:, 0], data[:, 1])
-    plt.plot(data2[:, 0], data2[:, 2])
-    plt.show()
+    print("Third Run: both tolerances are set at 0.01")
+    # Run the simulation
+    ats.absolute_error_tolerance = 0.01
+    ats.relative_error_tolerance = 0.01
+    ode = hprm.OdeMethod.RK45(ats)
+    state_info.set_new_model(id.PS_1_DOF) # 3DoF
+    state_info.u1 = [0.0, 100.0]
+    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
 
 main()
