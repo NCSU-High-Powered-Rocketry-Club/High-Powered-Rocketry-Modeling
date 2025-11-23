@@ -9,8 +9,10 @@ pub(crate) struct Dof1 {
     // This model is a simple 1D, (position,velocity) model
     // The assumtion is that the rocket is flying perfectly vertical and that there are no
     // considerations about rotation or anything which would not be 3D in nature.
-    pub(super) u: Vector2<f64>,    // (height, velocity)
-    pub(super) dudt: Vector2<f64>, // (d_height, d_velocity)
+    /// (height, velocity)
+    pub(super) u: Vector2<f64>,    
+    /// (d_height/dt, d_velocity/dt)
+    pub(super) dudt: Vector2<f64>,
     rocket: Rocket,
     is_current: bool,
     pub(super) time: f64,
@@ -18,7 +20,7 @@ pub(crate) struct Dof1 {
 
 impl Dof1 {
     pub(crate) const NLOG: usize = 3;
-    //Private Routines
+    //
     pub(crate) fn new(u: [f64; 2], rocket: Rocket) -> Self {
         Self {
             u: Vector2::new(u[0], u[1]),

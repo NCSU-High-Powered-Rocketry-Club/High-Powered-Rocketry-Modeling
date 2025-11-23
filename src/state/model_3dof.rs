@@ -10,8 +10,10 @@ pub(crate) struct Dof3 {
     // This model is a 3 Degree of Freedom model which has 2 spatial dimensions
     // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
     // within that 2D space.
-    pub(super) u: Vector6<f64>, //[f64; 6], // (x position, y position, angle(ccw), x velocity, y velocity, angular veloicty)
-    pub(super) dudt: Vector6<f64>, // (dx, dy, dang, dvx, dvy, dvang)
+    /// (x,y,angle,vx,vy,angular rate)
+    pub(super) u: Vector6<f64>,
+    /// (dxdt,dydt,d_angle_dt,dvxdt,dvydt,d_angular rate_dt)
+    pub(super) dudt: Vector6<f64>,
     pub(crate) rocket: Rocket,
     pub(crate) is_current: bool,
     pub(super) time: f64,
@@ -19,7 +21,7 @@ pub(crate) struct Dof3 {
 
 impl Dof3 {
     pub(crate) const NLOG: usize = 9;
-    //Private Routines
+    //
     pub(crate) fn new(u: [f64; 6], rocket: Rocket) -> Self {
         Self {
             u: Vector6::new(u[0], u[1], u[2], u[3], u[4], u[5]),
