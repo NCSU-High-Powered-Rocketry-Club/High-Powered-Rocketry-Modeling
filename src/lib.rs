@@ -53,8 +53,8 @@ fn sim_apogee(test_rocket: Rocket, py_state: &mut PyState, ode_method: &OdeMetho
 
     // Initial Conditions
     let state = match py_state.ndof {
-        1 => State::__1DOF(Dof1::new(py_state.u1, test_rocket.clone())),
-        3 => State::__3DOF(Dof3::new(py_state.u3, test_rocket.clone())),
+        1 => State::__1DOF(Dof1::new(py_state.u1_as_vector(), test_rocket.clone())),
+        3 => State::__3DOF(Dof3::new(py_state.u3_as_vector(), test_rocket.clone())),
         //        6 => State::__6DOF(Dof6::new(pystate.u6, test_rocket.clone())),
         _ => {
             return Err(PyErr::new::<PyTypeError, _>(

@@ -25,7 +25,7 @@ impl Dof3 {
     pub(crate) fn new(u: Vector6<f64>, rocket: Rocket) -> Self {
         Self {
             u,
-            dudt: Vector6::new(f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN),
+            dudt: Vector6::from_element(f64::NAN),
             rocket,
             is_current: false,
             time: 0.0,

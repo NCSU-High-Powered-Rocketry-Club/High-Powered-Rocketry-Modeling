@@ -5,10 +5,12 @@ pub(crate) mod state_vector;
 use crate::math::Norm;
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
-use pyo3::prelude::*;
-use state_vector::StateVector;
-use std::process::exit;
 use crate::simdata_mod::{SimulationData};
+use state_vector::StateVector;
+
+use std::process::exit;
+use pyo3::prelude::*;
+use nalgebra::{Vector2, Vector3, Vector6, SVector};
 
 #[pyclass(dict, get_all, set_all)]
 pub(crate) struct PyState {
@@ -16,7 +18,7 @@ pub(crate) struct PyState {
     pub nlog: usize,
     pub u1: [f64; 2],
     pub u3: [f64; 6],
-    pub u6: [f64; 12]
+    pub u6: [f64; 12],
 }
 #[pymethods]
 impl PyState {
@@ -36,9 +38,9 @@ impl PyState {
         Self {
             ndof,
             nlog,
-            u1: [0.0; 2],
-            u3: [0.0; 6],
-            u6: [0.0; 12],
+            u1: [0.0;2],
+            u3: [0.0;6],
+            u6: [0.0;12],
         }
     }
     pub(crate) fn set_new_model(&mut self, new_ndof: i32) -> () {
@@ -48,6 +50,15 @@ impl PyState {
             _ => {0_usize}
         };
         self.ndof = new_ndof;
+    }
+}
+
+impl PyState{
+    pub(crate) fn u1_as_vector(&self) -> Vector2<f64> {
+            Vector2::<f64>::from_vec(self.u1.to_vec())
+    }
+    pub(crate) fn u3_as_vector(&self) -> Vector6<f64> {
+            Vector6::<f64>::from_vec(self.u3.to_vec())
     }
 }
 
