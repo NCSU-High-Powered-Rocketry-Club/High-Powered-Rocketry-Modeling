@@ -22,9 +22,9 @@ pub(crate) struct Dof3 {
 impl Dof3 {
     pub(crate) const NLOG: usize = 9;
     //
-    pub(crate) fn new(u: [f64; 6], rocket: Rocket) -> Self {
+    pub(crate) fn new(u: Vector6<f64>, rocket: Rocket) -> Self {
         Self {
-            u: Vector6::new(u[0], u[1], u[2], u[3], u[4], u[5]),
+            u,
             dudt: Vector6::new(f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN),
             rocket,
             is_current: false,

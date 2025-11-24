@@ -1,8 +1,6 @@
 use crate::state::state_vector::StateVector;
 use pyo3::prelude::*;
 use numpy::{ToPyArray, PyArray1, PyArray2};
-use crate::state::model_1dof::Dof1;
-use crate::state::model_3dof::Dof3;
 //
 const L: usize = 18;
 #[pyclass(dict,get_all,set_all)]
