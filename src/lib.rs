@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 use std::f64::consts::PI;
 use std::io::BufRead;
 
-use crate::math::ode::{AdaptiveTimeStep, OdeMethod};
+use crate::math::ode::{AdaptiveTimeStep, FixedTimeStep, OdeMethod, TimeStepOptions};
 use crate::simdata_mod::{SimulationData};
 use crate::simulation::Simulation;
 use crate::state::{model_1dof::Dof1, model_3dof::Dof3, State};
@@ -64,22 +64,27 @@ impl Rocket {
         }
     }
     
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None))]
     fn simulate_flight(
         &self,
         initial_height: f64,
         initial_velocity: f64,
         model_type: ModelType,
         integration_method: IntegrationMethod,
+        timestep_config: Option<TimeStepOptions>,
     ) -> PyResult<SimulationData> {
-        let ode_method = match integration_method {
-            IntegrationMethod::Euler => OdeMethod::Euler(0.01),
-            IntegrationMethod::RK3 => OdeMethod::RK3(0.01),
-            IntegrationMethod::RK45 => {
-                let mut ats = AdaptiveTimeStep::new();
-                ats.absolute_error_tolerance = 1.0;
-                ats.relative_error_tolerance = 1.0;
-                OdeMethod::RK45(ats)
-            }
+        let ode_method = match (integration_method, timestep_config) {
+            (IntegrationMethod::Euler, Some(TimeStepOptions::Fixed(f))) => OdeMethod::Euler(f),
+            (IntegrationMethod::Euler, None) => OdeMethod::Euler(FixedTimeStep::new(0.01)),
+            (IntegrationMethod::Euler, Some(TimeStepOptions::Adaptive(_))) => return Err(PyTypeError::new_err("Euler requires FixedTimeStep")),
+
+            (IntegrationMethod::RK3, Some(TimeStepOptions::Fixed(f))) => OdeMethod::RK3(f),
+            (IntegrationMethod::RK3, None) => OdeMethod::RK3(FixedTimeStep::new(0.01)),
+            (IntegrationMethod::RK3, Some(TimeStepOptions::Adaptive(_))) => return Err(PyTypeError::new_err("RK3 requires FixedTimeStep")),
+
+            (IntegrationMethod::RK45, Some(TimeStepOptions::Adaptive(a))) => OdeMethod::RK45(a),
+            (IntegrationMethod::RK45, None) => OdeMethod::RK45(AdaptiveTimeStep::new()),
+            (IntegrationMethod::RK45, Some(TimeStepOptions::Fixed(_))) => return Err(PyTypeError::new_err("RK45 requires AdaptiveTimeStep")),
         };
 
         let state = match model_type {
@@ -109,5 +114,7 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<IntegrationMethod>()?;
     m.add_class::<Rocket>()?;
     m.add_class::<SimulationData>()?;
+    m.add_class::<crate::math::ode::FixedTimeStep>()?;
+    m.add_class::<crate::math::ode::AdaptiveTimeStep>()?;
     Ok(())
 }

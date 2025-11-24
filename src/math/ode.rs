@@ -3,13 +3,33 @@ use pyo3::prelude::*;
 use crate::math::vec_ops::VectorOperations;
 use crate::state::State;
 
+#[derive(FromPyObject)]
+pub enum TimeStepOptions {
+    Fixed(FixedTimeStep),
+    Adaptive(AdaptiveTimeStep),
+}
+
 #[pyclass(dict, get_all, set_all)]
 #[derive(Clone)]
 pub(crate) enum OdeMethod {
     //1st argument = timestep size
-    Euler(f64),
-    RK3(f64),
+    Euler(FixedTimeStep),
+    RK3(FixedTimeStep),
     RK45(AdaptiveTimeStep),
+}
+
+#[pyclass(dict, get_all, set_all)]
+#[derive(Clone)]
+pub struct FixedTimeStep {
+    pub dt: f64,
+}
+
+#[pymethods]
+impl FixedTimeStep {
+    #[new]
+    pub fn new(dt: f64) -> Self {
+        Self { dt }
+    }
 }
 
 #[pyclass(dict, get_all, set_all)]
@@ -58,8 +78,8 @@ impl OdeMethod {
         //Wrapper function. Used to execute an iteration, or timestep,
         // given a state/ODE, and a timestepping method
         match self {
-            OdeMethod::Euler(delta_time) => Self::explicit_euler(state, *delta_time),
-            OdeMethod::RK3(delta_time) => Self::runge_kutta_3(state, *delta_time),
+            OdeMethod::Euler(fixed) => Self::explicit_euler(state, fixed.dt),
+            OdeMethod::RK3(fixed) => Self::runge_kutta_3(state, fixed.dt),
             OdeMethod::RK45(adaptive_time_step) => Self::runge_kutta_45(state, adaptive_time_step),
             _ => {
                 println!("Invalid ODE Integration Method");
