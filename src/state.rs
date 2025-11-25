@@ -55,10 +55,10 @@ impl PyState {
 
 impl PyState{
     pub(crate) fn u1_as_vector(&self) -> Vector2<f64> {
-            Vector2::<f64>::from_vec(self.u1.to_vec())
+        Vector2::from_row_slice(&self.u1)
     }
     pub(crate) fn u3_as_vector(&self) -> Vector6<f64> {
-            Vector6::<f64>::from_vec(self.u3.to_vec())
+        Vector6::from_row_slice(&self.u3)
     }
 }
 
