@@ -1,6 +1,5 @@
 use crate::math::Norm;
-use crate::physics_mod;
-use crate::rocket_mod::Rocket;
+use crate::{Rocket, physics_mod};
 use std::f64::consts::PI;
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 
