@@ -1,4 +1,4 @@
-use crate::math::ode::OdeMethod;
+use crate::math::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
 
@@ -7,7 +7,7 @@ pub(crate) struct Simulation {
     // State space/model, and a timestepping method, and will carry out iterations until a stopping
     // criterea is reached, or the maximum number of iterations have been carried out.
     state: State,
-    ode: OdeMethod,
+    ode: OdeSolver,
     exit_condition: i32,
     pub(crate) iter: u64,
     maxiter: u64,
@@ -15,7 +15,7 @@ pub(crate) struct Simulation {
 impl Simulation {
     pub(crate) fn new(
         state: State,
-        ode: OdeMethod,
+        ode: OdeSolver,
         exit_condition: i32,
         maxiter: u64,
     ) -> Simulation {

@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from hprm import Rocket, ModelType, IntegrationMethod, AdaptiveTimeStep
+from hprm import Rocket, ModelType, OdeMethod, AdaptiveTimeStep
 
 def main():
     print("Testing out the High Powered Rocket Modeling Program")
@@ -30,7 +30,7 @@ def main():
     # )
     ats = AdaptiveTimeStep()
     ats.absolute_error_tolerance = 1.0
-    test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.OneDOF, IntegrationMethod.RK45, ats)
+    test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.OneDOF, OdeMethod.RK45, ats)
 
 
     # # Extract data and put in np array
