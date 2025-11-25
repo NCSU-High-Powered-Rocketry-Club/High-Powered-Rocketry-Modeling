@@ -166,7 +166,7 @@ impl StateVector {
             StateVector::__1DLOG(avec) => avec.as_slice(),
             StateVector::__3DLOG(avec) => avec.as_slice(),
             _ => {
-                panic!("Invalid Dot Product, mismatching State Vectors.")
+                panic!("Invalid conversion to array, mismatching or unsupported State Vector type.")
             }
         }
     }
