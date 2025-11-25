@@ -1,13 +1,14 @@
-use crate::math::vec_ops::{MathVector, VectorOperations};
+use nalgebra::{SVector, Vector2, Vector6, Vector3};
+
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StateVector {
     // Data type which represents an actual vector(rust::array) of the state space for a given model
-    __1DOF(MathVector<2>),
-    __1DLOG(MathVector<3>),
-    __3DOF(MathVector<6>),
-    __3DLOG(MathVector<9>),
+    __1DOF(Vector2<f64>),
+    __1DLOG(Vector3<f64>),
+    __3DOF(Vector6<f64>),
+    __3DLOG(SVector<f64, 9>),
 }
 
 impl Add for StateVector {
@@ -76,10 +77,10 @@ impl Mul for StateVector {
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => {
-                StateVector::__1DOF(avec * bvec)
+                StateVector::__1DOF(avec.component_mul(&bvec))
             }
             (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => {
-                StateVector::__3DOF(avec * bvec)
+                StateVector::__3DOF(avec.component_mul(&bvec))
             }
             _ => {
                 panic!("Invalid addition, mismatching State Vectors.")
@@ -91,8 +92,8 @@ impl Mul for StateVector {
 impl MulAssign for StateVector {
     fn mul_assign(&mut self, rhs: Self) {
         match (self, rhs) {
-            (StateVector::__1DOF(mut avec), StateVector::__1DOF(bvec)) => avec *= bvec,
-            (StateVector::__3DOF(mut avec), StateVector::__3DOF(bvec)) => avec *= bvec,
+            (StateVector::__1DOF(mut avec), StateVector::__1DOF(bvec)) => avec.component_mul_assign(&bvec),
+            (StateVector::__3DOF(mut avec), StateVector::__3DOF(bvec)) => avec.component_mul_assign(&bvec),
             _ => {
                 panic!("Invalid addition, mismatching State Vectors.")
             }
@@ -100,35 +101,35 @@ impl MulAssign for StateVector {
     }
 }
 
-impl VectorOperations for StateVector {
-    fn dot(&self, b: &Self) -> f64 {
+impl StateVector {
+    pub fn dot(&self, b: &Self) -> f64 {
         match (self, b) {
-            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => avec.dot(bvec),
-            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => avec.dot(bvec),
+            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => avec.dot(&bvec),
+            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => avec.dot(&bvec),
             _ => {
                 panic!("Invalid Dot Product, mismatching State Vectors.")
             }
         }
     }
-    fn scale(&self, k: f64) -> Self {
+    pub fn scale(&self, k: f64) -> Self {
         match self {
-            StateVector::__1DOF(avec) => StateVector::__1DOF(avec.scale(k)),
-            StateVector::__3DOF(avec) => StateVector::__3DOF(avec.scale(k)),
+            StateVector::__1DOF(avec) => StateVector::__1DOF(avec * k),
+            StateVector::__3DOF(avec) => StateVector::__3DOF(avec * k),
             _ => {
-                panic!("State Vectore Scale Impl")
+                panic!("State Vector Scale Impl")
             }
         }
     }
-    fn cross_2d(&self, in2: &MathVector<2>) -> f64 {
+    pub fn cross_2d(&self, in2: &Vector2<f64>) -> f64 {
         match self {
-            StateVector::__1DOF(avec) => avec.cross_2d(in2),
+            StateVector::__1DOF(avec) => avec.perp(in2),
             StateVector::__3DOF(avec) => panic!("Requires 2d math vector"),
             _ => {
-                panic!("cRequires 2d math vector")
+                panic!("Requires 2d math vector")
             }
         }
     }
-    fn cross_3d(&self, in2: &MathVector<3>) -> MathVector<3> {
+    pub fn cross_3d(&self, in2: &Vector3<f64>) -> Vector3<f64> {
         match self {
             StateVector::__1DOF(avec) => panic!("Requires 3d math vector"),
             StateVector::__3DOF(avec) => panic!("Requires 3d math vector"),
@@ -137,9 +138,18 @@ impl VectorOperations for StateVector {
             }
         }
     } 
-    fn rotate_2d(&self, angle: &f64) -> MathVector<2> {
+    pub fn rotate_2d(&self, angle: &f64) -> Vector2<f64> {
         match self {
-            StateVector::__1DOF(avec) => avec.rotate_2d(angle),
+            StateVector::__1DOF(avec) => {
+                //assert_eq!(L, 2);
+                let a = self.as_array();
+                let mut out = [0.0f64; 2];
+                //
+                out[0] = a[0] * angle.cos() - a[1] * angle.sin();
+                out[1] = a[0] * angle.sin() + a[1] * angle.cos();
+                //
+                Vector2::new(out[0], out[1])
+            },
             StateVector::__3DOF(avec) => panic!("Requires 2d math vector"),
             _ => {
                 panic!("Requires 2d math vector")
@@ -151,12 +161,12 @@ impl VectorOperations for StateVector {
 impl StateVector {
     pub(crate) fn as_array(&self) -> &[f64] {
         match self {
-            StateVector::__1DOF(avec) => avec.data.as_slice(),
-            StateVector::__3DOF(avec) => avec.data.as_slice(),
-            StateVector::__1DLOG(avec) => avec.data.as_slice(),
-            StateVector::__3DLOG(avec) => avec.data.as_slice(),
+            StateVector::__1DOF(avec) => avec.as_slice(),
+            StateVector::__3DOF(avec) => avec.as_slice(),
+            StateVector::__1DLOG(avec) => avec.as_slice(),
+            StateVector::__3DLOG(avec) => avec.as_slice(),
             _ => {
-                panic!("Invalid Dot Product, mismatching State Vectors.")
+                panic!("Invalid conversion to array, mismatching or unsupported State Vector type.")
             }
         }
     }

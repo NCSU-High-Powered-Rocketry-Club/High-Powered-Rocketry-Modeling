@@ -236,10 +236,9 @@ impl OdeSolver {
         du4 = du4 + k7.clone().scale(1.0 / 40.0);
 
         // ---------- Error estimate: || du4 - du5 || ----------
-        let error_vec = (du4.clone() - du5.clone()).scale(dt);
+        let error_vec = (du4.clone() - du5.clone());
 
         // Find the size of the error vector
-        //let error_norm: f64 = error_vec.as_array().iter().map(|x| x * x).sum::<f64>().sqrt();
         let error_norm: f64 = error_vec.dot(&error_vec).sqrt();
 
         // ---------- Update timestep adaptively ----------
