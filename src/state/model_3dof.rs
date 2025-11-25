@@ -2,7 +2,6 @@ use crate::math::Norm;
 use crate::physics_mod;
 use crate::rocket_mod::Rocket;
 use std::f64::consts::PI;
-extern crate nalgebra as na;
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 
 #[derive(Debug, Clone, Copy)]

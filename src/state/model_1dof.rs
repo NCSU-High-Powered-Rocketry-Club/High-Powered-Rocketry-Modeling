@@ -1,8 +1,7 @@
 //use crate::math::vec_ops::MathVector;
 use crate::physics_mod;
 use crate::rocket_mod::Rocket;
-extern crate nalgebra as na;
-use na::{Vector2, Vector3};
+use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof1 {
