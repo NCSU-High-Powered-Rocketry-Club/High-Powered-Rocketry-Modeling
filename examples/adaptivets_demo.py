@@ -6,7 +6,7 @@ import hprm
 
 def main():
     print("Testing out the High Powered Rocket Modeling Program")
-    print("First Run: both tolerances are set at 1.0")
+    print("First Run: both tolerances are set at E-8")
 
     id = hprm.PyID()
 
@@ -25,8 +25,8 @@ def main():
 
     ats = hprm.AdaptiveTimeStep()
 
-    ats.absolute_error_tolerance = 1.0
-    ats.relative_error_tolerance = 1.0
+    ats.absolute_error_tolerance = 1.0e-8
+    ats.relative_error_tolerance = 1.0e-8
     ode = hprm.OdeMethod.RK45(ats)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
@@ -45,20 +45,20 @@ def main():
 
 
 
-    print("Second Run: both tolerances are set at 0.1")
+    print("Second Run: both tolerances are set at E-9")
     # Run the simulation
-    ats.absolute_error_tolerance = 0.1
-    ats.relative_error_tolerance = 0.1
+    ats.absolute_error_tolerance = 1.0e-9
+    ats.relative_error_tolerance = 1.0e-9
     ode = hprm.OdeMethod.RK45(ats)
     state_info.set_new_model(id.PS_1_DOF) # 3DoF
     state_info.u1 = [0.0, 100.0]
     simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
     
 
-    print("Third Run: both tolerances are set at 0.01")
+    print("Third Run: both tolerances are set at E-10")
     # Run the simulation
-    ats.absolute_error_tolerance = 0.01
-    ats.relative_error_tolerance = 0.01
+    ats.absolute_error_tolerance = 1.0e-10
+    ats.relative_error_tolerance = 1.0e-10
     ode = hprm.OdeMethod.RK45(ats)
     state_info.set_new_model(id.PS_1_DOF) # 3DoF
     state_info.u1 = [0.0, 100.0]

@@ -13,8 +13,8 @@ def main():
     test_vehicle = hprm.Rocket(
         10.0,   # mass kg
         0.3,    # drag coefficient
-        0.005,  # cross-sectional refference area
-        0.05,   # lifting-surface refference area
+        0.005,  # cross-sectional reference area
+        0.05,   # lifting-surface reference area
         5.0,    # Moment of Inertia (for a 3DoF rocket)
         0.5,    # Dimensional stability margin (distance between cp and cg)
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
@@ -23,10 +23,11 @@ def main():
     #ode = hprm.OdeMethod.Euler(1e-2)
 
     ats = hprm.AdaptiveTimeStep()
-
-    ats.absolute_error_tolerance = 1.0
-    ats.relative_error_tolerance = 1.0
+    ats.absolute_error_tolerance = 1e-8
+    ats.relative_error_tolerance = 1e-8
+    
     ode = hprm.OdeMethod.RK45(ats)
+    # ode = hprm.OdeMethod.RK3(0.1)
 
     state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
 
@@ -34,7 +35,7 @@ def main():
     #           they change with different models. For not intended use case
     #           is to have a translation table with the different configs
     state_info.u1 = [0.0, 100.0]
-    state_info.u3 = [0.0, 0.0, math.pi/2.0,
+    state_info.u3 = [0.0, 0.0, 5.0 * math.pi / 180.0,
                      0.0, 100.0, 0.0]
     
 

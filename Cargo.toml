@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = "0.27.0"
 numpy = "0.27.0"
+nalgebra = "0.34.1"
 
 [lints.rust]
 unused_imports = "allow"
