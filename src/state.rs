@@ -2,6 +2,8 @@ pub(crate) mod model_1dof;
 pub(crate) mod model_3dof;
 pub(crate) mod state_vector;
 
+use nalgebra::{Vector2, Vector6};
+
 use crate::state::model_1dof::Dof1;
 use crate::state::model_3dof::Dof3;
 use crate::state::state_vector::StateVector;
@@ -30,20 +32,20 @@ impl State {
         match model_type {
             ModelType::OneDOF => {
                 // u1 = [y, vy]
-                let u1 = [initial_height, initial_velocity];
+                let u1 = Vector2::new(initial_height, initial_velocity);
                 State::__1DOF(Dof1::new(u1, rocket))
             }
             ModelType::ThreeDOF => {
                 // u3 = [x, y, theta, vx, vy, omega]
                 // Initial orientation = PI/2 (pointing up)
-                let u3 = [
+                let u3 = Vector6::new(
                     0.0,
                     initial_height,
                     PI / 2.0,
                     0.0,
                     initial_velocity,
                     0.0,
-                ];
+                );
                 State::__3DOF(Dof3::new(u3, rocket))
             }
         }

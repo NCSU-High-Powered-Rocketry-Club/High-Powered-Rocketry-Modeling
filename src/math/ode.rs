@@ -2,7 +2,6 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 use crate::OdeMethod;
-use crate::math::vec_ops::VectorOperations;
 use crate::state::State;
 
 #[derive(FromPyObject)]
@@ -105,8 +104,8 @@ impl OdeSolver {
     pub(crate) fn timestep(&mut self, state: &mut State) {
         match self {
             OdeSolver::Euler(fixed) => Self::explicit_euler(state, fixed.dt),
-            OdeSolver::RK3(fixed)   => Self::runge_kutta_3(state, fixed.dt),
-            OdeSolver::RK45(a)      => Self::runge_kutta_45(state, a),
+            OdeSolver::RK3(fixed) => Self::runge_kutta_3(state, fixed.dt),
+            OdeSolver::RK45(a) => Self::runge_kutta_45(state, a),
         }
     }
 
@@ -236,7 +235,7 @@ impl OdeSolver {
         du4 = du4 + k7.clone().scale(1.0 / 40.0);
 
         // ---------- Error estimate: || du4 - du5 || ----------
-        let error_vec = (du4.clone() - du5.clone());
+        let error_vec = du4.clone() - du5.clone();
 
         // Find the size of the error vector
         let error_norm: f64 = error_vec.dot(&error_vec).sqrt();
