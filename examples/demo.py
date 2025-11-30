@@ -19,6 +19,7 @@ def main():
 
     initial_height = 0.0
     initial_velocity = 100.0
+    initial_angle = math.pi - .1
 
     # Run the simulation
     # This would get you the entire flight data
@@ -30,8 +31,7 @@ def main():
     # )
     ats = AdaptiveTimeStep()
     ats.absolute_error_tolerance = 1.0
-    test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.OneDOF, OdeMethod.RK45, ats)
-
+    test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
 
     # # Extract data and put in np array
     # nrow = simdata.get_len()

@@ -78,7 +78,7 @@ impl Rocket {
         }
     }
     
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None))]
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None))]
     fn simulate_flight(
         &self,
         initial_height: f64,
@@ -86,6 +86,7 @@ impl Rocket {
         model_type: ModelType,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
+        initial_angle: Option<f64>,
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
@@ -94,6 +95,7 @@ impl Rocket {
             *self,
             initial_height,
             initial_velocity,
+            initial_angle,
         );
 
         const MAXITER: u64 = 1e5 as u64;

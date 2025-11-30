@@ -28,6 +28,7 @@ impl State {
         rocket: Rocket,
         initial_height: f64,
         initial_velocity: f64,
+        initial_angle: Option<f64>,
     ) -> Self {
         match model_type {
             ModelType::OneDOF => {
@@ -37,11 +38,11 @@ impl State {
             }
             ModelType::ThreeDOF => {
                 // u3 = [x, y, theta, vx, vy, omega]
-                // Initial orientation = PI/2 (pointing up)
+                // Initial orientation = PI/2 (pointing up) if not provided
                 let u3 = Vector6::new(
                     0.0,
                     initial_height,
-                    PI / 2.0,
+                    initial_angle.unwrap_or(PI / 2.0),
                     0.0,
                     initial_velocity,
                     0.0,
