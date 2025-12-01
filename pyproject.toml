@@ -28,9 +28,6 @@ examples = [
     "matplotlib",
 ]
 
-[tool.maturin]
-# Enables PyO3 extension-module build
-features = ["pyo3/extension-module"]
-
 [tool.uv]
-package = false
+cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}]
+config-settings = { build-args = "--profile=dev" }

@@ -16,13 +16,7 @@ We use `uv` to handle the python side of this project. It's like pip but better,
 
 ##### uv Workflow:
 ```bash
-# First time setup
-uv sync --all-extras --inexact
-
-# Build Rust extension
-uv run maturin develop --uv
 
 # Run the Demo
 uv run examples/demo.py
 ```
-
