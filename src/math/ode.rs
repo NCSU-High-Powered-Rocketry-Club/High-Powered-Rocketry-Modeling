@@ -1,14 +1,34 @@
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
+use crate::OdeMethod;
 use crate::state::State;
+
+#[derive(FromPyObject)]
+pub enum TimeStepOptions {
+    Fixed(FixedTimeStep),
+    Adaptive(AdaptiveTimeStep),
+}
+
+#[derive(Clone)]
+pub(crate) enum OdeSolver {
+    Euler(FixedTimeStep),
+    RK3(FixedTimeStep),
+    RK45(AdaptiveTimeStep),
+}
 
 #[pyclass(dict, get_all, set_all)]
 #[derive(Clone)]
-pub(crate) enum OdeMethod {
-    //1st argument = timestep size
-    Euler(f64),
-    RK3(f64),
-    RK45(AdaptiveTimeStep),
+pub struct FixedTimeStep {
+    pub dt: f64,
+}
+
+#[pymethods]
+impl FixedTimeStep {
+    #[new]
+    pub fn new(dt: f64) -> Self {
+        Self { dt }
+    }
 }
 
 #[pyclass(dict, get_all, set_all)]
@@ -52,18 +72,40 @@ impl AdaptiveTimeStep {
     }
 }
 
-impl OdeMethod {
+impl OdeSolver {
+    pub fn from_method(
+        method: OdeMethod,
+        timestep_config: Option<TimeStepOptions>,
+    ) -> PyResult<Self> {
+        match (method, timestep_config) {
+            (OdeMethod::Euler, Some(TimeStepOptions::Fixed(f))) =>
+                Ok(OdeSolver::Euler(f)),
+            (OdeMethod::Euler, None) =>
+                Ok(OdeSolver::Euler(FixedTimeStep::new(0.01))),
+            (OdeMethod::Euler, Some(TimeStepOptions::Adaptive(_))) =>
+                Err(PyTypeError::new_err("Euler requires FixedTimeStep")),
+
+            (OdeMethod::RK3, Some(TimeStepOptions::Fixed(f))) =>
+                Ok(OdeSolver::RK3(f)),
+            (OdeMethod::RK3, None) =>
+                Ok(OdeSolver::RK3(FixedTimeStep::new(0.01))),
+            (OdeMethod::RK3, Some(TimeStepOptions::Adaptive(_))) =>
+                Err(PyTypeError::new_err("RK3 requires FixedTimeStep")),
+
+            (OdeMethod::RK45, Some(TimeStepOptions::Adaptive(a))) =>
+                Ok(OdeSolver::RK45(a)),
+            (OdeMethod::RK45, None) =>
+                Ok(OdeSolver::RK45(AdaptiveTimeStep::new())),
+            (OdeMethod::RK45, Some(TimeStepOptions::Fixed(_))) =>
+                Err(PyTypeError::new_err("RK45 requires AdaptiveTimeStep")),
+        }
+    }
+
     pub(crate) fn timestep(&mut self, state: &mut State) {
-        //Wrapper function. Used to execute an iteration, or timestep,
-        // given a state/ODE, and a timestepping method
         match self {
-            OdeMethod::Euler(delta_time) => Self::explicit_euler(state, *delta_time),
-            OdeMethod::RK3(delta_time) => Self::runge_kutta_3(state, *delta_time),
-            OdeMethod::RK45(adaptive_time_step) => Self::runge_kutta_45(state, adaptive_time_step),
-            _ => {
-                println!("Invalid ODE Integration Method");
-                std::process::exit(1);
-            }
+            OdeSolver::Euler(fixed) => Self::explicit_euler(state, fixed.dt),
+            OdeSolver::RK3(fixed) => Self::runge_kutta_3(state, fixed.dt),
+            OdeSolver::RK45(a) => Self::runge_kutta_45(state, a),
         }
     }
 
@@ -193,7 +235,7 @@ impl OdeMethod {
         du4 = du4 + k7.clone().scale(1.0 / 40.0);
 
         // ---------- Error estimate: || du4 - du5 || ----------
-        let error_vec = (du4.clone() - du5.clone());
+        let error_vec = du4.clone() - du5.clone();
 
         // Find the size of the error vector
         let error_norm: f64 = error_vec.dot(&error_vec).sqrt();

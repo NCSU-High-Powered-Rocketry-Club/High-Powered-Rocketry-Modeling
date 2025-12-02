@@ -1,6 +1,5 @@
 //use crate::math::vec_ops::MathVector;
-use crate::physics_mod;
-use crate::rocket_mod::Rocket;
+use crate::{Rocket, physics_mod};
 use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
