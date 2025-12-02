@@ -104,6 +104,41 @@ impl Rocket {
         simulation.run(&mut log);
         Ok(log)
     }
+
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None))]
+    fn predict_apogee(
+        &self,
+        initial_height: f64,
+        initial_velocity: f64,
+        model_type: ModelType,
+        integration_method: OdeMethod,
+        timestep_config: Option<TimeStepOptions>,
+        initial_angle: Option<f64>,
+    ) -> PyResult<f64> {
+        let log = self.simulate_flight(
+            initial_height,
+            initial_velocity,
+            model_type,
+            integration_method,
+            timestep_config,
+            initial_angle,
+        )?;
+
+        // Gets the height column based on model type
+        let height_col = match model_type {
+            ModelType::OneDOF => 1,
+            ModelType::ThreeDOF => 2,
+        };
+
+        let mut max_height = initial_height;
+        for i in 0..log.len {
+            let h = log.get_val(i as usize, height_col);
+            if h > max_height {
+                max_height = h;
+            }
+        }
+        Ok(max_height)
+    }
 }
 
 #[pymodule]
