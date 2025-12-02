@@ -4,6 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "hprm"
+description = "High Powered Rocketry Modeling library"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.8"

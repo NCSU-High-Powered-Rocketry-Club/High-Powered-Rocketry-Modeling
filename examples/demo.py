@@ -31,7 +31,7 @@ def main():
     # )
     ats = AdaptiveTimeStep()
     ats.absolute_error_tolerance = 1.0
-    test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    print(f"Apogee: {test_vehicle.predict_apogee(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)}")
 
     # # Extract data and put in np array
     # nrow = simdata.get_len()

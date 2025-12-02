@@ -20,3 +20,15 @@ We use `uv` to handle the python side of this project. It's like pip but better,
 # Run the Demo
 uv run examples/demo.py
 ```
+
+## Publishing
+Releases are automated via GitHub Actions. To publish a new version:
+1. Update version in `Cargo.toml`.
+2. Merge changes to `main`.
+3. Push a tag (e.g., `v0.1.0`).
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
