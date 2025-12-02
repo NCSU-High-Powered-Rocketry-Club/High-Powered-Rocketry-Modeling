@@ -1,7 +1,7 @@
 /target
 /.env
-/.github
 /.idea
 .venv/
-.vscode
+.vscode/
 hprm/
+dist/
