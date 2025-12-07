@@ -5,118 +5,64 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: read
-
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  # --------------------------
+  # Build Wheels (Linux, Mac, Windows)
+  # --------------------------
+  build-wheels:
+    name: ${{ matrix.os }} ${{ matrix.target }} (Py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        target: [x86_64, aarch64, armv7]
+        include:
+          # --- Linux (Standard + Free-threaded) ---
+          - os: ubuntu-latest
+            target: x86_64
+            python-version: '3.14'
+          - os: ubuntu-latest
+            target: x86_64
+            python-version: '3.14t' # This triggers the free-threaded build
+          
+          # --- Windows (Standard + Free-threaded) ---
+          - os: windows-latest
+            target: x64
+            python-version: '3.14'
+          - os: windows-latest
+            target: x64
+            python-version: '3.14t'
+
+          # --- macOS (Standard + Free-threaded) ---
+          - os: macos-latest
+            target: x86_64
+            python-version: '3.14'
+          - os: macos-latest
+            target: aarch64 
+            python-version: '3.14t'
 
     steps:
       - uses: actions/checkout@v4
 
-      # Needed so Docker can emulate non-x86 architectures
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
+      # 1. Setup Python
+      # On Linux, this step is mostly for the 'runner', but maturin uses its own docker 
+      # images. However, passing '3.14t' to setup-python works on Win/Mac.
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Build Linux wheels
+      # 2. Build
+      - name: Build Wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          command: build
-          args: --release --out dist
+          # We specify the python interpreter to ensure we get the 't' version when requested
+          args: --release --out dist --interpreter python${{ matrix.python-version }}
           sccache: 'true'
           manylinux: auto
 
-      - name: Upload Linux wheels
+      - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.target }}
+          name: wheels-${{ matrix.os }}-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
-
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.14'
-
-      - name: Build Windows wheels
-        uses: PyO3/maturin-action@v1
-        env:
-          PYO3_PYTHON: python
-        with:
-          command: build
-          args: --release --out dist
-          sccache: 'true'
-
-      - name: Upload Windows wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-windows
-          path: dist
-
-  macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.14'
-
-      - name: Build macOS wheels
-        uses: PyO3/maturin-action@v1
-        env:
-          PYO3_PYTHON: python
-        with:
-          command: build
-          args: --release --out dist
-          sccache: 'true'
-
-      - name: Upload macOS wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-macos
-          path: dist
-
-  sdist:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build sdist
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
-
-      - name: Upload sdist
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-sdist
-          path: dist
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, windows, macos, sdist]
-    environment: release
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
-        with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*

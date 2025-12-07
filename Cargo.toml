@@ -3,13 +3,14 @@ name = "hprm"
 version = "0.1.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "hprm"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.27.2", features = ["extension-module", "abi3-py314"]}
+pyo3 = { version = "0.27.2", features = ["extension-module", "gil-refs"] } 
+
+# Ensure numpy is compatible with the pyo3 version you are using
 numpy = "0.27.0"
 nalgebra = "0.34.1"
 
