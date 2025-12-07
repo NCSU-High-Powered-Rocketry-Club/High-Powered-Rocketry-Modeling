@@ -7,12 +7,15 @@ name = "hprm"
 description = "High Powered Rocketry Modeling library"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.8"
+
+# Require Python 3.14 and newer
+requires-python = ">=3.14"
 
 classifiers = [
     "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
 # maturin will pull version dynamically from Cargo.toml if needed
@@ -30,5 +33,9 @@ examples = [
 ]
 
 [tool.uv]
-cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "**/*.rs" },
+]
 config-settings = { build-args = "--profile=dev" }
