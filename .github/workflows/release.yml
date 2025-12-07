@@ -11,18 +11,29 @@ permissions:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64, armv7]
+
     steps:
       - uses: actions/checkout@v4
+
+      # Needed so Docker can emulate non-x86 architectures
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
       - uses: PyO3/maturin-action@v1
         with:
+          target: ${{ matrix.target }}
           command: build
           args: --release --out dist
           sccache: 'true'
           manylinux: auto
+
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux
+          name: wheels-linux-${{ matrix.target }}
           path: dist
 
   windows:
@@ -80,6 +91,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/download-artifact@v4
+
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         with:
