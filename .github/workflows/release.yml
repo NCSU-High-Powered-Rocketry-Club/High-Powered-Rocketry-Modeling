@@ -22,7 +22,8 @@ jobs:
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: PyO3/maturin-action@v1
+      - name: Build Linux wheels
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
           command: build
@@ -30,7 +31,7 @@ jobs:
           sccache: 'true'
           manylinux: auto
 
-      - name: Upload wheels
+      - name: Upload Linux wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.target }}
@@ -40,12 +41,22 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: PyO3/maturin-action@v1
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Build Windows wheels
+        uses: PyO3/maturin-action@v1
+        env:
+          PYO3_PYTHON: python
         with:
           command: build
           args: --release --out dist
           sccache: 'true'
-      - name: Upload wheels
+
+      - name: Upload Windows wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-windows
@@ -55,12 +66,22 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: PyO3/maturin-action@v1
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Build macOS wheels
+        uses: PyO3/maturin-action@v1
+        env:
+          PYO3_PYTHON: python
         with:
           command: build
           args: --release --out dist
           sccache: 'true'
-      - name: Upload wheels
+
+      - name: Upload macOS wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-macos
@@ -70,11 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: --out dist
+
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
