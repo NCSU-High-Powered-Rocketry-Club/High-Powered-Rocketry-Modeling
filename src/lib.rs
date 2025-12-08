@@ -141,7 +141,7 @@ impl Rocket {
     }
 }
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<ModelType>()?;
     m.add_class::<OdeMethod>()?;
