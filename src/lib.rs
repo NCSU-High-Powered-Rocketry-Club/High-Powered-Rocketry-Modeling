@@ -78,7 +78,7 @@ impl Rocket {
         }
     }
     
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None))]
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
     fn simulate_flight(
         &self,
         initial_height: f64,
@@ -87,6 +87,7 @@ impl Rocket {
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
         initial_angle: Option<f64>,
+        print_output: bool,
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
@@ -101,11 +102,11 @@ impl Rocket {
         const MAXITER: u64 = 1e5 as u64;
         let mut simulation = Simulation::new(state, ode_solver, 1, MAXITER);
         let mut log = SimulationData::new();
-        simulation.run(&mut log);
+        simulation.run(&mut log, print_output);
         Ok(log)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None))]
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
     fn predict_apogee(
         &self,
         initial_height: f64,
@@ -114,6 +115,7 @@ impl Rocket {
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
         initial_angle: Option<f64>,
+        print_output: bool
     ) -> PyResult<f64> {
         let log = self.simulate_flight(
             initial_height,
@@ -122,6 +124,7 @@ impl Rocket {
             integration_method,
             timestep_config,
             initial_angle,
+            print_output,
         )?;
 
         // Gets the height column based on model type
