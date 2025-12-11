@@ -46,6 +46,7 @@ pub struct AdaptiveTimeStep {
     pub relative_error_tolerance: f64,
 }
 
+// TODO: make this so you have to pass in parameters
 #[pymethods]
 impl AdaptiveTimeStep {
     #[new]
