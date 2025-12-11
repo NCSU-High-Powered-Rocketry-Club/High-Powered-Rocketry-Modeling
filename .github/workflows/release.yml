@@ -17,37 +17,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # --- Linux x86_64 (host) ---
+          # --- Linux ---
           - os: ubuntu-latest
             target: x86_64
             python-version: '3.14'
           - os: ubuntu-latest
             target: x86_64
-            python-version: '3.14t'   # free-threaded
+            python-version: '3.14t' # Free-threaded
 
-          # --- Linux aarch64 (64-bit Pi / ARM servers) ---
-          - os: ubuntu-latest
-            target: aarch64
-            python-version: '3.14'
-          - os: ubuntu-latest
-            target: aarch64
-            python-version: '3.14t'   # free-threaded
-
-          # --- Linux armv7 (32-bit Pi OS) ---
-          - os: ubuntu-latest
-            target: armv7
-            python-version: '3.14'
-          - os: ubuntu-latest
-            target: armv7
-            python-version: '3.14t'   # free-threaded
-
-          # --- Windows (x64) ---
+          # --- Windows ---
           - os: windows-latest
             target: x64
             python-version: '3.14'
           - os: windows-latest
             target: x64
-            python-version: '3.14t'   # free-threaded
+            python-version: '3.14t' # Free-threaded
 
           # --- macOS ---
           - os: macos-latest
@@ -55,45 +39,24 @@ jobs:
             python-version: '3.14'
           - os: macos-latest
             target: aarch64
-            python-version: '3.14t'   # free-threaded
+            python-version: '3.14t' # Free-threaded
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-      # '3.14' or '3.14t' – t = free-threaded
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
-      # QEMU only needed for Linux cross-compile to non-x86 targets
-      - name: Setup QEMU
-        if: runner.os == 'Linux' && matrix.target != 'x86_64'
-        uses: docker/setup-qemu-action@v3
-
-      # Build wheels on Linux (cross-compile for x86_64/aarch64/armv7)
-      - name: Build Wheels (Linux)
-        if: runner.os == 'Linux'
+      - name: Build Wheels
         uses: PyO3/maturin-action@v1
-        env:
-          PYO3_PYTHON: python
         with:
-          command: build
           target: ${{ matrix.target }}
-          args: --release --out dist
+          # Force the builder to use the specific interpreter version (e.g. 3.14t)
+          args: --release --out dist --interpreter python${{ matrix.python-version }}
           sccache: 'true'
           manylinux: auto
-
-      # Build wheels on Windows / macOS (native arch)
-      - name: Build Wheels (non-Linux)
-        if: runner.os != 'Linux'
-        uses: PyO3/maturin-action@v1
-        env:
-          PYO3_PYTHON: python
-        with:
-          command: build
-          args: --release --out dist
-          sccache: 'true'
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -122,7 +85,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build_wheels, sdist]
     environment: release
-
+    
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -134,5 +97,5 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: upload
-          # --skip-existing prevents failure if retrying a partial upload
+          # --skip-existing prevents failure if you are retrying a partial upload
           args: --non-interactive --skip-existing dist/*

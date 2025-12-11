@@ -21,10 +21,11 @@ classifiers = [
 # maturin will pull version dynamically from Cargo.toml if needed
 dynamic = ["version"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "maturin>=1.8,<2.0",
     "pytest",
+    "ziglang"
 ]
 
 examples = [
