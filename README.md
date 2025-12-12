@@ -20,7 +20,7 @@ We use `uv` to handle the python side of this project. It's like pip but better,
 # Run the Demo
 uv run examples/demo.py
 ```
-
+<!-- 
 ## Publishing
 Releases are automated via GitHub Actions. To publish a new version:
 1. Update version in `Cargo.toml`.
@@ -29,5 +29,34 @@ Releases are automated via GitHub Actions. To publish a new version:
 
 ```bash
 git tag v0.1.0
-git push origin v0.1.0
+git push origin v0.1.0 -->
 ```
+
+# Building and Publishing Manually
+
+## Prerequisites
+Ensure you have `uv` installed. The project is configured to use `maturin` and `zig` (for cross-compilation) via `uv`.
+
+## Building Wheels
+To build wheels for Windows (x64), Linux (x86_64), and Linux (aarch64) for supported Python versions:
+
+```powershell
+.\build_wheels.ps1
+```
+
+This script will:
+1. Clean the `target/wheels` directory.
+2. Build Windows wheels.
+3. Cross-compile Linux wheels using Zig.
+
+## Publishing to PyPI
+You will need a PyPI API token.
+
+1. **Check Version**: Ensure `Cargo.toml` version is updated.
+2. **Upload**:
+   ```bash
+   uv run maturin upload target/wheels/*
+   ```
+   - **Username**: `__token__`
+   - **Password**: Your PyPI API token (starts with `pypi-`).
+
