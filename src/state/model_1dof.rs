@@ -17,8 +17,6 @@ pub(crate) struct Dof1 {
 }
 
 impl Dof1 {
-    pub(crate) const NLOG: usize = 3;
-    //
     pub(crate) fn new(u: Vector2<f64>, rocket: Rocket) -> Self {
         Self {
             u,
@@ -28,21 +26,24 @@ impl Dof1 {
             time: 0.0,
         }
     }
+
     pub(super) fn get_velocity(&self) -> f64 {
         self.u[1]
     }
+
     pub(super) fn get_height(&self) -> f64 {
         self.u[0]
     }
+
     pub(super) fn get_derivs_1dof(&mut self) -> Vector2<f64> {
-        if !self.is_current {
-            self.update_state_derivatives();
-        }
+        self.update_state_derivatives();
         self.dudt
     }
+
     pub(super) fn get_time_1dof(&self) -> f64 {
         self.time
     }
+
     pub(super) fn print_state_1dof(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
@@ -53,15 +54,23 @@ impl Dof1 {
             self.dudt[1]
         );
     }
+
     pub(super) fn get_logrow(&self) -> Vector3<f64> {
         Vector3::new(self.u[0], self.u[1], self.dudt[1])
     }
+
     pub(super) fn update_state(&mut self, du: Vector2<f64>, dt: f64) {
         self.u += du;
         self.time += dt;
         self.is_current = false;
     }
+
     pub(super) fn update_state_derivatives(&mut self) {
+        // If already current, no need to recompute
+        if self.is_current {
+            return;
+        }
+
         let force_drag =
             physics_mod::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area_drag);
         let g = physics_mod::gravity();
@@ -80,33 +89,10 @@ impl Dof1 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{Vector2, Vector3};
+    use approx::assert_abs_diff_eq;
+    use nalgebra::Vector2;
 
-    // Small helper for floating-point comparisons.
-    fn assert_approx(a: f64, b: f64, tol: f64) {
-        let diff = (a - b).abs();
-        assert!(
-            diff <= tol,
-            "Expected {a} ≈ {b} (tol={tol}), but |a-b|={diff}"
-        );
-    }
-
-    fn assert_vec2_approx(a: Vector2<f64>, b: Vector2<f64>, tol: f64) {
-        assert_approx(a[0], b[0], tol);
-        assert_approx(a[1], b[1], tol);
-    }
-
-    fn assert_vec3_approx(a: Vector3<f64>, b: Vector3<f64>, tol: f64) {
-        assert_approx(a[0], b[0], tol);
-        assert_approx(a[1], b[1], tol);
-        assert_approx(a[2], b[2], tol);
-    }
-
-    // Make a rocket with known parameters.
-    //
-    // NOTE:
-    // If Rocket::default() doesn't exist, replace this with whatever constructor
-    // your crate provides (or a full struct literal with all required fields).
+    /// Makes a rocket with known parameters for 1DOF tests.
     fn make_rocket(mass: f64, cd: f64, area_drag: f64) -> Rocket {
         Rocket {
             mass,
@@ -121,7 +107,7 @@ mod tests {
 
     #[test]
     fn new_sets_expected_initial_state() {
-        let u0 = Vector2::new(123.0, -4.5);
+        let u0 = Vector2::new(123.0, 4.5);
         let rocket = make_rocket(10.0, 0.6, 0.01);
 
         let dof = Dof1::new(u0, rocket);
@@ -154,7 +140,7 @@ mod tests {
 
     #[test]
     fn update_state_advances_u_and_time_and_invalidates_derivs() {
-        let u0 = Vector2::new(1.0, 2.0);
+        let u0 = Vector2::new(1.0, 1.0);
         let rocket = make_rocket(5.0, 0.5, 0.02);
         let mut dof = Dof1::new(u0, rocket);
 
@@ -162,12 +148,12 @@ mod tests {
         let _ = dof.get_derivs_1dof();
         assert!(dof.is_current);
 
-        let du = Vector2::new(0.25, -0.5);
+        let du = Vector2::new(0.25, 0.5);
         let dt = 0.1;
         dof.update_state(du, dt);
 
-        assert_vec2_approx(dof.u, Vector2::new(1.25, 1.5), 0.0);
-        assert_approx(dof.time, 0.1, 0.0);
+        assert_abs_diff_eq!(dof.u, Vector2::new(1.25, 1.5), epsilon = 0.0);
+        assert_abs_diff_eq!(dof.time, 0.1, epsilon = 0.0);
 
         // should invalidate cached derivatives
         assert!(!dof.is_current);
@@ -187,14 +173,14 @@ mod tests {
         dof.update_state_derivatives();
 
         // dhdt = v
-        assert_approx(dof.dudt[0], v, 1e-12);
+        assert_abs_diff_eq!(dof.dudt[0], v, epsilon = 1e-12);
 
-        // dvdt = drag/m + g (using the same functions as production code)
+        // dvdt = drag/m + g 
         let drag = physics_mod::calc_drag_force(v, cd, area);
         let g = physics_mod::gravity();
         let expected_dvdt = drag / mass + g;
 
-        assert_approx(dof.dudt[1], expected_dvdt, 1e-12);
+        assert_abs_diff_eq!(dof.dudt[1], expected_dvdt, epsilon = 1e-12);
         assert!(dof.is_current);
     }
 
@@ -222,7 +208,7 @@ mod tests {
 
         // Second call should return the same values (cached)
         let d2 = dof.get_derivs_1dof();
-        assert_vec2_approx(d1, d2, 0.0);
+        assert_abs_diff_eq!(d1, d2, epsilon = 0.0);
     }
 
     #[test]
@@ -261,8 +247,8 @@ mod tests {
         dof.update_state_derivatives();
 
         let row = dof.get_logrow();
-        assert_approx(row[0], h, 1e-12);
-        assert_approx(row[1], v, 1e-12);
-        assert_approx(row[2], dof.dudt[1], 1e-12);
+        assert_abs_diff_eq!(row[0], h, epsilon = 1e-12);
+        assert_abs_diff_eq!(row[1], v, epsilon = 1e-12);
+        assert_abs_diff_eq!(row[2], dof.dudt[1], epsilon = 1e-12);
     }
 }
