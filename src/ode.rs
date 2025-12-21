@@ -1,8 +1,8 @@
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
-use crate::OdeMethod;
 use crate::state::State;
+use crate::OdeMethod;
 
 #[derive(FromPyObject)]
 pub enum TimeStepOptions {
@@ -46,12 +46,28 @@ pub struct AdaptiveTimeStep {
     pub relative_error_tolerance: f64,
 }
 
-// TODO: make this so you have to pass in parameters
 #[pymethods]
 impl AdaptiveTimeStep {
     #[new]
-    pub(crate) fn new() -> Self {
-        Self{
+    pub fn new(
+        dt: f64,
+        dt_min: f64,
+        dt_max: f64,
+        absolute_error_tolerance: f64,
+        relative_error_tolerance: f64,
+    ) -> Self {
+        Self {
+            dt,
+            dt_min,
+            dt_max,
+            absolute_error_tolerance,
+            relative_error_tolerance,
+        }
+    }
+
+    #[staticmethod]
+    pub fn default() -> Self {
+        Self {
             dt: 0.01,
             dt_min: 1e-6,
             dt_max: 10.0,
@@ -59,17 +75,20 @@ impl AdaptiveTimeStep {
             relative_error_tolerance: 1.0e-2,
         }
     }
+
     pub fn next_dt(&self, error_norm: f64) -> f64 {
         let dt = self.dt;
- 
+
         // Account for edge case where error norm is extremely small or 0
         if error_norm <= 1e-30 {
             return (dt * 2.0).clamp(self.dt_min, self.dt_max);
         }
- 
-        (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * 0.5 / error_norm).powf(0.25))
-            .clamp(0.5, 2.0))
-            .clamp(self.dt_min, self.dt_max)
+
+        (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * 0.5
+            / error_norm)
+            .powf(0.25))
+        .clamp(0.5, 2.0))
+        .clamp(self.dt_min, self.dt_max)
     }
 }
 
@@ -79,26 +98,23 @@ impl OdeSolver {
         timestep_config: Option<TimeStepOptions>,
     ) -> PyResult<Self> {
         match (method, timestep_config) {
-            (OdeMethod::Euler, Some(TimeStepOptions::Fixed(f))) =>
-                Ok(OdeSolver::Euler(f)),
-            (OdeMethod::Euler, None) =>
-                Ok(OdeSolver::Euler(FixedTimeStep::new(0.01))),
-            (OdeMethod::Euler, Some(TimeStepOptions::Adaptive(_))) =>
-                Err(PyTypeError::new_err("Euler requires FixedTimeStep")),
+            (OdeMethod::Euler, Some(TimeStepOptions::Fixed(f))) => Ok(OdeSolver::Euler(f)),
+            (OdeMethod::Euler, None) => Ok(OdeSolver::Euler(FixedTimeStep::new(0.01))),
+            (OdeMethod::Euler, Some(TimeStepOptions::Adaptive(_))) => {
+                Err(PyTypeError::new_err("Euler requires FixedTimeStep"))
+            }
 
-            (OdeMethod::RK3, Some(TimeStepOptions::Fixed(f))) =>
-                Ok(OdeSolver::RK3(f)),
-            (OdeMethod::RK3, None) =>
-                Ok(OdeSolver::RK3(FixedTimeStep::new(0.01))),
-            (OdeMethod::RK3, Some(TimeStepOptions::Adaptive(_))) =>
-                Err(PyTypeError::new_err("RK3 requires FixedTimeStep")),
+            (OdeMethod::RK3, Some(TimeStepOptions::Fixed(f))) => Ok(OdeSolver::RK3(f)),
+            (OdeMethod::RK3, None) => Ok(OdeSolver::RK3(FixedTimeStep::new(0.01))),
+            (OdeMethod::RK3, Some(TimeStepOptions::Adaptive(_))) => {
+                Err(PyTypeError::new_err("RK3 requires FixedTimeStep"))
+            }
 
-            (OdeMethod::RK45, Some(TimeStepOptions::Adaptive(a))) =>
-                Ok(OdeSolver::RK45(a)),
-            (OdeMethod::RK45, None) =>
-                Ok(OdeSolver::RK45(AdaptiveTimeStep::new())),
-            (OdeMethod::RK45, Some(TimeStepOptions::Fixed(_))) =>
-                Err(PyTypeError::new_err("RK45 requires AdaptiveTimeStep")),
+            (OdeMethod::RK45, Some(TimeStepOptions::Adaptive(a))) => Ok(OdeSolver::RK45(a)),
+            (OdeMethod::RK45, None) => Ok(OdeSolver::RK45(AdaptiveTimeStep::default())),
+            (OdeMethod::RK45, Some(TimeStepOptions::Fixed(_))) => {
+                Err(PyTypeError::new_err("RK45 requires AdaptiveTimeStep"))
+            }
         }
     }
 

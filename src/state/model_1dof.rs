@@ -1,5 +1,5 @@
 //use crate::math::vec_ops::MathVector;
-use crate::{Rocket, physics_mod};
+use crate::{physics_mod, Rocket};
 use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
@@ -8,7 +8,7 @@ pub(crate) struct Dof1 {
     // The assumtion is that the rocket is flying perfectly vertical and that there are no
     // considerations about rotation or anything which would not be 3D in nature.
     /// (height, velocity)
-    pub(super) u: Vector2<f64>,    
+    pub(super) u: Vector2<f64>,
     /// (d_height/dt, d_velocity/dt)
     pub(super) dudt: Vector2<f64>,
     rocket: Rocket,
@@ -175,7 +175,7 @@ mod tests {
         // dhdt = v
         assert_abs_diff_eq!(dof.dudt[0], v, epsilon = 1e-12);
 
-        // dvdt = drag/m + g 
+        // dvdt = drag/m + g
         let drag = physics_mod::calc_drag_force(v, cd, area);
         let g = physics_mod::gravity();
         let expected_dvdt = drag / mass + g;

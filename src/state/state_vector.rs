@@ -1,4 +1,4 @@
-use nalgebra::{SVector, Vector2, Vector6, Vector3};
+use nalgebra::{SVector, Vector2, Vector3, Vector6};
 
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
@@ -92,8 +92,12 @@ impl Mul for StateVector {
 impl MulAssign for StateVector {
     fn mul_assign(&mut self, rhs: Self) {
         match (self, rhs) {
-            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => avec.component_mul_assign(&bvec),
-            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => avec.component_mul_assign(&bvec),
+            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => {
+                avec.component_mul_assign(&bvec)
+            }
+            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => {
+                avec.component_mul_assign(&bvec)
+            }
             _ => {
                 panic!("Invalid addition, mismatching State Vectors.")
             }
@@ -137,7 +141,7 @@ impl StateVector {
                 panic!("Requires 3d math vector")
             }
         }
-    } 
+    }
     pub fn rotate_2d(&self, angle: &f64) -> Vector2<f64> {
         match self {
             StateVector::__1DOF(avec) => {
@@ -149,7 +153,7 @@ impl StateVector {
                 out[1] = a[0] * angle.sin() + a[1] * angle.cos();
                 //
                 Vector2::new(out[0], out[1])
-            },
+            }
             StateVector::__3DOF(avec) => panic!("Requires 2d math vector"),
             _ => {
                 panic!("Requires 2d math vector")
@@ -175,8 +179,8 @@ impl StateVector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{SVector, Vector2, Vector3, Vector6};
     use approx::{assert_abs_diff_eq, assert_relative_eq};
+    use nalgebra::{SVector, Vector2, Vector3, Vector6};
 
     #[test]
     fn add_statevector_adds_matching_variants() {
@@ -197,8 +201,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Invalid addition, mismatching State Vectors.")]
     fn add_panics_on_mismatch() {
-        let _ = StateVector::__1DOF(Vector2::new(0.0, 0.0))
-            + StateVector::__3DOF(Vector6::zeros());
+        let _ = StateVector::__1DOF(Vector2::new(0.0, 0.0)) + StateVector::__3DOF(Vector6::zeros());
     }
 
     #[test]
@@ -239,8 +242,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Invalid addition, mismatching State Vectors.")]
     fn sub_panics_on_mismatch() {
-        let _ = StateVector::__3DOF(Vector6::zeros())
-            - StateVector::__1DOF(Vector2::new(0.0, 0.0));
+        let _ = StateVector::__3DOF(Vector6::zeros()) - StateVector::__1DOF(Vector2::new(0.0, 0.0));
     }
 
     #[test]
@@ -282,8 +284,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Invalid addition, mismatching State Vectors.")]
     fn mul_panics_on_mismatch() {
-        let _ = StateVector::__1DOF(Vector2::new(1.0, 2.0))
-            * StateVector::__3DOF(Vector6::zeros());
+        let _ = StateVector::__1DOF(Vector2::new(1.0, 2.0)) * StateVector::__3DOF(Vector6::zeros());
     }
 
     #[test]
@@ -316,12 +317,7 @@ mod tests {
 
         let a3 = StateVector::__3DOF(Vector6::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
         let b3 = StateVector::__3DOF(Vector6::new(-1.0, 0.0, 10.0, -4.0, 2.0, 0.5));
-        let expected = 1.0 * (-1.0)
-            + 2.0 * 0.0
-            + 3.0 * 10.0
-            + 4.0 * (-4.0)
-            + 5.0 * 2.0
-            + 6.0 * 0.5;
+        let expected = 1.0 * (-1.0) + 2.0 * 0.0 + 3.0 * 10.0 + 4.0 * (-4.0) + 5.0 * 2.0 + 6.0 * 0.5;
 
         assert_relative_eq!(a3.dot(&b3), expected, epsilon = 1e-12);
     }
@@ -337,10 +333,7 @@ mod tests {
     #[test]
     fn scale_scales_supported_variants() {
         let a1 = StateVector::__1DOF(Vector2::new(1.0, -2.0));
-        assert_eq!(
-            a1.scale(2.5),
-            StateVector::__1DOF(Vector2::new(2.5, -5.0))
-        );
+        assert_eq!(a1.scale(2.5), StateVector::__1DOF(Vector2::new(2.5, -5.0)));
 
         let a3 = StateVector::__3DOF(Vector6::new(1.0, 2.0, 3.0, 4.0, -5.0, 6.0));
         assert_eq!(
@@ -403,5 +396,4 @@ mod tests {
         let angle = 0.1;
         let _ = v.rotate_2d(&angle);
     }
-
 }

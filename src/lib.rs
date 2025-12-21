@@ -1,4 +1,4 @@
-mod math;
+mod ode;
 mod physics_mod;
 mod simdata_mod;
 mod simulation;
@@ -8,8 +8,8 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use std::f64::consts::PI;
 
-use crate::math::ode::{AdaptiveTimeStep, FixedTimeStep, OdeSolver, TimeStepOptions};
-use crate::simdata_mod::{SimulationData};
+use crate::ode::{OdeSolver, TimeStepOptions};
+use crate::simdata_mod::SimulationData;
 use crate::simulation::Simulation;
 use crate::state::{model_1dof::Dof1, model_3dof::Dof3, State};
 
@@ -35,7 +35,7 @@ pub enum OdeMethod {
     RK45,
 }
 
-#[pyclass(dict,get_all,set_all)]
+#[pyclass(dict, get_all, set_all)]
 #[derive(Debug, Clone, Copy)]
 /// Represents the physical properties of the rocket used in the simulation.
 pub(crate) struct Rocket {
@@ -77,7 +77,7 @@ impl Rocket {
             cl_a,
         }
     }
-    
+
     #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
     fn simulate_flight(
         &self,
@@ -115,7 +115,7 @@ impl Rocket {
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
         initial_angle: Option<f64>,
-        print_output: bool
+        print_output: bool,
     ) -> PyResult<f64> {
         let log = self.simulate_flight(
             initial_height,
@@ -150,7 +150,7 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<OdeMethod>()?;
     m.add_class::<Rocket>()?;
     m.add_class::<SimulationData>()?;
-    m.add_class::<crate::math::ode::FixedTimeStep>()?;
-    m.add_class::<crate::math::ode::AdaptiveTimeStep>()?;
+    m.add_class::<crate::ode::FixedTimeStep>()?;
+    m.add_class::<crate::ode::AdaptiveTimeStep>()?;
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::math::ode::OdeSolver;
+use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
 
@@ -28,11 +28,7 @@ impl Simulation {
         }
     }
 
-    pub(crate) fn run(
-        &mut self,
-        log: &mut SimulationData,
-        print_output: bool,
-    ) {
+    pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool) {
         // Executes the simulation
         for i in 0..self.maxiter {
             log.add_row(self.state.get_logrow(), self.state.get_time());

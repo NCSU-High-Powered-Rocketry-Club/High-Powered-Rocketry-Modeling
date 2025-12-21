@@ -90,7 +90,21 @@ class AdaptiveTimeStep:
     Target relative error tolerance.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        dt: float,
+        dt_min: float,
+        dt_max: float,
+        absolute_error_tolerance: float,
+        relative_error_tolerance: float,
+    ) -> None:
+        """
+        Create an AdaptiveTimeStep with specified parameters.
+        """
+        ...
+
+    @staticmethod
+    def default() -> AdaptiveTimeStep:
         """
         Create an AdaptiveTimeStep using default parameters.
         """

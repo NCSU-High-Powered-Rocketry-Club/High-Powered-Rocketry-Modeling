@@ -1,7 +1,6 @@
-use crate::math::Norm;
-use crate::{Rocket, physics_mod};
-use std::f64::consts::PI;
+use crate::{physics_mod, Rocket};
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Dof3 {
@@ -91,13 +90,17 @@ impl Dof3 {
 
         // ========== Forces
         //
-        let cd_total = self.rocket.cd + self.rocket.cl_a*alpha.abs();//crappy estimation for drag increasing with AoA
+        let cd_total = self.rocket.cd + self.rocket.cl_a * alpha.abs(); //crappy estimation for drag increasing with AoA
 
         let force_drag = physics_mod::calc_drag_force(vmag, cd_total, self.rocket.area_drag);
         let drag_vec = velocity * (force_drag / vmag);
         //
-        let force_lift =
-            physics_mod::calc_lift_force(vmag, self.rocket.cl_a, alpha.abs(), self.rocket.area_drag);
+        let force_lift = physics_mod::calc_lift_force(
+            vmag,
+            self.rocket.cl_a,
+            alpha.abs(),
+            self.rocket.area_drag,
+        );
         let lift_vec = Rotation2::new(0.5 * PI * alpha_dir) * velocity * (force_lift / vmag);
         //
         let sum_force = lift_vec + drag_vec;
@@ -129,7 +132,7 @@ impl Dof3 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nalgebra::{Rotation2, Vector2, Vector6, SVector};
+    use nalgebra::{Rotation2, SVector, Vector2, Vector6};
     use std::f64::consts::PI;
 
     fn assert_approx(a: f64, b: f64, tol: f64) {
@@ -163,7 +166,6 @@ mod tests {
             stab_margin_dimensional: 0.3,
             inertia_z: 2.5,
         }
-    
     }
 
     #[test]
@@ -260,16 +262,9 @@ mod tests {
     fn update_state_derivatives_matches_expected_formula_using_physics_mod() {
         // This test manually computes the expected dudt values doing the same physics calculations
         // and verifies dudt matches.
-        
+
         // We choose a nonzero angle and both vx,vy nonzero to exercise alpha sign.
-        let u0 = Vector6::new(
-            0.0,
-            100.0,
-            0.4,
-            50.0,
-            20.0,
-            0.7,
-        );
+        let u0 = Vector6::new(0.0, 100.0, 0.4, 50.0, 20.0, 0.7);
 
         let rocket = make_rocket();
         let mut dof = Dof3::new(u0, rocket);
@@ -279,7 +274,7 @@ mod tests {
 
         // Get the expected values by doing the same physics calculations here
         let ox = -1.0 * f64::sin(u0[2]);
-        let oy =  1.0 * f64::cos(u0[2]);
+        let oy = 1.0 * f64::cos(u0[2]);
         let orientation = Vector2::new(ox, oy);
 
         let velocity = Vector2::new(u0[3], u0[4]);
@@ -297,12 +292,8 @@ mod tests {
         let force_drag = physics_mod::calc_drag_force(vmag, cd_total, dof.rocket.area_drag);
         let drag_vec = velocity * (force_drag / vmag);
 
-        let force_lift = physics_mod::calc_lift_force(
-            vmag,
-            dof.rocket.cl_a,
-            alpha.abs(),
-            dof.rocket.area_drag
-        );
+        let force_lift =
+            physics_mod::calc_lift_force(vmag, dof.rocket.cl_a, alpha.abs(), dof.rocket.area_drag);
         let lift_vec = Rotation2::new(0.5 * PI * alpha_dir) * velocity * (force_lift / vmag);
 
         let sum_force = lift_vec + drag_vec;
@@ -319,9 +310,7 @@ mod tests {
             u0[3], // dxdt
             u0[4], // dydt
             u0[5], // d(angle)/dt = omega
-            dvxdt,
-            dvydt,
-            domegadt
+            dvxdt, dvydt, domegadt,
         );
 
         assert_vec6_approx(got, expected, 1e-12);
@@ -339,8 +328,15 @@ mod tests {
         let row = dof.get_logrow();
 
         let expected = SVector::<f64, 9>::from_row_slice(&[
-            dof.u[0], dof.u[1], dof.u[2], dof.u[3], dof.u[4], dof.u[5],
-            dof.dudt[3], dof.dudt[4], dof.dudt[5],
+            dof.u[0],
+            dof.u[1],
+            dof.u[2],
+            dof.u[3],
+            dof.u[4],
+            dof.u[5],
+            dof.dudt[3],
+            dof.dudt[4],
+            dof.dudt[5],
         ]);
 
         assert_svec9_approx(row, expected, 1e-12);
