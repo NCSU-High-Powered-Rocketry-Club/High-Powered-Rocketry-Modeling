@@ -1,6 +1,6 @@
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
-use crate::simulation::Simulation;
+use crate::simulation::{Simulation, SimulationExitCondition};
 use crate::state::State;
 use pyo3::prelude::*;
 
@@ -91,7 +91,12 @@ impl Rocket {
         );
 
         const MAXITER: u64 = 1e5 as u64;
-        let mut simulation = Simulation::new(state, ode_solver, 1, MAXITER);
+        let mut simulation = Simulation::new(
+            state,
+            ode_solver,
+            SimulationExitCondition::ApogeeReached,
+            MAXITER,
+        );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output);
         Ok(log)
