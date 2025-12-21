@@ -16,7 +16,6 @@ pub(crate) fn calc_lift_force(velocity: f64, cl_alpha: f64, alpha: f64, area: f6
     0.5 * rho * velocity.powi(2) * cl_alpha * alpha * area
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -51,8 +50,16 @@ mod tests {
         let expected_pos = 0.5 * density() * v.powi(2) * cl_alpha * alpha_pos * area;
         let expected_neg = 0.5 * density() * v.powi(2) * cl_alpha * alpha_neg * area;
 
-        assert_relative_eq!(calc_lift_force(v, cl_alpha, alpha_pos, area), expected_pos, epsilon = 1e-12);
-        assert_relative_eq!(calc_lift_force(v, cl_alpha, alpha_neg, area), expected_neg, epsilon = 1e-12);
+        assert_relative_eq!(
+            calc_lift_force(v, cl_alpha, alpha_pos, area),
+            expected_pos,
+            epsilon = 1e-12
+        );
+        assert_relative_eq!(
+            calc_lift_force(v, cl_alpha, alpha_neg, area),
+            expected_neg,
+            epsilon = 1e-12
+        );
 
         // Lift should be zero at alpha = 0
         assert_relative_eq!(calc_lift_force(v, cl_alpha, 0.0, area), 0.0, epsilon = 0.0);

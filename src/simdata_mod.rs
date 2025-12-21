@@ -28,7 +28,7 @@ impl SimulationData {
     //
     //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
-        if index >= self.len as usize {}
+        index >= self.len as usize;
         if col == 0 {
             self.time[index]
         } else {

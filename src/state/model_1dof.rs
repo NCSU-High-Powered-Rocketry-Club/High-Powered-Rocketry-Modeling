@@ -1,5 +1,6 @@
 //use crate::math::vec_ops::MathVector;
-use crate::{physics_mod, Rocket};
+use crate::physics_mod;
+use crate::rocket::Rocket;
 use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
@@ -99,7 +100,7 @@ mod tests {
             cd,
             area_drag,
             area_lift: 0.0,
-            inertia_z: 0.0,
+            moment_of_inertia: 0.0,
             stab_margin_dimensional: 0.0,
             cl_a: 0.0,
         }
@@ -232,7 +233,7 @@ mod tests {
         // dhdt should change because velocity changed
         assert!(d_after[0] != d_before[0]);
 
-        // dvdt should also generally change because drag depends on v
+        // dvdt should also change because drag depends on v
         assert!(d_after[1] != d_before[1]);
     }
 

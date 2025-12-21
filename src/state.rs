@@ -4,10 +4,11 @@ pub(crate) mod state_vector;
 
 use nalgebra::{Vector2, Vector6};
 
+use crate::rocket::Rocket;
 use crate::state::model_1dof::DOF1;
 use crate::state::model_3dof::DOF3;
 use crate::state::state_vector::StateVector;
-use crate::{ModelType, Rocket};
+use crate::ModelType;
 
 use std::f64::consts::PI;
 use std::process::exit;
@@ -22,7 +23,6 @@ pub(crate) enum State {
 
 impl State {
     /// Construct a `State` from ModelType + initial conditions + Rocket.
-    /// This moves the logic out of `simulate_flight()`.
     pub(crate) fn from_model_type(
         model_type: ModelType,
         rocket: Rocket,

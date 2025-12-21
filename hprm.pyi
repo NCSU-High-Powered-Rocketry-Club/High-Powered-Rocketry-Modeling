@@ -60,13 +60,6 @@ class FixedTimeStep:
 class AdaptiveTimeStep:
     """
     Configuration for adaptive time stepping.
-
-    Defaults:
-        - dt = 0.01
-        - dt_min = 1e-6
-        - dt_max = 10.0
-        - absolute_error_tolerance = 1e-2
-        - relative_error_tolerance = 1e-2
     """
 
     dt: float
@@ -107,6 +100,11 @@ class AdaptiveTimeStep:
     def default() -> AdaptiveTimeStep:
         """
         Create an AdaptiveTimeStep using default parameters.
+            - dt = 0.01
+            - dt_min = 1e-6
+            - dt_max = 10.0
+            - absolute_error_tolerance = 1e-2
+            - relative_error_tolerance = 1e-2
         """
         ...
 
@@ -160,7 +158,7 @@ class Rocket:
     :param cd: Drag coefficient.
     :param area_drag: Reference area for drag in square meters.
     :param area_lift: Reference area for lift in square meters.
-    :param inertia_z: Moment of inertia about the z-axis in kg·m².
+    :param moment_of_inertia: Moment of inertia about the z-axis in kg·m².
     :param stab_margin_dimensional: Static stability margin in meters.
     :param cl_a: Lift coefficient slope per radian.
     """
@@ -181,7 +179,7 @@ class Rocket:
     """
     Reference area for lift in square meters.
     """
-    inertia_z: float
+    moment_of_inertia: float
     """
     Moment of inertia about the z-axis in kg·m².
     """
@@ -200,7 +198,7 @@ class Rocket:
         cd: float,
         area_drag: float,
         area_lift: float,
-        inertia_z: float,
+        moment_of_inertia: float,
         stab_margin_dimensional: float,
         cl_a: float,
     ) -> None:

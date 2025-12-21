@@ -247,7 +247,6 @@ mod tests {
 
     #[test]
     fn sub_assign_updates_in_place_for_matching_variants() {
-        // NOTE: Will FAIL until SubAssign is fixed similarly to AddAssign.
         let mut a1 = StateVector::__1DOF(Vector2::new(5.0, 1.0));
         a1 -= StateVector::__1DOF(Vector2::new(2.0, -3.0));
         assert_eq!(a1, StateVector::__1DOF(Vector2::new(3.0, 4.0)));
@@ -289,7 +288,6 @@ mod tests {
 
     #[test]
     fn mul_assign_componentwise_updates_in_place_for_matching_variants() {
-        // NOTE: Will FAIL until MulAssign is fixed similarly to AddAssign.
         let mut a1 = StateVector::__1DOF(Vector2::new(2.0, -3.0));
         a1 *= StateVector::__1DOF(Vector2::new(4.0, 10.0));
         assert_eq!(a1, StateVector::__1DOF(Vector2::new(8.0, -30.0)));

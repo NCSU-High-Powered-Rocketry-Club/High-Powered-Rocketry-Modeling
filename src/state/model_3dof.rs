@@ -1,4 +1,5 @@
-use crate::{physics_mod, Rocket};
+use crate::physics_mod;
+use crate::rocket::Rocket;
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 use std::f64::consts::PI;
 
@@ -124,7 +125,7 @@ impl DOF3 {
         let dvydt = accel[1] + physics_mod::gravity();
 
         //Angular Acceleration
-        let domegadt = sum_moment / self.rocket.inertia_z;
+        let domegadt = sum_moment / self.rocket.moment_of_inertia;
 
         // 1st order terms
         let dxdt = self.u[3];
@@ -171,7 +172,7 @@ mod tests {
             area_lift: 0.0,
             area_drag: 0.02,
             stab_margin_dimensional: 0.3,
-            inertia_z: 2.5,
+            moment_of_inertia: 2.5,
         }
     }
 
@@ -311,7 +312,7 @@ mod tests {
         let accel = sum_force * (1.0 / dof.rocket.mass);
         let dvxdt = accel[0];
         let dvydt = accel[1] + physics_mod::gravity();
-        let domegadt = sum_moment / dof.rocket.inertia_z;
+        let domegadt = sum_moment / dof.rocket.moment_of_inertia;
 
         let expected = Vector6::new(
             u0[3], // dxdt
