@@ -141,7 +141,7 @@ impl OdeSolver {
         // This method is a 3-stage method based off Strong Stability Preserving (SSP) aka.
         // Total variation Diminishing (TVD) form of RK3. (commonly used in PDE applications)
 
-        let mut state_rk: State = state.clone();
+        let mut state_rk: State = *state;
 
         //Stage 1       dt = 1 * DT
         let dudt = state_rk.get_derivs();
@@ -153,15 +153,15 @@ impl OdeSolver {
         let coeff: f64 = 0.25 * dt;
         du = dudt.clone().scale(coeff) + dudt2.clone().scale(coeff);
 
-        state_rk = state.clone();
+        state_rk = *state;
         state_rk.update(du, 0.0);
 
         // Stage 3
         let dudt3 = state_rk.get_derivs();
         let coeff = dt * 1.0 / 6.0;
         du = dudt.scale(coeff);
-        du = du + dudt2.scale(coeff);
-        du = du + dudt3.scale(4.0 * coeff);
+        du += dudt2.scale(coeff);
+        du += dudt3.scale(4.0 * coeff);
         state.update(du, dt);
     }
 
@@ -175,14 +175,14 @@ impl OdeSolver {
         let k1 = dudt1.clone().scale(dt);
 
         // ========== Stage 2 ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + 0.2 * k1
         stage.update(k1.clone().scale(0.2), 0.0);
         let dudt2 = stage.get_derivs();
         let k2 = dudt2.clone().scale(dt);
 
         // ========== Stage 3 ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + 0.075*k1 + 0.225*k2
         stage.update(k1.clone().scale(0.075), 0.0);
         stage.update(k2.clone().scale(0.225), 0.0);
@@ -190,7 +190,7 @@ impl OdeSolver {
         let k3 = dudt3.clone().scale(dt);
 
         // ========== Stage 4 ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + (44/45)*k1 - (56/15)*k2 + (32/9)*k3
         stage.update(k1.clone().scale(44.0 / 45.0), 0.0);
         stage.update(k2.clone().scale(-56.0 / 15.0), 0.0);
@@ -199,7 +199,7 @@ impl OdeSolver {
         let k4 = dudt4.clone().scale(dt);
 
         // ========== Stage 5 ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + (19372/6561)*k1 - (25360/2187)*k2
         //          + (64448/6561)*k3 - (212/729)*k4
         stage.update(k1.clone().scale(19372.0 / 6561.0), 0.0);
@@ -210,7 +210,7 @@ impl OdeSolver {
         let k5 = dudt5.clone().scale(dt);
 
         // ========== Stage 6 ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + (9017/3168)*k1 - (355/33)*k2
         //          + (46732/5247)*k3 + (49/176)*k4
         //          - (5103/18656)*k5
@@ -223,7 +223,7 @@ impl OdeSolver {
         let k6 = dudt6.clone().scale(dt);
 
         // ========== Stage 7 (5th-order combination) ==========
-        let mut stage = state.clone();
+        let mut stage = *state;
         // ut = u + (35/384)*k1 + (500/1113)*k3
         //          + (125/192)*k4 - (2187/6784)*k5
         //          + (11/84)*k6
@@ -237,22 +237,22 @@ impl OdeSolver {
 
         // ---------- Build 5th-order increment (du5) ----------
         let mut du5 = k1.clone().scale(35.0 / 384.0);
-        du5 = du5 + k3.clone().scale(500.0 / 1113.0);
-        du5 = du5 + k4.clone().scale(125.0 / 192.0);
-        du5 = du5 + k5.clone().scale(-2187.0 / 6784.0);
-        du5 = du5 + k6.clone().scale(11.0 / 84.0);
+        du5 += k3.clone().scale(500.0 / 1113.0);
+        du5 += k4.clone().scale(125.0 / 192.0);
+        du5 += k5.clone().scale(-2187.0 / 6784.0);
+        du5 += k6.clone().scale(11.0 / 84.0);
         // (no k7 in the 5th-order solution)
 
         // ---------- Build 4th-order increment (du4) ----------
         let mut du4 = k1.clone().scale(5179.0 / 57600.0);
-        du4 = du4 + k3.clone().scale(7571.0 / 16695.0);
-        du4 = du4 + k4.clone().scale(393.0 / 640.0);
-        du4 = du4 + k5.clone().scale(-92097.0 / 339200.0);
-        du4 = du4 + k6.clone().scale(187.0 / 2100.0);
-        du4 = du4 + k7.clone().scale(1.0 / 40.0);
+        du4 += k3.clone().scale(7571.0 / 16695.0);
+        du4 += k4.clone().scale(393.0 / 640.0);
+        du4 += k5.clone().scale(-92097.0 / 339200.0);
+        du4 += k6.clone().scale(187.0 / 2100.0);
+        du4 += k7.clone().scale(1.0 / 40.0);
 
         // ---------- Error estimate: || du4 - du5 || ----------
-        let error_vec = du4.clone() - du5.clone();
+        let error_vec = du4 - du5;
 
         // Find the size of the error vector
         let error_norm: f64 = error_vec.dot(&error_vec).sqrt();

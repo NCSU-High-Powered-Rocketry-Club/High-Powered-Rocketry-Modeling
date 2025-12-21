@@ -4,8 +4,8 @@ pub(crate) mod state_vector;
 
 use nalgebra::{Vector2, Vector6};
 
-use crate::state::model_1dof::Dof1;
-use crate::state::model_3dof::Dof3;
+use crate::state::model_1dof::DOF1;
+use crate::state::model_3dof::DOF3;
 use crate::state::state_vector::StateVector;
 use crate::{ModelType, Rocket};
 
@@ -16,8 +16,8 @@ use std::process::exit;
 /// This matches the `ModelType` enum (Python API) but contains the *actual* model data.
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
-    __1DOF(Dof1),
-    __3DOF(Dof3),
+    __1DOF(DOF1),
+    __3DOF(DOF3),
 }
 
 impl State {
@@ -34,7 +34,7 @@ impl State {
             ModelType::OneDOF => {
                 // u1 = [y, vy]
                 let u1 = Vector2::new(initial_height, initial_velocity);
-                State::__1DOF(Dof1::new(u1, rocket))
+                State::__1DOF(DOF1::new(u1, rocket))
             }
             ModelType::ThreeDOF => {
                 // u3 = [x, y, theta, vx, vy, omega]
@@ -47,7 +47,7 @@ impl State {
                     initial_velocity,
                     0.0,
                 );
-                State::__3DOF(Dof3::new(u3, rocket))
+                State::__3DOF(DOF3::new(u3, rocket))
             }
         }
     }

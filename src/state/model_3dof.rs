@@ -3,7 +3,7 @@ use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct Dof3 {
+pub(crate) struct DOF3 {
     // This model is a 3 Degree of Freedom model which has 2 spatial dimensions
     // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
     // within that 2D space.
@@ -16,7 +16,7 @@ pub(crate) struct Dof3 {
     pub(super) time: f64,
 }
 
-impl Dof3 {
+impl DOF3 {
     pub(crate) fn new(u: Vector6<f64>, rocket: Rocket) -> Self {
         Self {
             u,
@@ -26,19 +26,24 @@ impl Dof3 {
             time: 0.0,
         }
     }
+
     pub(super) fn get_y_velocity(&self) -> f64 {
         self.u[4]
     }
+
     pub(super) fn get_height(&self) -> f64 {
         self.u[1]
     }
+
     pub(super) fn get_derivs_3dof(&mut self) -> Vector6<f64> {
         self.update_state_derivatives();
         self.dudt
     }
+
     pub(super) fn get_time_3dof(&self) -> f64 {
         self.time
     }
+
     pub(super) fn print_state_3dof(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    X Velocity:{:8.2}(m/s)    Y Velocity::{:8.2}(m/s)    AngularVelo:{:8.2}(rad/s)",
@@ -50,24 +55,26 @@ impl Dof3 {
             self.u[5]
         );
     }
+
     pub(super) fn get_logrow(&self) -> SVector<f64, 9> {
         let mut row = [0.0; 9];
-        row[0..6].copy_from_slice(&self.u.as_slice()[..]);
+        row[0..6].copy_from_slice(self.u.as_slice());
         row[6..9].copy_from_slice(&self.dudt.as_slice()[3..6]);
         SVector::<f64, 9>::from_row_slice(&row)
     }
+
     pub(super) fn update_state(&mut self, du: Vector6<f64>, dt: f64) {
         self.u += du;
         self.time += dt;
         self.is_current = false;
     }
-    //
+
     pub(super) fn update_state_derivatives(&mut self) {
         if self.is_current {
             return;
         }
         // Find vector representing the rocket's orientation cand velocity
-        let ox = -1.0 * f64::sin(self.u[2]);
+        let ox = -f64::sin(self.u[2]);
         let oy = 1.0 * f64::cos(self.u[2]);
         let orientation = Vector2::new(ox, oy);
         let velocity = Vector2::new(self.u[3], self.u[4]);
@@ -172,7 +179,7 @@ mod tests {
     fn new_sets_expected_initial_state() {
         let u0 = Vector6::new(1.0, 2.0, 0.1, 3.0, 4.0, 0.5);
         let rocket = make_rocket();
-        let dof = Dof3::new(u0, rocket);
+        let dof = DOF3::new(u0, rocket);
 
         assert_eq!(dof.u, u0);
 
@@ -189,7 +196,7 @@ mod tests {
     fn getters_return_expected_components() {
         let u0 = Vector6::new(0.0, 123.4, 0.0, -1.0, 9.87, 0.0);
         let rocket = make_rocket();
-        let dof = Dof3::new(u0, rocket);
+        let dof = DOF3::new(u0, rocket);
 
         assert_eq!(dof.get_height(), 123.4);
         assert_eq!(dof.get_y_velocity(), 9.87);
@@ -200,7 +207,7 @@ mod tests {
     fn update_state_advances_u_and_time_and_invalidates_cache() {
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         // Make derivatives current first
         dof.update_state_derivatives();
@@ -221,7 +228,7 @@ mod tests {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 0.0, 0.2, 30.0, 10.0, 0.1);
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         assert!(!dof.is_current);
 
@@ -244,7 +251,7 @@ mod tests {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 10.0, 0.0, 40.0, 0.0, 0.0);
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         let d1 = dof.get_derivs_3dof();
         assert!(dof.is_current);
@@ -267,7 +274,7 @@ mod tests {
         let u0 = Vector6::new(0.0, 100.0, 0.4, 50.0, 20.0, 0.7);
 
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         dof.update_state_derivatives();
         let got = dof.dudt;
@@ -321,7 +328,7 @@ mod tests {
         // Test that the logrow contains the expected components in the expected order.
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         dof.update_state_derivatives();
 
@@ -348,7 +355,7 @@ mod tests {
         // dxdt == vx, dydt == vy, d(angle)/dt == omega.
         let u0 = Vector6::new(0.0, 10.0, 1.2, -3.0, 8.0, -0.4);
         let rocket = make_rocket();
-        let mut dof = Dof3::new(u0, rocket);
+        let mut dof = DOF3::new(u0, rocket);
 
         dof.update_state_derivatives();
 

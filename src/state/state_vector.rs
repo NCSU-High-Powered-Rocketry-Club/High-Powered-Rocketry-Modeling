@@ -108,8 +108,8 @@ impl MulAssign for StateVector {
 impl StateVector {
     pub fn dot(&self, b: &Self) -> f64 {
         match (self, b) {
-            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => avec.dot(&bvec),
-            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => avec.dot(&bvec),
+            (StateVector::__1DOF(avec), StateVector::__1DOF(bvec)) => avec.dot(bvec),
+            (StateVector::__3DOF(avec), StateVector::__3DOF(bvec)) => avec.dot(bvec),
             _ => {
                 panic!("Invalid Dot Product, mismatching State Vectors.")
             }

@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::Simulation;
-use crate::state::{model_1dof::Dof1, model_3dof::Dof3, State};
+use crate::state::{model_1dof::DOF1, model_3dof::DOF3, State};
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, PartialEq, Debug)]

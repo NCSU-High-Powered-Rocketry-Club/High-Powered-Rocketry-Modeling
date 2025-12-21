@@ -78,10 +78,6 @@ impl Simulation {
     }
     fn condition_one(&self) -> bool {
         // Stop calculation when apogee is reached
-        if self.state.get_vertical_velocity() < 0.0 {
-            true
-        } else {
-            false
-        }
+        self.state.get_vertical_velocity() < 0.0
     }
 }

@@ -28,9 +28,7 @@ impl SimulationData {
     //
     //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
-        if index >= self.len as usize {
-            ()
-        }
+        if index >= self.len as usize {}
         if col == 0 {
             self.time[index]
         } else {
@@ -50,7 +48,7 @@ impl SimulationData {
 }
 
 impl SimulationData {
-    pub(crate) fn add_row(&mut self, row: StateVector, time: f64) -> () {
+    pub(crate) fn add_row(&mut self, row: StateVector, time: f64) {
         self.len += 1; // Can maybe speed up by adding this at very end (simulation iter #)
         self.time.push(time);
         let rowdata = row.as_array();
