@@ -1,9 +1,9 @@
 use crate::state::state_vector::StateVector;
+use numpy::{PyArray1, PyArray2, ToPyArray};
 use pyo3::prelude::*;
-use numpy::{ToPyArray, PyArray1, PyArray2};
 //
 const L: usize = 18;
-#[pyclass(dict,get_all,set_all)]
+#[pyclass(dict, get_all, set_all)]
 #[derive(Clone, Debug)]
 pub(crate) struct SimulationData {
     pub(crate) len: u64,
@@ -28,9 +28,7 @@ impl SimulationData {
     //
     //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
-        if index >= self.len as usize {
-            ()
-        }
+        index >= self.len as usize;
         if col == 0 {
             self.time[index]
         } else {
@@ -47,11 +45,10 @@ impl SimulationData {
     //pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
     //    (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
     //}
-
 }
 
 impl SimulationData {
-    pub(crate) fn add_row(&mut self, row: StateVector, time: f64) -> () {
+    pub(crate) fn add_row(&mut self, row: StateVector, time: f64) {
         self.len += 1; // Can maybe speed up by adding this at very end (simulation iter #)
         self.time.push(time);
         let rowdata = row.as_array();
@@ -61,8 +58,6 @@ impl SimulationData {
                 rowvec.push(0.0);
             }
         }
-        self.data
-            .push(<[f64; L]>::try_from(rowvec).unwrap());
+        self.data.push(<[f64; L]>::try_from(rowvec).unwrap());
     }
-
 }

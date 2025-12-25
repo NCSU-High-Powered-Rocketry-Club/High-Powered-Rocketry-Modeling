@@ -15,3 +15,6 @@ nalgebra = "0.34.1"
 
 [lints.rust]
 unused_imports = "allow"
+
+[dev-dependencies]
+approx = "0.5"

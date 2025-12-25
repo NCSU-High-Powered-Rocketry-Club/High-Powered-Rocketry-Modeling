@@ -29,10 +29,10 @@ def main():
     #     ModelType.OneDOF, 
     #     IntegrationMethod.RK45
     # )
-    ats = AdaptiveTimeStep()
+    ats = AdaptiveTimeStep.default()
     ats.absolute_error_tolerance = 1.0
-    log = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
-    # print(f"Apogee: {test_vehicle.predict_apogee(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)}")
+    # log = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    print(f"Apogee: {test_vehicle.predict_apogee(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)}")
 
     # # Extract data and put in np array
     # nrow = simdata.get_len()
