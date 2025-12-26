@@ -52,16 +52,6 @@ impl State {
         }
     }
 
-    pub(crate) fn interpolate(&self, s1: &State, s2: &mut State, tau: f64, dt: f64) -> () {
-        let sv1 : StateVector = s1.get_state_vec();
-        let sv2 : StateVector = s2.get_state_vec();
-        // calculate backtracking update
-        let dsv = (sv2-sv1).scale(tau-1.0f64);
-        let dt_new = dt*(tau-1.0f64);
-        // backtrack the new state
-        s2.update(dsv,dt_new);
-    }
-
     pub(crate) fn get_logrow(&self) -> StateVector {
         match self {
             State::__1DOF(dof1) => StateVector::__1DLOG(dof1.get_logrow()),

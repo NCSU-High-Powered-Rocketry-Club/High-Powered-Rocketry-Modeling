@@ -18,37 +18,46 @@ def main():
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
     )
 
+    # Common initial conditions
     initial_height = 0.0
     initial_velocity = 100.0
     initial_angle = math.pi - .1
 
+    # Timestep method object
     ats = AdaptiveTimeStep.default()
-    iout = False
+
+
+    # Methodology:
+    # First Run without logging for profiling the mthod
+    # Then Run with logging to show the accuracy of the apogee obtained
 
     # Run the simulation
-    ats.absolute_error_tolerance = 1.0e-1
-    ats.relative_error_tolerance = 1.0e-1
+    ats.absolute_error_tolerance = 1.0e-0
+    ats.relative_error_tolerance = 1.0e-0
     tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, iout)
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
     tend = perf_counter()
     t1 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
+
+    # Run the simulation
+    ats.absolute_error_tolerance = 1.0e-2
+    ats.relative_error_tolerance = 1.0e-2
+    tstart = perf_counter()
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    tend = perf_counter()
+    t2 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
+    
 
     # Run the simulation
     ats.absolute_error_tolerance = 1.0e-4
     ats.relative_error_tolerance = 1.0e-4
     tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, iout)
-    tend = perf_counter()
-    t2 = tend-tstart
-    
-
-    # Run the simulation
-    ats.absolute_error_tolerance = 1.0e-6
-    ats.relative_error_tolerance = 1.0e-6
-    tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, iout)
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
     tend = perf_counter()
     t3 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
 
     print("First Run:  both tolerances are set at E-2")
     print(f"Time Elapsed = {t1:.3e} s\n\n")

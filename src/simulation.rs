@@ -52,7 +52,7 @@ impl Simulation {
             log.add_row(self.state.get_logrow(), self.state.get_time());
 
             // Output simulation info to terminal
-            if print_output && i % 10 == 0 {
+            if print_output && i % 1 == 0 {
                 self.state.print_state(i);
             }
 

@@ -118,19 +118,23 @@ impl OdeSolver {
         }
     }
 
-    pub(crate) fn backtrack_apogee(&self, state: &mut State, prev_state: &State) -> () {
+    pub(crate) fn backtrack_apogee(&mut self, state: &mut State, prev_state: &State) -> () {
         let vert_velo      = state.get_vertical_velocity();
         let prev_vert_velo = prev_state.get_vertical_velocity();
         // Time fraction which is approx apogee assuming const acceleration
         let tau:f64 = prev_vert_velo / (prev_vert_velo - vert_velo);
-        // 
-        let dt: f64 = match self {
-            OdeSolver::Euler(fixed) => fixed.dt,
-            OdeSolver::RK3(fixed) => fixed.dt,
-            OdeSolver::RK45(ats) => ats.dt,
+        //
+        // Update the tinestep to be the desired size
+        match self {
+            OdeSolver::Euler(fixed) => fixed.dt *= tau,
+            OdeSolver::RK3(fixed) => fixed.dt *= tau,
+            OdeSolver::RK45(ats) => ats.dt *= tau,
         };
         //
-        prev_state.interpolate(prev_state, state, tau, dt);
+        //Rerun the timestep
+        let mut tmp_state = prev_state.clone();
+        self.timestep(&mut tmp_state);
+        *state = tmp_state;
     }
 
 
