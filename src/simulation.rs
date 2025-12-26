@@ -46,19 +46,10 @@ impl Simulation {
     pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool) {
         // Executes the simulation
         for i in 0..self.max_iterations {
+            let old_state = self.state.clone();
+
             self.current_iteration = i;
             log.add_row(self.state.get_logrow(), self.state.get_time());
-
-            // Check for exit condition
-            if self.is_done() {
-                if print_output {
-                    println!("\n==================== Calculation complete! ================================================================================");
-                    self.state.print_state(i);
-                    println!("===========================================================================================================================\n");
-                }
-
-                break;
-            }
 
             // Output simulation info to terminal
             if print_output && i % 10 == 0 {
@@ -67,6 +58,22 @@ impl Simulation {
 
             // Advance the calculation
             self.ode.timestep(&mut self.state);
+            //
+            // Check Exit Condition
+            if self.is_done() {
+                // Mitigate overshoot errors
+                match self.exit_condition {
+                    SimulationExitCondition::ApogeeReached => self.ode.backtrack_apogee(&mut self.state, &old_state)
+                }
+                //
+                if print_output {
+                    println!("\n==================== Calculation complete! ================================================================================");
+                    self.state.print_state(i);
+                    println!("===========================================================================================================================\n");
+                }
+
+                break;
+            }
         }
     }
 
@@ -82,11 +89,11 @@ impl Simulation {
 
     fn is_done(&self) -> bool {
         match self.exit_condition {
-            SimulationExitCondition::ApogeeReached => self.condition_one(),
+            SimulationExitCondition::ApogeeReached => self.condition_apogee(),
         }
     }
 
-    fn condition_one(&self) -> bool {
+    fn condition_apogee(&self) -> bool {
         // Stop calculation when apogee is reached
         self.state.get_vertical_velocity() < 0.0
     }
