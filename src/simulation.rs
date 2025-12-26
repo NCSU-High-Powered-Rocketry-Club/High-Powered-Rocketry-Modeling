@@ -68,7 +68,7 @@ impl Simulation {
                 //
                 if print_output {
                     println!("\n==================== Calculation complete! ================================================================================");
-                    self.state.print_state(i);
+                    self.state.print_state(i+1);
                     println!("===========================================================================================================================\n");
                 }
 
@@ -95,7 +95,8 @@ impl Simulation {
 
     fn condition_apogee(&self) -> bool {
         // Stop calculation when apogee is reached
-        self.state.get_vertical_velocity() < 0.0
+        let tolerance : f64 = 1.0; // m/s
+        self.state.get_vertical_velocity() < tolerance
     }
 }
 
