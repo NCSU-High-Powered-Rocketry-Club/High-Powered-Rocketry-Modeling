@@ -121,7 +121,7 @@ impl OdeSolver {
     pub(crate) fn backtrack_apogee(&mut self, state: &mut State, prev_state: &State) -> () {
         let vert_velo      = state.get_vertical_velocity();
         let prev_vert_velo = prev_state.get_vertical_velocity();
-        // Time fraction which is approx apogee assuming const acceleration
+        // Time fraction which is approx apogee assuming const acceleration (v(t) = v0 + at)
         let tau:f64 = prev_vert_velo / (prev_vert_velo - vert_velo);
         //
         // Update the tinestep to be the desired size
