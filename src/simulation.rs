@@ -144,7 +144,7 @@ mod tests {
 
         assert!(!simulation.is_done());
 
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(simulation.is_done());
         assert!(simulation.current_iteration <= max_iterations);
@@ -159,7 +159,7 @@ mod tests {
 
         assert!(!simulation.is_done());
 
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(!simulation.is_done());
         // We have to do - 1 here because current_iteration is zero-indexed
@@ -218,7 +218,7 @@ mod tests {
         assert!(a0.is_nan());
 
         // After running, it should be done, and apogee should be a finite altitude
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(simulation.is_done());
 
