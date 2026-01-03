@@ -69,7 +69,7 @@ impl Rocket {
         }
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false, log_output=false))]
     fn simulate_flight(
         &self,
         initial_height: f64,
@@ -79,6 +79,7 @@ impl Rocket {
         timestep_config: Option<TimeStepOptions>,
         initial_angle: Option<f64>,
         print_output: bool,
+        log_output: bool,
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
@@ -98,7 +99,7 @@ impl Rocket {
             MAXITER,
         );
         let mut log = SimulationData::new();
-        simulation.run(&mut log, print_output);
+        simulation.run(&mut log, print_output, log_output);
         Ok(log)
     }
 
@@ -121,6 +122,7 @@ impl Rocket {
             timestep_config,
             initial_angle,
             print_output,
+            false,
         )?;
 
         // Gets the height column based on model type
@@ -129,13 +131,16 @@ impl Rocket {
             ModelType::ThreeDOF => 2,
         };
 
-        let mut max_height = initial_height;
-        for i in 0..log.len {
-            let h = log.get_val(i as usize, height_col);
-            if h > max_height {
-                max_height = h;
-            }
-        }
+        let max_height = log.get_val((log.len as usize)-1, height_col);
+
+        //let mut max_height = initial_height;
+        //for i in 0..log.len {
+        //    let h = log.get_val(i as usize, height_col);
+        //    if h > max_height {
+        //        max_height = h;
+        //    }
+        //}
+
         Ok(max_height)
     }
 }

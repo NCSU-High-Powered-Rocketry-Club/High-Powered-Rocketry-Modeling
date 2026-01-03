@@ -2,6 +2,8 @@ use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
 
+use std::ops::Not;
+
 /// Enum defining the various exit conditions for the simulation. Eventually, more exit
 /// conditions, such as ground impact, can be added here.
 pub enum SimulationExitCondition {
@@ -43,13 +45,13 @@ impl Simulation {
     /// - `&mut self` (`undefined`) - Describe this parameter.
     /// - `log` (`&mut SimulationData`) - Describe this parameter.
     /// - `print_output` (`bool`) - Describe this parameter.
-    pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool) {
+    pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool, log_output: bool) {
         // Executes the simulation
         for i in 0..self.max_iterations {
             let old_state = self.state.clone();
 
             self.current_iteration = i;
-            log.add_row(self.state.get_logrow(), self.state.get_time());
+            if log_output {log.add_row(self.state.get_logrow(), self.state.get_time())};
 
             // Output simulation info to terminal
             if print_output && i % 1 == 0 {
@@ -65,6 +67,8 @@ impl Simulation {
                 match self.exit_condition {
                     SimulationExitCondition::ApogeeReached => self.ode.backtrack_apogee(&mut self.state, &old_state)
                 }
+                //
+                if log_output.not() {log.add_row(self.state.get_logrow(), self.state.get_time())};
                 //
                 if print_output {
                     println!("\n==================== Calculation complete! ================================================================================");
