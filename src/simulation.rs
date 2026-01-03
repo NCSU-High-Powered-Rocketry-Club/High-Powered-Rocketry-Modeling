@@ -145,6 +145,9 @@ mod tests {
         assert!(simulation.is_done());
         assert!(simulation.current_iteration <= max_iterations);
 
+        // Make sure backtracking is not allowing gross overshoots of apogee`
+        assert!(simulation.state.get_vertical_velocity() > -5.0);
+
         // Tests that running a simulation with too low max_iterations stops correctly
         let mut simulation = make_simulation();
         let max_iterations: u64 = 5;
