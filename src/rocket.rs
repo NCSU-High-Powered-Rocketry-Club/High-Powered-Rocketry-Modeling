@@ -133,14 +133,6 @@ impl Rocket {
 
         let max_height = log.get_val((log.len as usize)-1, height_col);
 
-        //let mut max_height = initial_height;
-        //for i in 0..log.len {
-        //    let h = log.get_val(i as usize, height_col);
-        //    if h > max_height {
-        //        max_height = h;
-        //    }
-        //}
-
         Ok(max_height)
     }
 }
