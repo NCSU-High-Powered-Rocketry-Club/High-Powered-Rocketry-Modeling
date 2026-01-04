@@ -118,6 +118,26 @@ impl OdeSolver {
         }
     }
 
+    pub(crate) fn backtrack_apogee(&mut self, state: &mut State, prev_state: &State) -> () {
+        let vertical_rate_of_distance_change_with_time_in_meters_per_second          = state.get_vertical_velocity();
+        let previous_vertical_rate_of_distance_change_with_time_in_meters_per_second = prev_state.get_vertical_velocity();
+        // Time fraction which is approx apogee assuming const acceleration (v(t) = v0 + at)
+        let tau:f64 = previous_vertical_rate_of_distance_change_with_time_in_meters_per_second / (previous_vertical_rate_of_distance_change_with_time_in_meters_per_second - vertical_rate_of_distance_change_with_time_in_meters_per_second);
+        //
+        // Update the tinestep to be the desired size
+        match self {
+            OdeSolver::Euler(fixed) => fixed.dt *= tau,
+            OdeSolver::RK3(fixed) => fixed.dt *= tau,
+            OdeSolver::RK45(ats) => ats.dt *= tau,
+        };
+        //
+        //Rerun the timestep
+        let mut tmp_state = prev_state.clone();
+        self.timestep(&mut tmp_state);
+        *state = tmp_state;
+    }
+
+
     pub(crate) fn timestep(&mut self, state: &mut State) {
         match self {
             OdeSolver::Euler(fixed) => Self::explicit_euler(state, fixed.dt),

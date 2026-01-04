@@ -1,17 +1,14 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import hprm
-
+from time import perf_counter
+from hprm import Rocket, AdaptiveTimeStep, ModelType, OdeMethod
 
 def main():
     print("Testing out the High Powered Rocket Modeling Program")
-    print("First Run: both tolerances are set at E-8")
-
-    id = hprm.PyID()
 
     # Define the Test Vehicle
-    test_vehicle = hprm.Rocket(
+    test_vehicle = Rocket(
         10.0,   # mass kg
         0.3,    # drag coefficient
         0.005,  # cross-sectional refference area
@@ -21,47 +18,51 @@ def main():
         0.2     # Derivative of lift coefficient with alpha(angle of attack)
     )
 
-    #ode = hprm.OdeMethod.Euler(1e-2)
+    # Common initial conditions
+    initial_height = 0.0
+    initial_velocity = 100.0
+    initial_angle = math.pi - .1
 
-    ats = hprm.AdaptiveTimeStep()
+    # Timestep method object
+    ats = AdaptiveTimeStep.default()
 
-    ats.absolute_error_tolerance = 1.0e-8
-    ats.relative_error_tolerance = 1.0e-8
-    ode = hprm.OdeMethod.RK45(ats)
 
-    state_info = hprm.PyState(id.PS_1_DOF) # 3DoF
+    # Methodology:
+    # First Run without logging for profiling the mthod
+    # Then Run with logging to show the accuracy of the apogee obtained
 
-    # Note: It's hard to make the model imputs general / textual because
-    #           they change with different models. For not intended use case
-    #           is to have a translation table with the different configs
-    state_info.u1 = [0.0, 100.0]
-    state_info.u3 = [0.0, 0.0, math.pi/2.0,
-                     0.0, 100.0, 0.0]
+    # Run the simulation
+    ats.absolute_error_tolerance = 1.0e-0
+    ats.relative_error_tolerance = 1.0e-0
+    tstart = perf_counter()
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    tend = perf_counter()
+    t1 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
+
+    # Run the simulation
+    ats.absolute_error_tolerance = 1.0e-2
+    ats.relative_error_tolerance = 1.0e-2
+    tstart = perf_counter()
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    tend = perf_counter()
+    t2 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
     
 
     # Run the simulation
-    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
+    ats.absolute_error_tolerance = 1.0e-4
+    ats.relative_error_tolerance = 1.0e-4
+    tstart = perf_counter()
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle)
+    tend = perf_counter()
+    t3 = tend-tstart
+    simdata = test_vehicle.simulate_flight(initial_height, initial_velocity, ModelType.ThreeDOF, OdeMethod.RK45, ats, initial_angle, True)
 
-
-
-
-    print("Second Run: both tolerances are set at E-9")
-    # Run the simulation
-    ats.absolute_error_tolerance = 1.0e-9
-    ats.relative_error_tolerance = 1.0e-9
-    ode = hprm.OdeMethod.RK45(ats)
-    state_info.set_new_model(id.PS_1_DOF) # 3DoF
-    state_info.u1 = [0.0, 100.0]
-    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
-    
-
-    print("Third Run: both tolerances are set at E-10")
-    # Run the simulation
-    ats.absolute_error_tolerance = 1.0e-10
-    ats.relative_error_tolerance = 1.0e-10
-    ode = hprm.OdeMethod.RK45(ats)
-    state_info.set_new_model(id.PS_1_DOF) # 3DoF
-    state_info.u1 = [0.0, 100.0]
-    simdata = hprm.sim_apogee(test_vehicle, state_info, ode)
-
+    print("First Run:  both tolerances are set at E-2")
+    print(f"Time Elapsed = {t1:.3e} s\n\n")
+    print("Second Run: both tolerances are set at E-4")
+    print(f"Time Elapsed = {t2:.3e} s\n\n")
+    print("Third Run:  both tolerances are set at E-6")
+    print(f"Time Elapsed = {t3:.3e} s\n\n")
 main()

@@ -2,6 +2,8 @@ use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
 
+use std::ops::Not;
+
 /// Enum defining the various exit conditions for the simulation. Eventually, more exit
 /// conditions, such as ground impact, can be added here.
 pub enum SimulationExitCondition {
@@ -43,30 +45,39 @@ impl Simulation {
     /// - `&mut self` (`undefined`) - Describe this parameter.
     /// - `log` (`&mut SimulationData`) - Describe this parameter.
     /// - `print_output` (`bool`) - Describe this parameter.
-    pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool) {
+    pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool, log_output: bool) {
         // Executes the simulation
         for i in 0..self.max_iterations {
+            let old_state = self.state.clone();
+
             self.current_iteration = i;
-            log.add_row(self.state.get_logrow(), self.state.get_time());
-
-            // Check for exit condition
-            if self.is_done() {
-                if print_output {
-                    println!("\n==================== Calculation complete! ================================================================================");
-                    self.state.print_state(i);
-                    println!("===========================================================================================================================\n");
-                }
-
-                break;
-            }
+            if log_output {log.add_row(self.state.get_logrow(), self.state.get_time())};
 
             // Output simulation info to terminal
-            if print_output && i % 10 == 0 {
+            if print_output && i % 1 == 0 {
                 self.state.print_state(i);
             }
 
             // Advance the calculation
             self.ode.timestep(&mut self.state);
+            //
+            // Check Exit Condition
+            if self.is_done() {
+                // Mitigate overshoot errors
+                match self.exit_condition {
+                    SimulationExitCondition::ApogeeReached => self.ode.backtrack_apogee(&mut self.state, &old_state)
+                }
+                //
+                if log_output.not() {log.add_row(self.state.get_logrow(), self.state.get_time())};
+                //
+                if print_output {
+                    println!("\n==================== Calculation complete! ================================================================================");
+                    self.state.print_state(i+1);
+                    println!("===========================================================================================================================\n");
+                }
+
+                break;
+            }
         }
     }
 
@@ -82,13 +93,14 @@ impl Simulation {
 
     fn is_done(&self) -> bool {
         match self.exit_condition {
-            SimulationExitCondition::ApogeeReached => self.condition_one(),
+            SimulationExitCondition::ApogeeReached => self.condition_apogee(),
         }
     }
 
-    fn condition_one(&self) -> bool {
+    fn condition_apogee(&self) -> bool {
         // Stop calculation when apogee is reached
-        self.state.get_vertical_velocity() < 0.0
+        let tolerance : f64 = 1.0; // m/s
+        self.state.get_vertical_velocity() < tolerance
     }
 }
 
@@ -127,15 +139,24 @@ mod tests {
     fn test_run() {
         // Tests that running a simple simulation completes without error
         let mut simulation = make_simulation();
-        let max_iterations: u64 = 100;
+        let max_iterations: u64 = 1000;
         simulation.max_iterations = max_iterations;
 
         assert!(!simulation.is_done());
 
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(simulation.is_done());
         assert!(simulation.current_iteration <= max_iterations);
+
+        // Make sure backtracking is not allowing gross overshoots of apogee`
+        assert!(simulation.state.get_vertical_velocity() > -5.0);
+
+        // Test for a very specific apogee. Adjust the range for this test only 
+        // if getting a different apogee is an expected outcome. (i.e. improving backtracking or
+        // changing the model / integration method or params)
+        let target : f64 = 453.87; 
+        assert!((simulation.apogee()-target).abs() < 1.0);
 
         // Tests that running a simulation with too low max_iterations stops correctly
         let mut simulation = make_simulation();
@@ -144,7 +165,7 @@ mod tests {
 
         assert!(!simulation.is_done());
 
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(!simulation.is_done());
         // We have to do - 1 here because current_iteration is zero-indexed
@@ -203,7 +224,7 @@ mod tests {
         assert!(a0.is_nan());
 
         // After running, it should be done, and apogee should be a finite altitude
-        simulation.run(&mut SimulationData::new(), false);
+        simulation.run(&mut SimulationData::new(), false, false);
 
         assert!(simulation.is_done());
 
