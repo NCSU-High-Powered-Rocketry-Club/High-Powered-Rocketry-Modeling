@@ -139,7 +139,7 @@ mod tests {
     fn test_run() {
         // Tests that running a simple simulation completes without error
         let mut simulation = make_simulation();
-        let max_iterations: u64 = 100;
+        let max_iterations: u64 = 1000;
         simulation.max_iterations = max_iterations;
 
         assert!(!simulation.is_done());
@@ -151,6 +151,12 @@ mod tests {
 
         // Make sure backtracking is not allowing gross overshoots of apogee`
         assert!(simulation.state.get_vertical_velocity() > -5.0);
+
+        // Test for a very specific apogee. Adjust the range for this test only 
+        // if getting a different apogee is an expected outcome. (i.e. improving backtracking or
+        // changing the model / integration method or params)
+        let target : f64 = 453.87; 
+        assert!((simulation.apogee()-target).abs() < 1.0);
 
         // Tests that running a simulation with too low max_iterations stops correctly
         let mut simulation = make_simulation();
