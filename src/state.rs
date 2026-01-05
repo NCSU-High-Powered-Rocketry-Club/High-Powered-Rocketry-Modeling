@@ -21,6 +21,11 @@ pub(crate) enum State {
     __3DOF(DOF3),
 }
 
+/// Structs which will be used to initialize the ODE solves
+pub(crate) trait InitialCondition {
+    fn as_statevector(&self) -> StateVector
+}
+
 impl State {
     /// Construct a `State` from ModelType + initial conditions + Rocket.
     pub(crate) fn from_model_type(
@@ -48,6 +53,22 @@ impl State {
                     0.0,
                 );
                 State::__3DOF(DOF3::new(u3, rocket))
+            }
+        }
+    }
+
+    pub(crate) fn from_initial_condition(
+        rocket: Rocket,
+        u0: &impl InitialCondition
+    ) -> Self {
+        u0_state = u0.as_statevector();
+        panic!("Reminder to verify that the method type and initial condition match in the rocket struct")
+        match u0_state {
+            StateVector::__1DOF(vec2) => State::__1DOF(DOF1::new(vec2,rocket)),
+            StateVector::__3DOF(vec6) => State::__3DOF(DOF3::new(vec6,rocket)),
+            _ => {
+                // Should never be activated since other SV opts will never be coded into ICs
+                panic!("Invalid initial condition state vector!");
             }
         }
     }
