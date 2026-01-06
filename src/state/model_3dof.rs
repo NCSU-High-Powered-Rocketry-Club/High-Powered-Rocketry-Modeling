@@ -1,7 +1,9 @@
 use crate::physics_mod;
 use crate::rocket::Rocket;
+use crate::state::{InitialCondition, StateVector};
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 use std::f64::consts::PI;
+use pyo3::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct DOF3 {
@@ -134,6 +136,57 @@ impl DOF3 {
 
         self.dudt = Vector6::new(dxdt, dydt, omega, dvxdt, dvydt, domegadt);
         self.is_current = true;
+    }
+}
+
+#[pyclass(dict, get_all, set_all)]
+#[derive(Debug, Clone, Copy)]
+pub struct InitialCondition3DOF {
+    /// Initial down-range, or horizontal, position of the rocket (m)
+    pub horizontal_position:  f64,
+    /// Initial altitude of the rocket (m)
+    pub vertical_position:   f64,
+    /// Initial orientation of the rocket (rad)
+    pub orientation: f64,
+    /// Initial horizontal velocity or groundspeed (m/s)
+    pub horizontal_velocity: f64,
+    /// Initial vertical velocity (m/s)
+    pub vertical_velocity:   f64,
+    /// Initial rate of rotation of the rocket (rad/s)
+    pub angular_rate: f64,
+}
+
+#[pymethods]
+impl InitialCondition3DOF {
+    #[new]
+    fn new(
+        horizontal_position:f64,
+        vertical_position: f64,
+        orientation: f64,
+        horizontal_velocity: f64,
+        vertical_velocity: f64,
+        angular_rate: f64,
+    ) -> Self {
+        Self{
+        horizontal_position,
+        vertical_position,
+        orientation,
+        horizontal_velocity,
+        vertical_velocity,
+        angular_rate,
+        }
+    }
+}
+
+impl InitialCondition for InitialCondition3DOF {
+    fn as_statevector(&self) -> StateVector {
+        StateVector::__3DOF(Vector6::new(
+            self.horizontal_position,
+            self.vertical_position,
+            self.orientation,
+            self.horizontal_velocity,
+            self.vertical_velocity,
+            self.angular_rate))
     }
 }
 

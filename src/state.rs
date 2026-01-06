@@ -23,51 +23,22 @@ pub(crate) enum State {
 
 /// Structs which will be used to initialize the ODE solves
 pub(crate) trait InitialCondition {
-    fn as_statevector(&self) -> StateVector
+    fn as_statevector(&self) -> StateVector;
 }
 
 impl State {
-    /// Construct a `State` from ModelType + initial conditions + Rocket.
-    pub(crate) fn from_model_type(
-        model_type: ModelType,
-        rocket: Rocket,
-        initial_height: f64,
-        initial_velocity: f64,
-        initial_angle: Option<f64>,
-    ) -> Self {
-        match model_type {
-            ModelType::OneDOF => {
-                // u1 = [y, vy]
-                let u1 = Vector2::new(initial_height, initial_velocity);
-                State::__1DOF(DOF1::new(u1, rocket))
-            }
-            ModelType::ThreeDOF => {
-                // u3 = [x, y, theta, vx, vy, omega]
-                // Initial orientation = PI/2 (pointing up) if not provided
-                let u3 = Vector6::new(
-                    0.0,
-                    initial_height,
-                    initial_angle.unwrap_or(PI / 2.0),
-                    0.0,
-                    initial_velocity,
-                    0.0,
-                );
-                State::__3DOF(DOF3::new(u3, rocket))
-            }
-        }
-    }
-
+    
+    /// Construct a 'State' from a given initial condition
     pub(crate) fn from_initial_condition(
         rocket: Rocket,
         u0: &impl InitialCondition
     ) -> Self {
-        u0_state = u0.as_statevector();
-        panic!("Reminder to verify that the method type and initial condition match in the rocket struct")
+        let u0_state = u0.as_statevector();
+        panic!("Reminder to verify that the method type and initial condition match in the rocket struct");
         match u0_state {
             StateVector::__1DOF(vec2) => State::__1DOF(DOF1::new(vec2,rocket)),
             StateVector::__3DOF(vec6) => State::__3DOF(DOF3::new(vec6,rocket)),
             _ => {
-                // Should never be activated since other SV opts will never be coded into ICs
                 panic!("Invalid initial condition state vector!");
             }
         }

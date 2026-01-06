@@ -1,7 +1,8 @@
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
-use crate::state::State;
+use crate::state::{InitialCondition,State};
+use crate::state::state_vector::{StateVector};
 use pyo3::prelude::*;
 
 #[pyclass(eq, eq_int)]
@@ -69,26 +70,20 @@ impl Rocket {
         }
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_condition, integration_method, timestep_config=None, print_output=false, log_output=false))]
     fn simulate_flight(
         &self,
-        initial_height: f64,
-        initial_velocity: f64,
-        model_type: ModelType,
+        initial_condition: &impl InitialCondition,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
-        initial_angle: Option<f64>,
         print_output: bool,
         log_output: bool,
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
-        let state = State::from_model_type(
-            model_type,
+        let state = State::from_initial_condition(
             *self,
-            initial_height,
-            initial_velocity,
-            initial_angle,
+            initial_condition,
         );
 
         const MAXITER: u64 = 1e5 as u64;
@@ -103,33 +98,30 @@ impl Rocket {
         Ok(log)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
+    #[pyo3(signature = (initial_condition, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
     fn predict_apogee(
         &self,
-        initial_height: f64,
-        initial_velocity: f64,
-        model_type: ModelType,
+        initial_condition: &impl InitialCondition,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
         initial_angle: Option<f64>,
         print_output: bool,
     ) -> PyResult<f64> {
         let log = self.simulate_flight(
-            initial_height,
-            initial_velocity,
-            model_type,
+            initial_condition,
             integration_method,
             timestep_config,
-            initial_angle,
             print_output,
             false,
         )?;
 
         // Gets the height column based on model type
-        let height_col = match model_type {
-            ModelType::OneDOF => 1,
-            ModelType::ThreeDOF => 2,
+        let height_col = match initial_condition.as_statevector() {
+            StateVector::__1DOF(_v) => 1,
+            StateVector::__3DOF(_v) => 2,
+            _ => 0,
         };
+        /// Man that is janky, someone has to make that better  -Sailor
 
         let max_height = log.get_val((log.len as usize)-1, height_col);
 

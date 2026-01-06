@@ -1,13 +1,15 @@
 //use crate::math::vec_ops::MathVector;
 use crate::physics_mod;
 use crate::rocket::Rocket;
+use crate::state::{StateVector,InitialCondition};
 use nalgebra::{Vector2, Vector3};
+use pyo3::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct DOF1 {
     // This model is a simple 1D, (position,velocity) model
     // The assumtion is that the rocket is flying perfectly vertical and that there are no
-    // considerations about rotation or anything which would not be 3D in nature.
+    // considerations about rotation or anything which would not be 1D in nature.
     /// (height, velocity)
     pub(super) u: Vector2<f64>,
     /// (d_height/dt, d_velocity/dt)
@@ -84,6 +86,29 @@ impl DOF1 {
 
         self.dudt = Vector2::new(dhdt, dvdt);
         self.is_current = true;
+    }
+}
+
+#[pyclass(dict, get_all, set_all)]
+#[derive(Debug, Clone, Copy)]
+pub struct InitialCondition1DOF {
+    /// Initial height of the rocket (m)
+    pub height: f64,
+    /// Intial vertical velocity of the rocket (m)
+    pub velocity: f64,
+}
+
+#[pymethods]
+impl InitialCondition1DOF {
+    #[new]
+    fn new(height: f64, velocity: f64) -> Self {
+        Self{height,velocity}
+    }
+}
+
+impl InitialCondition for InitialCondition1DOF {
+    fn as_statevector(&self) -> StateVector {
+        StateVector::__1DOF(Vector2::new(self.height,self.velocity))
     }
 }
 
