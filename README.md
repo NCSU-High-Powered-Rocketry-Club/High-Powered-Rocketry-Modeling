@@ -14,49 +14,35 @@ Follow [this guide](https://www.geeksforgeeks.org/installation-guide/how-to-setu
 ## Install uv
 We use `uv` to handle the python side of this project. It's like pip but better, install it [here](https://docs.astral.sh/uv/getting-started/installation/).
 
-##### uv Workflow:
-```bash
+## Python Bindings (PyPI)
 
-# Run the Demo
-uv run examples/demo.py
-```
-<!-- 
-## Publishing
-Releases are automated via GitHub Actions. To publish a new version:
-1. Update version in `Cargo.toml`.
-2. Merge changes to `main`.
-3. Push a tag (e.g., `v0.1.0`).
+We need to to first build wheels for each platform, right now the workflow is to do this locally
+and then upload to PyPI. At the minimum, we build for Linux x86_64 and aarch64 for python versions
+3.10+, including free threaded wheels.
+
+1. We should always bump the version in `firm_python/Cargo.toml`
+
+2. Build the wheels:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0 -->
+# If you're on linux
+./compile.sh
+# If you're on windows
+.\compile.ps1
 ```
 
-# Building and Publishing Manually
+This will create wheels in the `target/wheels` directory, for Python versions 3.10 to 3.14,
+for both x86_64 and aarch64.
 
-## Prerequisites
-Ensure you have `uv` installed. The project is configured to use `maturin` and `zig` (for cross-compilation) via `uv`.
+3. Make sure you also have a source distribution:
 
-## Building Wheels
-To build wheels for Windows (x64), Linux (x86_64), and Linux (aarch64) for supported Python versions:
-
-```powershell
-.\build_wheels.ps1
+```bash
+uv run maturin sdist
 ```
 
-This script will:
-1. Clean the `target/wheels` directory.
-2. Build Windows wheels.
-3. Cross-compile Linux wheels using Zig.
+4. We will use `uv` to publish these wheels to PyPI. Make sure you are part of the HPRC
+   organization on PyPI, so you have access to the project and can publish new versions.
 
-## Publishing to PyPI
-You will need a PyPI API token.
-
-1. **Check Version**: Ensure `Cargo.toml` version is updated.
-2. **Upload**:
-   ```bash
-   uv run maturin upload target/wheels/*
-   ```
-   - **Username**: `__token__`
-   - **Password**: Your PyPI API token (starts with `pypi-`).
-
+```bash
+uv publish target/wheels/*
+```

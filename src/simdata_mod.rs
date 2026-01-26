@@ -28,7 +28,9 @@ impl SimulationData {
     //
     //
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
-        index >= self.len as usize;
+        if index >= self.len as usize {
+            panic!("Index out of bounds");
+        }
         if col == 0 {
             self.time[index]
         } else {

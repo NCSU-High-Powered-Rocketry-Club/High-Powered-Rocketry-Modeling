@@ -66,6 +66,7 @@ impl State {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn get_state_vec(&self) -> StateVector {
         match self {
             State::__1DOF(dof1) => StateVector::__1DOF(dof1.u),
@@ -73,6 +74,7 @@ impl State {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn get_altitude(&self) -> f64 {
         match self {
             State::__1DOF(dof1) => dof1.get_height(),
