@@ -31,7 +31,7 @@ jobs:
         run: uv sync --group dev
 
       - name: Build Python extension (maturin develop)
-        run: uv run maturin develop -m
+        run: uv run maturin develop
 
       - name: Run pytest
         run: uv run pytest -q
