@@ -3,7 +3,6 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-
 class ModelType(Enum):
     """
     Represents the type of dynamic model used for the simulation.
@@ -18,7 +17,6 @@ class ModelType(Enum):
     """
     Three degrees of freedom model; rocket moves in 2D with rotation (x, y, theta).
     """
-
 
 class OdeMethod(Enum):
     """
@@ -40,7 +38,6 @@ class OdeMethod(Enum):
     Fourth-order Runge–Kutta method with adaptive time stepping.
     """
 
-
 class FixedTimeStep:
     """
     Configuration for fixed time stepping.
@@ -53,9 +50,7 @@ class FixedTimeStep:
     Time step size in seconds.
     """
 
-    def __init__(self, dt: float) -> None:
-        ...
-
+    def __init__(self, dt: float) -> None: ...
 
 class AdaptiveTimeStep:
     """
@@ -117,7 +112,6 @@ class AdaptiveTimeStep:
         """
         ...
 
-
 class SimulationData:
     """
     Stores the results of a simulation as a time history.
@@ -128,9 +122,7 @@ class SimulationData:
     Number of rows in the simulation log.
     """
 
-    def __init__(self) -> None:
-        ...
-
+    def __init__(self) -> None: ...
     def get_val(self, index: int, col: int) -> float:
         """
         Get a value from the simulation data.
@@ -148,7 +140,6 @@ class SimulationData:
         :return: Number of rows in the simulation log.
         """
         ...
-
 
 class Rocket:
     """
@@ -201,9 +192,7 @@ class Rocket:
         moment_of_inertia: float,
         stab_margin_dimensional: float,
         cl_a: float,
-    ) -> None:
-        ...
-
+    ) -> None: ...
     def simulate_flight(
         self,
         initial_height: float,

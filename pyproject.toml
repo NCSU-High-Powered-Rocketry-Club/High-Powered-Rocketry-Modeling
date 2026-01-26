@@ -26,10 +26,12 @@ dynamic = ["version"]
 dev = [
     "maturin>=1.8,<2.0",
     "pytest",
-    "ziglang"
+    "ziglang",
+    "ruff"
 ]
 
-examples = [
+[project.optional-dependencies]
+extras = [
     "numpy",
     "matplotlib",
 ]
