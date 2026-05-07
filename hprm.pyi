@@ -202,6 +202,7 @@ class Rocket:
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         initial_angle: Optional[float] = None,
         print_output: bool = False,
+        log_output: bool = False,
     ) -> SimulationData:
         """
         Simulate the rocket's flight and return the full time history.
@@ -213,6 +214,8 @@ class Rocket:
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param initial_angle: Initial orientation in radians for ThreeDOF, or None for default.
         :param print_output: Whether to print simulation progress to stdout.
+        :param log_output: Whether to log each integration step into the returned SimulationData.
+            If False, only the final (apogee) state is logged.
         :return: SimulationData containing the simulated trajectory.
         """
         ...
