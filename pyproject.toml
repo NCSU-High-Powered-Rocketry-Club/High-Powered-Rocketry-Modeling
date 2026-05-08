@@ -37,6 +37,7 @@ dev = [
 extras = [
     "numpy",
     "matplotlib",
+    "plotly",
 ]
 
 [tool.uv]
