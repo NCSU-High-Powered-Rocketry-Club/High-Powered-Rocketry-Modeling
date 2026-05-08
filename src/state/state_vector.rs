@@ -124,27 +124,28 @@ impl StateVector {
             }
         }
     }
+    #[allow(dead_code)]
     pub fn cross_2d(&self, in2: &Vector2<f64>) -> f64 {
         match self {
             StateVector::__1DOF(avec) => avec.perp(in2),
-            StateVector::__3DOF(avec) => panic!("Requires 2d math vector"),
-            _ => {
-                panic!("Requires 2d math vector")
-            }
+            StateVector::__3DOF(_) => panic!("Requires 2d math vector"),
+            StateVector::__1DLOG(_) => panic!("Requires 2d math vector"),
+            StateVector::__3DLOG(_) => panic!("Requires 2d math vector"),
         }
     }
-    pub fn cross_3d(&self, in2: &Vector3<f64>) -> Vector3<f64> {
+    #[allow(dead_code)]
+    pub fn cross_3d(&self, _in2: &Vector3<f64>) -> Vector3<f64> {
         match self {
-            StateVector::__1DOF(avec) => panic!("Requires 3d math vector"),
-            StateVector::__3DOF(avec) => panic!("Requires 3d math vector"),
-            _ => {
-                panic!("Requires 3d math vector")
-            }
+            StateVector::__1DOF(_) => panic!("Requires 3d math vector"),
+            StateVector::__3DOF(_) => panic!("Requires 3d math vector"),
+            StateVector::__1DLOG(_) => panic!("Requires 3d math vector"),
+            StateVector::__3DLOG(_) => panic!("Requires 3d math vector"),
         }
     }
+    #[allow(dead_code)]
     pub fn rotate_2d(&self, angle: &f64) -> Vector2<f64> {
         match self {
-            StateVector::__1DOF(avec) => {
+            StateVector::__1DOF(_) => {
                 //assert_eq!(L, 2);
                 let a = self.as_array();
                 let mut out = [0.0f64; 2];
@@ -154,10 +155,9 @@ impl StateVector {
                 //
                 Vector2::new(out[0], out[1])
             }
-            StateVector::__3DOF(avec) => panic!("Requires 2d math vector"),
-            _ => {
-                panic!("Requires 2d math vector")
-            }
+            StateVector::__3DOF(_) => panic!("Requires 2d math vector"),
+            StateVector::__1DLOG(_) => panic!("Requires 2d math vector"),
+            StateVector::__3DLOG(_) => panic!("Requires 2d math vector"),
         }
     }
 }
@@ -169,9 +169,6 @@ impl StateVector {
             StateVector::__3DOF(avec) => avec.as_slice(),
             StateVector::__1DLOG(avec) => avec.as_slice(),
             StateVector::__3DLOG(avec) => avec.as_slice(),
-            _ => {
-                panic!("Invalid conversion to array, mismatching or unsupported State Vector type.")
-            }
         }
     }
 }
@@ -315,7 +312,7 @@ mod tests {
 
         let a3 = StateVector::__3DOF(Vector6::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
         let b3 = StateVector::__3DOF(Vector6::new(-1.0, 0.0, 10.0, -4.0, 2.0, 0.5));
-        let expected = 1.0 * (-1.0) + 2.0 * 0.0 + 3.0 * 10.0 + 4.0 * (-4.0) + 5.0 * 2.0 + 6.0 * 0.5;
+        let expected = -1.0 + 2.0 * 0.0 + 3.0 * 10.0 + 4.0 * (-4.0) + 5.0 * 2.0 + 6.0 * 0.5;
 
         assert_relative_eq!(a3.dot(&b3), expected, epsilon = 1e-12);
     }

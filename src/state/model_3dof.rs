@@ -281,8 +281,8 @@ mod tests {
         let got = dof.dudt;
 
         // Get the expected values by doing the same physics calculations here
-        let ox = -1.0 * f64::sin(u0[2]);
-        let oy = 1.0 * f64::cos(u0[2]);
+        let ox = -f64::sin(u0[2]);
+        let oy = f64::cos(u0[2]);
         let orientation = Vector2::new(ox, oy);
 
         let velocity = Vector2::new(u0[3], u0[4]);

@@ -70,6 +70,7 @@ impl Rocket {
     }
 
     #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false, log_output=false))]
+    #[allow(clippy::too_many_arguments)]
     fn simulate_flight(
         &self,
         initial_height: f64,
@@ -104,6 +105,7 @@ impl Rocket {
     }
 
     #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
+    #[allow(clippy::too_many_arguments)]
     fn predict_apogee(
         &self,
         initial_height: f64,
@@ -131,7 +133,7 @@ impl Rocket {
             ModelType::ThreeDOF => 2,
         };
 
-        let max_height = log.get_val((log.len as usize)-1, height_col);
+        let max_height = log.get_val((log.len as usize) - 1, height_col);
 
         Ok(max_height)
     }

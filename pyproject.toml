@@ -8,12 +8,15 @@ description = "High Powered Rocketry Modeling library"
 readme = "README.md"
 license = { text = "MIT" }
 
-# Require Python 3.13 and newer
-requires-python = ">=3.13"
+# Require Python 3.10 and newer
+requires-python = ">=3.10"
 
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -26,10 +29,12 @@ dynamic = ["version"]
 dev = [
     "maturin>=1.8,<2.0",
     "pytest",
-    "ziglang"
+    "ziglang",
+    "ruff"
 ]
 
-examples = [
+[project.optional-dependencies]
+extras = [
     "numpy",
     "matplotlib",
 ]

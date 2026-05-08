@@ -48,13 +48,15 @@ impl Simulation {
     pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool, log_output: bool) {
         // Executes the simulation
         for i in 0..self.max_iterations {
-            let old_state = self.state.clone();
+            let old_state = self.state;
 
             self.current_iteration = i;
-            if log_output {log.add_row(self.state.get_logrow(), self.state.get_time())};
+            if log_output {
+                log.add_row(self.state.get_logrow(), self.state.get_time())
+            };
 
             // Output simulation info to terminal
-            if print_output && i % 1 == 0 {
+            if print_output {
                 self.state.print_state(i);
             }
 
@@ -65,14 +67,18 @@ impl Simulation {
             if self.is_done() {
                 // Mitigate overshoot errors
                 match self.exit_condition {
-                    SimulationExitCondition::ApogeeReached => self.ode.backtrack_apogee(&mut self.state, &old_state)
+                    SimulationExitCondition::ApogeeReached => {
+                        self.ode.backtrack_apogee(&mut self.state, &old_state)
+                    }
                 }
                 //
-                if log_output.not() {log.add_row(self.state.get_logrow(), self.state.get_time())};
+                if log_output.not() {
+                    log.add_row(self.state.get_logrow(), self.state.get_time())
+                };
                 //
                 if print_output {
                     println!("\n==================== Calculation complete! ================================================================================");
-                    self.state.print_state(i+1);
+                    self.state.print_state(i + 1);
                     println!("===========================================================================================================================\n");
                 }
 
@@ -81,6 +87,7 @@ impl Simulation {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn apogee(&mut self) -> f64 {
         // Getter to obtain the apogee of aa flight after the simulation is complete
         if !self.is_done() {
@@ -99,7 +106,7 @@ impl Simulation {
 
     fn condition_apogee(&self) -> bool {
         // Stop calculation when apogee is reached
-        let tolerance : f64 = 1.0; // m/s
+        let tolerance: f64 = 1.0; // m/s
         self.state.get_vertical_velocity() < tolerance
     }
 }
@@ -152,11 +159,11 @@ mod tests {
         // Make sure backtracking is not allowing gross overshoots of apogee`
         assert!(simulation.state.get_vertical_velocity() > -5.0);
 
-        // Test for a very specific apogee. Adjust the range for this test only 
+        // Test for a very specific apogee. Adjust the range for this test only
         // if getting a different apogee is an expected outcome. (i.e. improving backtracking or
         // changing the model / integration method or params)
-        let target : f64 = 453.87; 
-        assert!((simulation.apogee()-target).abs() < 1.0);
+        let target: f64 = 453.87;
+        assert!((simulation.apogee() - target).abs() < 1.0);
 
         // Tests that running a simulation with too low max_iterations stops correctly
         let mut simulation = make_simulation();
