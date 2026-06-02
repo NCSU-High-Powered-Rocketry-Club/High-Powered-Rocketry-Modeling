@@ -1,6 +1,7 @@
 use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
+use crate::constants::simulation_constants::APOGEE_VELOCITY_THRESHOLD_M_S;
 
 use std::ops::Not;
 
@@ -106,8 +107,7 @@ impl Simulation {
 
     fn condition_apogee(&self) -> bool {
         // Stop calculation when apogee is reached
-        let tolerance: f64 = 1.0; // m/s
-        self.state.get_vertical_velocity() < tolerance
+        self.state.get_vertical_velocity() < APOGEE_VELOCITY_THRESHOLD_M_S
     }
 }
 

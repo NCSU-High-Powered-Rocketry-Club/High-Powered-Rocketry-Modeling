@@ -1,3 +1,7 @@
+use crate::constants::ode_constants::{
+    DEFAULT_MAX_TIMESTEP, DEFAULT_MIN_TIMESTEP, DEFAULT_TOLERANCE, DEFAULT_TIMESTEP, SAFETY_FACTOR,
+};
+
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
@@ -68,26 +72,26 @@ impl AdaptiveTimeStep {
     #[staticmethod]
     pub fn default() -> Self {
         Self {
-            dt: 0.01,
-            dt_min: 1e-6,
-            dt_max: 10.0,
-            absolute_error_tolerance: 1.0e-2,
-            relative_error_tolerance: 1.0e-2,
+            dt: DEFAULT_TIMESTEP,
+            dt_min: DEFAULT_MIN_TIMESTEP,
+            dt_max: DEFAULT_MAX_TIMESTEP,
+            absolute_error_tolerance: DEFAULT_TOLERANCE,
+            relative_error_tolerance: DEFAULT_TOLERANCE,
         }
     }
 
     pub fn next_dt(&self, error_norm: f64) -> f64 {
         let dt = self.dt;
 
-        // Account for edge case where error norm is extremely small or 0
+        // Account for edge case where error norm is extremely small or 0, if so double it
         if error_norm <= 1e-30 {
             return (dt * 2.0).clamp(self.dt_min, self.dt_max);
         }
 
-        (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * 0.5
+        (dt * (((self.absolute_error_tolerance + self.relative_error_tolerance * dt) * SAFETY_FACTOR
             / error_norm)
-            .powf(0.25))
-        .clamp(0.5, 2.0))
+            .powf(0.25)) // it's a 4th order method, so we have to do 1/4 power here
+        .clamp(0.5, 2.0)) // limits the change in timestep to be between 0.5x and 2x
         .clamp(self.dt_min, self.dt_max)
     }
 }
@@ -149,14 +153,15 @@ impl OdeSolver {
         }
     }
 
+    /// The Explicit euler method is the most basic, just multiplying th derivative by the timestep
     fn explicit_euler(state: &mut State, dt: f64) {
-        //The Explicit euler method is the most basic,
-        // just multiplying th derivative by the timestep
         let dudt = state.get_derivs();
         let du = dudt.scale(dt);
         state.update(du, dt)
     }
 
+    /// Runge-Kutta 3rd order method, a 3-stage method that provides better accuracy 
+    /// than Euler's method by taking multiple intermediate steps within each timestep.
     fn runge_kutta_3(state: &mut State, dt: f64) {
         // Runge-Kutta methods are a family of higher-order integration schemes.
         // The account for varying degrees of non-linearity /
@@ -188,6 +193,14 @@ impl OdeSolver {
         state.update(du, dt);
     }
 
+    /// Runge-Kutta-Fehlberg method, a 4th-order method with an embedded 5th-order method for error 
+    /// estimation and adaptive timestep control. Basically what this means is that we get the best of
+    /// both worlds: we get a 4th-order accurate solution, but it can also be a lot faster than a fixed 
+    /// timestep method because it can take larger steps when the solution is smooth and smaller steps 
+    /// when the solution is changing rapidly.
+    /// 
+    /// Don't worry about all of the scary numbers, they are just the coefficients of the method which 
+    /// were derived by Fehlberg in the 1960s.
     fn runge_kutta_45(state: &mut State, adaptive_time_step: &mut AdaptiveTimeStep) {
         let dt = adaptive_time_step.dt;
 

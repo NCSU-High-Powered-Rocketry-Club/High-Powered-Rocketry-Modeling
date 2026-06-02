@@ -1,9 +1,11 @@
+use crate::constants::physics_constants::{GRAVITY_M_S_2, SEA_LEVEL_AIR_DENSITY_KG_M_3};
+
 pub(crate) fn density() -> f64 {
-    1.224
+    SEA_LEVEL_AIR_DENSITY_KG_M_3
 }
 
 pub(crate) fn gravity() -> f64 {
-    -9.8
+    -GRAVITY_M_S_2
 }
 
 pub(crate) fn calc_drag_force(velocity: f64, cd: f64, area: f64) -> f64 {

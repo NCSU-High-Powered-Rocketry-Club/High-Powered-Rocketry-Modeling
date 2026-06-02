@@ -1,3 +1,4 @@
+mod constants;
 mod ode;
 mod physics_mod;
 mod rocket;
@@ -9,7 +10,7 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use std::f64::consts::PI;
 
-use crate::ode::{OdeSolver, TimeStepOptions};
+use crate::ode::{OdeSolver, TimeStepOptions, AdaptiveTimeStep, FixedTimeStep};
 use crate::rocket::{ModelType, OdeMethod, Rocket};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::Simulation;
@@ -21,7 +22,7 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<OdeMethod>()?;
     m.add_class::<Rocket>()?;
     m.add_class::<SimulationData>()?;
-    m.add_class::<crate::ode::FixedTimeStep>()?;
-    m.add_class::<crate::ode::AdaptiveTimeStep>()?;
+    m.add_class::<FixedTimeStep>()?;
+    m.add_class::<AdaptiveTimeStep>()?;
     Ok(())
 }
