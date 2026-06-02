@@ -1,6 +1,4 @@
 import math
-import numpy as np
-import matplotlib.pyplot as plt
 from time import perf_counter
 from hprm import Rocket, AdaptiveTimeStep, ModelType, OdeMethod
 
@@ -35,7 +33,7 @@ def main():
     ats.absolute_error_tolerance = 1.0e-0
     ats.relative_error_tolerance = 1.0e-0
     tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,
@@ -45,7 +43,7 @@ def main():
     )
     tend = perf_counter()
     t1 = tend - tstart
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,
@@ -59,7 +57,7 @@ def main():
     ats.absolute_error_tolerance = 1.0e-2
     ats.relative_error_tolerance = 1.0e-2
     tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,
@@ -69,7 +67,7 @@ def main():
     )
     tend = perf_counter()
     t2 = tend - tstart
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,
@@ -83,7 +81,7 @@ def main():
     ats.absolute_error_tolerance = 1.0e-4
     ats.relative_error_tolerance = 1.0e-4
     tstart = perf_counter()
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,
@@ -93,7 +91,7 @@ def main():
     )
     tend = perf_counter()
     t3 = tend - tstart
-    simdata = test_vehicle.simulate_flight(
+    test_vehicle.simulate_flight(
         initial_height,
         initial_velocity,
         ModelType.ThreeDOF,

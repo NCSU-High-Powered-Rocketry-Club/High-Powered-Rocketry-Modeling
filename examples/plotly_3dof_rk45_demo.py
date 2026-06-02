@@ -18,13 +18,13 @@ def simdata_to_numpy(simdata, ncols: int) -> np.ndarray:
 
 def main() -> None:
     rocket = Rocket(
-        10.0,   # mass [kg]
-        0.3,    # drag coefficient [-]
+        10.0,  # mass [kg]
+        0.3,  # drag coefficient [-]
         0.005,  # drag reference area [m^2]
-        0.05,   # lift reference area [m^2]
-        5.0,    # moment of inertia [kg m^2]
-        0.5,    # stability margin [m]
-        0.2,    # dCL/d(alpha) [1/rad]
+        0.05,  # lift reference area [m^2]
+        5.0,  # moment of inertia [kg m^2]
+        0.5,  # stability margin [m]
+        0.2,  # dCL/d(alpha) [1/rad]
     )
 
     initial_height = 0.0
