@@ -1,6 +1,6 @@
 pub mod ode_constants {
     /// The default timestep for the ODE solver in seconds
-    pub const DEFAULT_TIMESTEP : f64 = 0.01;
+    pub const DEFAULT_TIMESTEP: f64 = 0.01;
     /// The minimum and maximum timestep limits for the adaptive ODE solver in seconds
     pub const DEFAULT_MIN_TIMESTEP: f64 = 1e-6;
     /// The maximum timestep limit for the adaptive ODE solver in seconds
@@ -20,7 +20,7 @@ pub mod physics_constants {
 
 pub mod simulation_constants {
     /// Number of data columns in SimulationData (matches StateVector length)
-    pub const DATA_LENGTH: usize = 18; 
+    pub const DATA_LENGTH: usize = 18;
     /// The initial number of rows to pre-allocate in SimulationData
     pub const INITIAL_DATA_CAPACITY: usize = 1000;
     /// The velocity threshold (m/s) below which the rocket is considered to have reached apogee

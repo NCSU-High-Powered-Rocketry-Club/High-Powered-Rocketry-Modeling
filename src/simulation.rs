@@ -1,7 +1,7 @@
+use crate::constants::simulation_constants::APOGEE_VELOCITY_THRESHOLD_M_S;
 use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
-use crate::constants::simulation_constants::APOGEE_VELOCITY_THRESHOLD_M_S;
 
 use std::ops::Not;
 

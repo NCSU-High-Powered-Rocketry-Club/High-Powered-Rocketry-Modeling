@@ -1,5 +1,5 @@
-use crate::state::state_vector::StateVector;
 use crate::constants::simulation_constants::{DATA_LENGTH, INITIAL_DATA_CAPACITY};
+use crate::state::state_vector::StateVector;
 use numpy::{PyArray1, PyArray2, ToPyArray};
 use pyo3::prelude::*;
 
@@ -30,7 +30,7 @@ impl SimulationData {
         if index >= self.len as usize {
             panic!("Index out of bounds");
         }
-        
+
         if col == 0 {
             self.time[index]
         } else {
@@ -54,6 +54,7 @@ impl SimulationData {
                 rowvec.push(0.0);
             }
         }
-        self.data.push(<[f64; DATA_LENGTH]>::try_from(rowvec).unwrap());
+        self.data
+            .push(<[f64; DATA_LENGTH]>::try_from(rowvec).unwrap());
     }
 }

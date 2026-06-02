@@ -10,7 +10,7 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use std::f64::consts::PI;
 
-use crate::ode::{OdeSolver, TimeStepOptions, AdaptiveTimeStep, FixedTimeStep};
+use crate::ode::{AdaptiveTimeStep, FixedTimeStep, OdeSolver, TimeStepOptions};
 use crate::rocket::{ModelType, OdeMethod, Rocket};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::Simulation;
