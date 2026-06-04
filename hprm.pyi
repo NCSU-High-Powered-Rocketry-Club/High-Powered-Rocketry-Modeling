@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Optional
+import numpy as np
 
 class OdeMethod(Enum):
     """
@@ -97,35 +98,6 @@ class AdaptiveTimeStep:
         """
         ...
 
-class SimulationData:
-    """
-    Stores the results of a simulation as a time history.
-    """
-
-    len: int
-    """
-    Number of rows in the simulation log.
-    """
-
-    def __init__(self) -> None: ...
-    def get_val(self, index: int, col: int) -> float:
-        """
-        Get a value from the simulation data.
-
-        :param index: Row index (time step).
-        :param col: Column index (0 for time, 1+ for state variables).
-        :return: Value at the given row and column.
-        """
-        ...
-
-    def get_len(self) -> int:
-        """
-        Get the number of data points.
-
-        :return: Number of rows in the simulation log.
-        """
-        ...
-
 class Rocket:
     """
     Physical properties of the rocket used in the simulation.
@@ -178,30 +150,31 @@ class Rocket:
         stab_margin_dimensional: float,
         cl_a: float,
     ) -> None: ...
+
     def simulate_flight_1dof(
-        self,
-        initial_height: float,
-        initial_velocity: float,
-        integration_method: OdeMethod,
-        timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
-        max_iterations: int = 100000,
-        print_output: bool = False,
-        log_output: bool = False,
-    ) -> SimulationData:
-        """
-        Simulate the rocket's flight using a 1-DOF model (vertical motion only).
-
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
-        :param integration_method: Numerical integration method to use.
-        :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
-        :param max_iterations: Maximum integration iterations allowed.
-        :param print_output: Whether to print simulation progress to stdout.
-        :param log_output: Whether to log each integration step into the returned SimulationData.
-        :return: SimulationData containing the simulated trajectory.
-        """
-        ...
-
+            self,
+            initial_height: float,
+            initial_velocity: float,
+            integration_method: OdeMethod,
+            timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
+            max_iterations: int = 100000,
+            print_output: bool = False,
+            log_output: bool = False,
+        ) -> tuple[np.ndarray, np.ndarray]:
+            """
+            Simulate the rocket's flight using a 1-DOF model (vertical motion only).
+    
+            :param initial_height: Initial altitude of the rocket in meters.
+            :param initial_velocity: Initial vertical velocity in meters per second.
+            :param integration_method: Numerical integration method to use.
+            :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
+            :param max_iterations: Maximum integration iterations allowed.
+            :param print_output: Whether to print simulation progress to stdout.
+            :param log_output: Whether to log each integration step into the returned arrays.
+            :return: A tuple containing (time_array, state_matrix) as NumPy arrays.
+            """
+            ...
+    
     def simulate_flight_3dof(
         self,
         initial_height: float,
@@ -212,7 +185,7 @@ class Rocket:
         max_iterations: int = 100000,
         print_output: bool = False,
         log_output: bool = False,
-    ) -> SimulationData:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Simulate the rocket's flight using a 3-DOF model (2D translation and rotation).
 
@@ -223,8 +196,8 @@ class Rocket:
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
         :param print_output: Whether to print simulation progress to stdout.
-        :param log_output: Whether to log each integration step into the returned SimulationData.
-        :return: SimulationData containing the simulated trajectory.
+        :param log_output: Whether to log each integration step into the returned arrays.
+        :return: A tuple containing (time_array, state_matrix) as NumPy arrays.
         """
         ...
 

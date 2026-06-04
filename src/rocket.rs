@@ -1,9 +1,11 @@
-use crate::constants::simulation_constants::MAX_ITERATIONS;
+use crate::constants::simulation_constants::{DATA_LENGTH, MAX_ITERATIONS};
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
 use crate::state::State;
 use pyo3::prelude::*;
+use pyo3::Bound;
+use numpy::{ndarray::Array2, PyArray1, PyArray2, ToPyArray};
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -62,8 +64,9 @@ impl Rocket {
 
     #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn simulate_flight_1dof(
+    fn simulate_flight_1dof<'py>(
         &self,
+        py: Python<'py>,
         initial_height: f64,
         initial_velocity: f64,
         integration_method: OdeMethod,
@@ -71,7 +74,7 @@ impl Rocket {
         max_iterations: u64,
         print_output: bool,
         log_output: bool,
-    ) -> PyResult<SimulationData> {
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray2<f64>>)> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
         let state = State::new_1dof(*self, initial_height, initial_velocity);
@@ -84,13 +87,21 @@ impl Rocket {
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
-        Ok(log)
+        
+        let time_array = log.time_log.to_pyarray(py);
+        let rows = log.time_log.len();
+        let flat_data: Vec<f64> = log.state_log.iter().flatten().copied().collect();
+        let matrix = Array2::from_shape_vec((rows, DATA_LENGTH), flat_data).unwrap();
+        let state_matrix = matrix.to_pyarray(py);
+
+        Ok((time_array, state_matrix))
     }
 
     #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn simulate_flight_3dof(
+    fn simulate_flight_3dof<'py>(
         &self,
+        py: Python<'py>,
         initial_height: f64,
         initial_velocity: f64,
         initial_angle: f64,
@@ -99,7 +110,7 @@ impl Rocket {
         max_iterations: u64,
         print_output: bool,
         log_output: bool,
-    ) -> PyResult<SimulationData> {
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray2<f64>>)> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
         let state = State::new_3dof(*self, initial_height, initial_velocity, initial_angle);
@@ -112,7 +123,14 @@ impl Rocket {
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
-        Ok(log)
+        
+        let time_array = log.time_log.to_pyarray(py);
+        let rows = log.time_log.len();
+        let flat_data: Vec<f64> = log.state_log.iter().flatten().copied().collect();
+        let matrix = Array2::from_shape_vec((rows, DATA_LENGTH), flat_data).unwrap();
+        let state_matrix = matrix.to_pyarray(py);
+
+        Ok((time_array, state_matrix))
     }
 
     #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
@@ -126,15 +144,19 @@ impl Rocket {
         max_iterations: u64,
         print_output: bool,
     ) -> PyResult<f64> {
-        let log = self.simulate_flight_1dof(
-            initial_height,
-            initial_velocity,
-            integration_method,
-            timestep_config,
+        let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
+
+        let state = State::new_1dof(*self, initial_height, initial_velocity);
+
+        let mut simulation = Simulation::new(
+            state,
+            ode_solver,
+            SimulationExitCondition::ApogeeReached,
             max_iterations,
-            print_output,
-            false,
-        )?;
+        );
+        
+        let mut log = SimulationData::new();
+        simulation.run(&mut log, print_output, false);
 
         const HEIGHT_COL: usize = 1;
 
@@ -155,16 +177,19 @@ impl Rocket {
         max_iterations: u64,
         print_output: bool,
     ) -> PyResult<f64> {
-        let log = self.simulate_flight_3dof(
-            initial_height,
-            initial_velocity,
-            initial_angle,
-            integration_method,
-            timestep_config,
+        let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
+
+        let state = State::new_3dof(*self, initial_height, initial_velocity, initial_angle);
+
+        let mut simulation = Simulation::new(
+            state,
+            ode_solver,
+            SimulationExitCondition::ApogeeReached,
             max_iterations,
-            print_output,
-            false,
-        )?;
+        );
+        
+        let mut log = SimulationData::new();
+        simulation.run(&mut log, print_output, false);
 
         const HEIGHT_COL: usize = 2;
 
