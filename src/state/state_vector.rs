@@ -115,6 +115,7 @@ impl StateVector {
             }
         }
     }
+
     pub fn scale(&self, k: f64) -> Self {
         match self {
             StateVector::__1DOF(avec) => StateVector::__1DOF(avec * k),
@@ -124,6 +125,7 @@ impl StateVector {
             }
         }
     }
+
     #[allow(dead_code)]
     pub fn cross_2d(&self, in2: &Vector2<f64>) -> f64 {
         match self {
@@ -133,6 +135,7 @@ impl StateVector {
             StateVector::__3DLOG(_) => panic!("Requires 2d math vector"),
         }
     }
+
     #[allow(dead_code)]
     pub fn cross_3d(&self, _in2: &Vector3<f64>) -> Vector3<f64> {
         match self {
@@ -142,6 +145,7 @@ impl StateVector {
             StateVector::__3DLOG(_) => panic!("Requires 3d math vector"),
         }
     }
+
     #[allow(dead_code)]
     pub fn rotate_2d(&self, angle: &f64) -> Vector2<f64> {
         match self {

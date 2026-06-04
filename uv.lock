@@ -251,15 +251,13 @@ wheels = [
 [[package]]
 name = "hprm"
 source = { editable = "." }
-dependencies = [
-    { name = "plotly" },
-]
 
 [package.optional-dependencies]
 extras = [
     { name = "matplotlib" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "plotly" },
 ]
 
 [package.dev-dependencies]
@@ -274,7 +272,7 @@ dev = [
 requires-dist = [
     { name = "matplotlib", marker = "extra == 'extras'" },
     { name = "numpy", marker = "extra == 'extras'" },
-    { name = "plotly" },
+    { name = "plotly", marker = "extra == 'extras'" },
 ]
 provides-extras = ["extras"]
 

@@ -1,52 +1,46 @@
+use crate::constants::simulation_constants::{DATA_LENGTH, INITIAL_DATA_CAPACITY};
 use crate::state::state_vector::StateVector;
 use numpy::{PyArray1, PyArray2, ToPyArray};
 use pyo3::prelude::*;
-//
-const L: usize = 18;
+
 #[pyclass(dict, get_all, set_all)]
 #[derive(Clone, Debug)]
 pub(crate) struct SimulationData {
     pub(crate) len: u64,
     time: Vec<f64>,
-    data: Vec<[f64; L]>,
+    data: Vec<[f64; DATA_LENGTH]>,
     index: usize,
     col: usize,
 }
+
 #[pymethods]
 impl SimulationData {
-    const INITCAP: usize = 1000;
     #[new]
     pub(crate) fn new() -> Self {
         Self {
             len: 0,
-            time: Vec::with_capacity(Self::INITCAP),
-            data: Vec::with_capacity(Self::INITCAP),
+            time: Vec::with_capacity(INITIAL_DATA_CAPACITY),
+            data: Vec::with_capacity(INITIAL_DATA_CAPACITY),
             index: 0,
             col: 0,
         }
     }
-    //
-    //
+
     pub(crate) fn get_val(&self, index: usize, col: usize) -> f64 {
         if index >= self.len as usize {
             panic!("Index out of bounds");
         }
+
         if col == 0 {
             self.time[index]
         } else {
             self.data[index][col - 1]
         }
     }
-    //
-    //
+
     pub(crate) fn get_len(&self) -> usize {
         self.time.len()
     }
-    //
-    //
-    //pub(crate) fn get_as_numpy_array(&self, py: Python) -> (Py<PyArray1<f64>> , Py<PyArray2<f64>>) {
-    //    (self.time.to_pyarray(py).into(), self.data.to_pyarray(py).into())
-    //}
 }
 
 impl SimulationData {
@@ -55,11 +49,12 @@ impl SimulationData {
         self.time.push(time);
         let rowdata = row.as_array();
         let mut rowvec = rowdata.to_vec();
-        if rowdata.len() < L {
-            while rowvec.len() < L {
+        if rowdata.len() < DATA_LENGTH {
+            while rowvec.len() < DATA_LENGTH {
                 rowvec.push(0.0);
             }
         }
-        self.data.push(<[f64; L]>::try_from(rowvec).unwrap());
+        self.data
+            .push(<[f64; DATA_LENGTH]>::try_from(rowvec).unwrap());
     }
 }
