@@ -21,11 +21,7 @@ pub(crate) enum State {
 
 impl State {
     /// Makes a new state for the 1-DOF model, given the rocket parameters and initial conditions.
-    pub(crate) fn new_1dof(
-        rocket: Rocket,
-        initial_height: f64,
-        initial_velocity: f64,
-    ) -> Self {
+    pub(crate) fn new_1dof(rocket: Rocket, initial_height: f64, initial_velocity: f64) -> Self {
         let u1 = Vector2::new(initial_height, initial_velocity);
         State::OneDOF(OneDOFModel::new(u1, rocket))
     }

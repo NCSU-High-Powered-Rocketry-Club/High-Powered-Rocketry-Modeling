@@ -211,7 +211,8 @@ mod tests {
             stab_margin_dimensional: 0.0,
             cl_a: 0.0,
         };
-        let state_negative_vel = State::OneDOF(OneDOFModel::new(Vector2::new(0.00, -0.01), rocket2));
+        let state_negative_vel =
+            State::OneDOF(OneDOFModel::new(Vector2::new(0.00, -0.01), rocket2));
         let sim_negative_vel = Simulation::new(
             state_negative_vel,
             OdeSolver::Euler(FixedTimeStep { dt: 0.1 }),

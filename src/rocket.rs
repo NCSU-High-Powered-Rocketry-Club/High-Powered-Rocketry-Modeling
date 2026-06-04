@@ -74,11 +74,7 @@ impl Rocket {
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
-        let state = State::new_1dof(
-            *self,
-            initial_height,
-            initial_velocity,
-        );
+        let state = State::new_1dof(*self, initial_height, initial_velocity);
 
         let mut simulation = Simulation::new(
             state,
@@ -106,12 +102,7 @@ impl Rocket {
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
-        let state = State::new_3dof(
-            *self,
-            initial_height,
-            initial_velocity,
-            initial_angle,
-        );
+        let state = State::new_3dof(*self, initial_height, initial_velocity, initial_angle);
 
         let mut simulation = Simulation::new(
             state,
