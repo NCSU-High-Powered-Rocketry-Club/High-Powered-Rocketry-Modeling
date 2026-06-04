@@ -4,7 +4,7 @@ use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct DOF3 {
+pub(crate) struct ThreeDOFModel {
     // This model is a 3 Degree of Freedom model which has 2 spatial dimensions
     // (x=horizontal, y=vertical) and a 3rd variable for the rotation of the rocket
     // within that 2D space.
@@ -17,7 +17,7 @@ pub(crate) struct DOF3 {
     pub(super) time: f64,
 }
 
-impl DOF3 {
+impl ThreeDOFModel {
     pub(crate) fn new(u: Vector6<f64>, rocket: Rocket) -> Self {
         Self {
             u,
@@ -180,7 +180,7 @@ mod tests {
     fn new_sets_expected_initial_state() {
         let u0 = Vector6::new(1.0, 2.0, 0.1, 3.0, 4.0, 0.5);
         let rocket = make_rocket();
-        let dof = DOF3::new(u0, rocket);
+        let dof = ThreeDOFModel::new(u0, rocket);
 
         assert_eq!(dof.u, u0);
 
@@ -197,7 +197,7 @@ mod tests {
     fn getters_return_expected_components() {
         let u0 = Vector6::new(0.0, 123.4, 0.0, -1.0, 9.87, 0.0);
         let rocket = make_rocket();
-        let dof = DOF3::new(u0, rocket);
+        let dof = ThreeDOFModel::new(u0, rocket);
 
         assert_eq!(dof.get_height(), 123.4);
         assert_eq!(dof.get_y_velocity(), 9.87);
@@ -208,7 +208,7 @@ mod tests {
     fn update_state_advances_u_and_time_and_invalidates_cache() {
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         // Make derivatives current first
         dof.update_state_derivatives();
@@ -229,7 +229,7 @@ mod tests {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 0.0, 0.2, 30.0, 10.0, 0.1);
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         assert!(!dof.is_current);
 
@@ -252,7 +252,7 @@ mod tests {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 10.0, 0.0, 40.0, 0.0, 0.0);
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         let d1 = dof.get_derivs_3dof();
         assert!(dof.is_current);
@@ -275,7 +275,7 @@ mod tests {
         let u0 = Vector6::new(0.0, 100.0, 0.4, 50.0, 20.0, 0.7);
 
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         dof.update_state_derivatives();
         let got = dof.dudt;
@@ -329,7 +329,7 @@ mod tests {
         // Test that the logrow contains the expected components in the expected order.
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         dof.update_state_derivatives();
 
@@ -356,7 +356,7 @@ mod tests {
         // dxdt == vx, dydt == vy, d(angle)/dt == omega.
         let u0 = Vector6::new(0.0, 10.0, 1.2, -3.0, 8.0, -0.4);
         let rocket = make_rocket();
-        let mut dof = DOF3::new(u0, rocket);
+        let mut dof = ThreeDOFModel::new(u0, rocket);
 
         dof.update_state_derivatives();
 

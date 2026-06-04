@@ -4,7 +4,7 @@ use crate::rocket::Rocket;
 use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct DOF1 {
+pub(crate) struct OneDOFModel {
     // This model is a simple 1D, (position,velocity) model
     // The assumtion is that the rocket is flying perfectly vertical and that there are no
     // considerations about rotation or anything which would not be 3D in nature.
@@ -17,7 +17,7 @@ pub(crate) struct DOF1 {
     pub(super) time: f64,
 }
 
-impl DOF1 {
+impl OneDOFModel {
     pub(crate) fn new(u: Vector2<f64>, rocket: Rocket) -> Self {
         Self {
             u,
@@ -111,7 +111,7 @@ mod tests {
         let u0 = Vector2::new(123.0, 4.5);
         let rocket = make_rocket(10.0, 0.6, 0.01);
 
-        let dof = DOF1::new(u0, rocket);
+        let dof = OneDOFModel::new(u0, rocket);
 
         // State
         assert_eq!(dof.u, u0);
@@ -132,7 +132,7 @@ mod tests {
         let u0 = Vector2::new(50.0, 12.34);
         let rocket = make_rocket(5.0, 0.5, 0.02);
 
-        let dof = DOF1::new(u0, rocket);
+        let dof = OneDOFModel::new(u0, rocket);
 
         assert_eq!(dof.get_height(), 50.0);
         assert_eq!(dof.get_velocity(), 12.34);
@@ -143,7 +143,7 @@ mod tests {
     fn update_state_advances_u_and_time_and_invalidates_derivs() {
         let u0 = Vector2::new(1.0, 1.0);
         let rocket = make_rocket(5.0, 0.5, 0.02);
-        let mut dof = DOF1::new(u0, rocket);
+        let mut dof = OneDOFModel::new(u0, rocket);
 
         // Force derivatives to be current first
         let _ = dof.get_derivs_1dof();
@@ -169,7 +169,7 @@ mod tests {
         let area = 0.02;
 
         let rocket = make_rocket(mass, cd, area);
-        let mut dof = DOF1::new(Vector2::new(h, v), rocket);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
 
         dof.update_state_derivatives();
 
@@ -194,7 +194,7 @@ mod tests {
         let area = 0.01;
 
         let rocket = make_rocket(mass, cd, area);
-        let mut dof = DOF1::new(Vector2::new(h, v), rocket);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
 
         // Initially stale
         assert!(!dof.is_current);
@@ -219,7 +219,7 @@ mod tests {
         let area = 0.015;
 
         let rocket = make_rocket(mass, cd, area);
-        let mut dof = DOF1::new(Vector2::new(0.0, 10.0), rocket);
+        let mut dof = OneDOFModel::new(Vector2::new(0.0, 10.0), rocket);
 
         let d_before = dof.get_derivs_1dof();
         assert!(dof.is_current);
@@ -242,7 +242,7 @@ mod tests {
         let h = 42.0;
         let v = -7.0;
         let rocket = make_rocket(5.0, 0.5, 0.02);
-        let mut dof = DOF1::new(Vector2::new(h, v), rocket);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
 
         // Ensure dudt is computed so logrow isn't using NaN accel
         dof.update_state_derivatives();

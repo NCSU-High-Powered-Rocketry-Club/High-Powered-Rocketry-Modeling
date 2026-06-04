@@ -11,14 +11,13 @@ use pyo3::prelude::*;
 use std::f64::consts::PI;
 
 use crate::ode::{AdaptiveTimeStep, FixedTimeStep, OdeSolver, TimeStepOptions};
-use crate::rocket::{ModelType, OdeMethod, Rocket};
+use crate::rocket::{OdeMethod, Rocket};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::Simulation;
-use crate::state::{model_1dof::DOF1, model_3dof::DOF3, State};
+use crate::state::{model_1dof::OneDOFModel, model_3dof::ThreeDOFModel, State};
 
 #[pymodule(gil_used = false)]
 fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<ModelType>()?;
     m.add_class::<OdeMethod>()?;
     m.add_class::<Rocket>()?;
     m.add_class::<SimulationData>()?;
