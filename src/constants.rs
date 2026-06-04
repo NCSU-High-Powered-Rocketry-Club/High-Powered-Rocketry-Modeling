@@ -25,4 +25,6 @@ pub mod simulation_constants {
     pub const INITIAL_DATA_CAPACITY: usize = 1000;
     /// The velocity threshold (m/s) below which the rocket is considered to have reached apogee
     pub const APOGEE_VELOCITY_THRESHOLD_M_S: f64 = 0.5;
+    /// The default number of iterations to run the simulation for if no stopping condition is met
+    pub const MAX_ITERATIONS: u64 = 1e5 as u64;
 }

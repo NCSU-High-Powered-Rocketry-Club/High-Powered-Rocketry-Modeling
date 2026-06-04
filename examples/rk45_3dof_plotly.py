@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from hprm import AdaptiveTimeStep, ModelType, OdeMethod, Rocket
+from hprm import AdaptiveTimeStep, OdeMethod, Rocket
 
 
 def main() -> None:
@@ -30,13 +30,12 @@ def main() -> None:
     ats.relative_error_tolerance = 1e-3
 
     # IMPORTANT: log_output=True gives you the full timeseries (otherwise you only get the final row).
-    simdata = rocket.simulate_flight(
+    simdata = rocket.simulate_flight_3dof(
         initial_height,
         initial_velocity,
-        ModelType.ThreeDOF,
+        initial_angle,
         OdeMethod.RK45,
         ats,
-        initial_angle,
         print_output=False,
         log_output=True,
     )

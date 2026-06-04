@@ -4,7 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from hprm import AdaptiveTimeStep, ModelType, OdeMethod, Rocket
+from hprm import AdaptiveTimeStep, OdeMethod, Rocket
 
 
 def simdata_to_numpy(simdata, ncols: int) -> np.ndarray:
@@ -37,13 +37,12 @@ def main() -> None:
 
     # For 3DOF logs:
     # col 0=t, 1=x, 2=y, 3=theta, 4=vx, 5=vy, 6=omega, 7=ax, 8=ay, 9=alpha_dot
-    simdata = rocket.simulate_flight(
+    simdata = rocket.simulate_flight_3dof(
         initial_height,
         initial_velocity,
-        ModelType.ThreeDOF,
+        initial_angle,
         OdeMethod.RK45,
         ats,
-        initial_angle,
     )
     data = simdata_to_numpy(simdata, ncols=10)
 

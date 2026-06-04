@@ -1,3 +1,4 @@
+use crate::constants::simulation_constants::MAX_ITERATIONS;
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
@@ -59,7 +60,7 @@ impl Rocket {
         }
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
     fn simulate_flight_1dof(
         &self,
@@ -67,6 +68,7 @@ impl Rocket {
         initial_velocity: f64,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
+        max_iterations: u64,
         print_output: bool,
         log_output: bool,
     ) -> PyResult<SimulationData> {
@@ -78,27 +80,27 @@ impl Rocket {
             initial_velocity,
         );
 
-        const MAXITER: u64 = 1e5 as u64;
         let mut simulation = Simulation::new(
             state,
             ode_solver,
             SimulationExitCondition::ApogeeReached,
-            MAXITER,
+            max_iterations,
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
         Ok(log)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, initial_angle=None, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
     fn simulate_flight_3dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,
+        initial_angle: f64,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
-        initial_angle: Option<f64>,
+        max_iterations: u64,
         print_output: bool,
         log_output: bool,
     ) -> PyResult<SimulationData> {
@@ -111,19 +113,18 @@ impl Rocket {
             initial_angle,
         );
 
-        const MAXITER: u64 = 1e5 as u64;
         let mut simulation = Simulation::new(
             state,
             ode_solver,
             SimulationExitCondition::ApogeeReached,
-            MAXITER,
+            max_iterations,
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
         Ok(log)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, print_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     fn predict_apogee_1dof(
         &self,
@@ -131,6 +132,7 @@ impl Rocket {
         initial_velocity: f64,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
+        max_iterations: u64,
         print_output: bool,
     ) -> PyResult<f64> {
         let log = self.simulate_flight_1dof(
@@ -138,6 +140,7 @@ impl Rocket {
             initial_velocity,
             integration_method,
             timestep_config,
+            max_iterations,
             print_output,
             false,
         )?;
@@ -149,23 +152,25 @@ impl Rocket {
         Ok(max_height)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     fn predict_apogee_3dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,
+        initial_angle: f64,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
-        initial_angle: Option<f64>,
+        max_iterations: u64,
         print_output: bool,
     ) -> PyResult<f64> {
         let log = self.simulate_flight_3dof(
             initial_height,
             initial_velocity,
+            initial_angle,
             integration_method,
             timestep_config,
-            initial_angle,
+            max_iterations,
             print_output,
             false,
         )?;

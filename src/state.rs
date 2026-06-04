@@ -35,14 +35,14 @@ impl State {
         rocket: Rocket,
         initial_height: f64,
         initial_velocity: f64,
-        initial_angle: Option<f64>,
+        initial_angle: f64,
     ) -> Self {
         // u3 = [x, y, theta, vx, vy, omega]
-        // Initial orientation = PI/2 (pointing up) if not provided
+        // PI/2 means pointing up
         let u3 = Vector6::new(
             0.0,
             initial_height,
-            initial_angle.unwrap_or(PI / 2.0),
+            initial_angle,
             0.0,
             initial_velocity,
             0.0,

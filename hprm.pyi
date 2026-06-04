@@ -3,21 +3,6 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 
-class ModelType(Enum):
-    """
-    Represents the type of dynamic model used for the simulation.
-    """
-
-    OneDOF = 0
-    """
-    One degree of freedom model; rocket moves only in the vertical direction (y).
-    """
-
-    ThreeDOF = 1
-    """
-    Three degrees of freedom model; rocket moves in 2D with rotation (x, y, theta).
-    """
-
 class OdeMethod(Enum):
     """
     Numerical integration methods for the ODE solver.
@@ -193,53 +178,99 @@ class Rocket:
         stab_margin_dimensional: float,
         cl_a: float,
     ) -> None: ...
-    def simulate_flight(
+
+    def simulate_flight_1dof(
+            self,
+            initial_height: float,
+            initial_velocity: float,
+            integration_method: OdeMethod,
+            timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
+            max_iterations: int = 100000,
+            print_output: bool = False,
+            log_output: bool = False,
+        ) -> SimulationData:
+            """
+            Simulate the rocket's flight using a 1-DOF model (vertical motion only).
+    
+            :param initial_height: Initial altitude of the rocket in meters.
+            :param initial_velocity: Initial vertical velocity in meters per second.
+            :param integration_method: Numerical integration method to use.
+            :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
+            :param max_iterations: Maximum integration iterations allowed.
+            :param print_output: Whether to print simulation progress to stdout.
+            :param log_output: Whether to log each integration step into the returned SimulationData.
+            :return: SimulationData containing the simulated trajectory.
+            """
+            ...
+    
+    def simulate_flight_3dof(
         self,
         initial_height: float,
         initial_velocity: float,
-        model_type: ModelType,
+        initial_angle: float,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
-        initial_angle: Optional[float] = None,
+        max_iterations: int = 100000,
         print_output: bool = False,
         log_output: bool = False,
     ) -> SimulationData:
         """
-        Simulate the rocket's flight and return the full time history.
+        Simulate the rocket's flight using a 3-DOF model (2D translation and rotation).
 
         :param initial_height: Initial altitude of the rocket in meters.
         :param initial_velocity: Initial vertical velocity in meters per second.
-        :param model_type: Dynamic model to use (OneDOF or ThreeDOF).
+        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
-        :param initial_angle: Initial orientation in radians for ThreeDOF, or None for default.
+        :param max_iterations: Maximum integration iterations allowed.
         :param print_output: Whether to print simulation progress to stdout.
         :param log_output: Whether to log each integration step into the returned SimulationData.
-            If False, only the final (apogee) state is logged.
         :return: SimulationData containing the simulated trajectory.
         """
         ...
 
-    def predict_apogee(
+    def predict_apogee_1dof(
         self,
         initial_height: float,
         initial_velocity: float,
-        model_type: ModelType,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
-        initial_angle: Optional[float] = None,
+        max_iterations: int = 100000,
         print_output: bool = False,
     ) -> float:
         """
-        Predict the apogee (maximum altitude) of the flight.
+        Predict the apogee (maximum altitude) using a 1-DOF model.
 
         :param initial_height: Initial altitude of the rocket in meters.
         :param initial_velocity: Initial vertical velocity in meters per second.
-        :param model_type: Dynamic model to use (OneDOF or ThreeDOF).
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
-        :param initial_angle: Initial orientation in radians for ThreeDOF, or None for default.
+        :param max_iterations: Maximum integration iterations allowed.
         :param print_output: Whether to print simulation progress to stdout.
-        :return: Maximum altitude reached during the simulated flight in meters.
+        :return: Maximum altitude reached in meters.
+        """
+        ...
+
+    def predict_apogee_3dof(
+        self,
+        initial_height: float,
+        initial_velocity: float,
+        initial_angle: float,
+        integration_method: OdeMethod,
+        timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
+        max_iterations: int = 100000,
+        print_output: bool = False,
+    ) -> float:
+        """
+        Predict the apogee (maximum altitude) using a 3-DOF model.
+
+        :param initial_height: Initial altitude of the rocket in meters.
+        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
+        :param integration_method: Numerical integration method to use.
+        :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
+        :param max_iterations: Maximum integration iterations allowed.
+        :param print_output: Whether to print simulation progress to stdout.
+        :return: Maximum altitude reached in meters.
         """
         ...
