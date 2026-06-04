@@ -150,31 +150,30 @@ class Rocket:
         stab_margin_dimensional: float,
         cl_a: float,
     ) -> None: ...
-
     def simulate_flight_1dof(
-            self,
-            initial_height: float,
-            initial_velocity: float,
-            integration_method: OdeMethod,
-            timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
-            max_iterations: int = 100000,
-            print_output: bool = False,
-            log_output: bool = False,
-        ) -> tuple[np.ndarray, np.ndarray]:
-            """
-            Simulate the rocket's flight using a 1-DOF model (vertical motion only).
-    
-            :param initial_height: Initial altitude of the rocket in meters.
-            :param initial_velocity: Initial vertical velocity in meters per second.
-            :param integration_method: Numerical integration method to use.
-            :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
-            :param max_iterations: Maximum integration iterations allowed.
-            :param print_output: Whether to print simulation progress to stdout.
-            :param log_output: Whether to log each integration step into the returned arrays.
-            :return: A tuple containing (time_array, state_matrix) as NumPy arrays.
-            """
-            ...
-    
+        self,
+        initial_height: float,
+        initial_velocity: float,
+        integration_method: OdeMethod,
+        timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
+        max_iterations: int = 100000,
+        print_output: bool = False,
+        log_output: bool = False,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Simulate the rocket's flight using a 1-DOF model (vertical motion only).
+
+        :param initial_height: Initial altitude of the rocket in meters.
+        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param integration_method: Numerical integration method to use.
+        :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
+        :param max_iterations: Maximum integration iterations allowed.
+        :param print_output: Whether to print simulation progress to stdout.
+        :param log_output: Whether to log each integration step into the returned arrays.
+        :return: A tuple containing (time_array, state_matrix) as NumPy arrays.
+        """
+        ...
+
     def simulate_flight_3dof(
         self,
         initial_height: float,

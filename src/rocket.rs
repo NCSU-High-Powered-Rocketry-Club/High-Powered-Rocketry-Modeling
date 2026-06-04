@@ -3,9 +3,9 @@ use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
 use crate::state::State;
+use numpy::{ndarray::Array2, PyArray1, PyArray2, ToPyArray};
 use pyo3::prelude::*;
 use pyo3::Bound;
-use numpy::{ndarray::Array2, PyArray1, PyArray2, ToPyArray};
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -64,6 +64,7 @@ impl Rocket {
 
     #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::type_complexity)]
     fn simulate_flight_1dof<'py>(
         &self,
         py: Python<'py>,
@@ -75,21 +76,27 @@ impl Rocket {
         print_output: bool,
         log_output: bool,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray2<f64>>)> {
+        // Create the ODE solver based on the specified integration method and time step configuration
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
-
+        // Initialize the state of the rocket for a 1DOF simulation
         let state = State::new_1dof(*self, initial_height, initial_velocity);
 
+        // Create a new simulation instance with the initialized state, ODE solver, and exit condition
         let mut simulation = Simulation::new(
             state,
             ode_solver,
             SimulationExitCondition::ApogeeReached,
             max_iterations,
         );
+
+        // Run the simulation and log the results into our custom SimulationData struct
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
-        
+
+        // Then converts the logged time and state data into NumPy arrays to return to Python
         let time_array = log.time_log.to_pyarray(py);
         let rows = log.time_log.len();
+        // First flattens the 2D state log into a 1D vector, then reshapes it back into a 2D array
         let flat_data: Vec<f64> = log.state_log.iter().flatten().copied().collect();
         let matrix = Array2::from_shape_vec((rows, DATA_LENGTH), flat_data).unwrap();
         let state_matrix = matrix.to_pyarray(py);
@@ -99,6 +106,7 @@ impl Rocket {
 
     #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::type_complexity)]
     fn simulate_flight_3dof<'py>(
         &self,
         py: Python<'py>,
@@ -123,7 +131,7 @@ impl Rocket {
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
-        
+
         let time_array = log.time_log.to_pyarray(py);
         let rows = log.time_log.len();
         let flat_data: Vec<f64> = log.state_log.iter().flatten().copied().collect();
@@ -154,7 +162,7 @@ impl Rocket {
             SimulationExitCondition::ApogeeReached,
             max_iterations,
         );
-        
+
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, false);
 
@@ -187,7 +195,7 @@ impl Rocket {
             SimulationExitCondition::ApogeeReached,
             max_iterations,
         );
-        
+
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, false);
 
