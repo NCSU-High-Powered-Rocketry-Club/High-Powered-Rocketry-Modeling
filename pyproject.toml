@@ -36,7 +36,6 @@ dev = [
 [project.optional-dependencies]
 extras = [
     "numpy",
-    "matplotlib",
     "plotly",
 ]
 
@@ -47,3 +46,9 @@ cache-keys = [
     { file = "**/*.rs" },
 ]
 config-settings = { build-args = "--profile=dev" }
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E501"]
