@@ -62,7 +62,7 @@ impl Rocket {
         }
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::type_complexity)]
     fn simulate_flight_1dof<'py>(
@@ -74,7 +74,6 @@ impl Rocket {
         timestep_config: Option<TimeStepOptions>,
         max_iterations: u64,
         print_output: bool,
-        log_output: bool,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray2<f64>>)> {
         // Create the ODE solver based on the specified integration method and time step configuration
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
@@ -91,7 +90,7 @@ impl Rocket {
 
         // Run the simulation and log the results into our custom SimulationData struct
         let mut log = SimulationData::new();
-        simulation.run(&mut log, print_output, log_output);
+        simulation.run(&mut log, print_output, true);
 
         // Then converts the logged time and state data into NumPy arrays to return to Python
         let time_array = log.time_log.to_pyarray(py);
@@ -104,7 +103,7 @@ impl Rocket {
         Ok((time_array, state_matrix))
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::type_complexity)]
     fn simulate_flight_3dof<'py>(
@@ -117,7 +116,6 @@ impl Rocket {
         timestep_config: Option<TimeStepOptions>,
         max_iterations: u64,
         print_output: bool,
-        log_output: bool,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray2<f64>>)> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
@@ -130,7 +128,7 @@ impl Rocket {
             max_iterations,
         );
         let mut log = SimulationData::new();
-        simulation.run(&mut log, print_output, log_output);
+        simulation.run(&mut log, print_output, true);
 
         let time_array = log.time_log.to_pyarray(py);
         let rows = log.time_log.len();
