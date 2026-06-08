@@ -47,7 +47,7 @@ impl Simulation {
 
             self.current_iteration = i;
             if log_output {
-                log.add_row(self.state.get_logrow(), self.state.get_time())
+                log.add_row(self.state.get_row_log(), self.state.get_time())
             };
 
             // Output simulation info to terminal
@@ -57,7 +57,7 @@ impl Simulation {
 
             // Does the next iteration of the simulation
             self.ode.timestep(&mut self.state);
-            
+
             // Check Exit Condition
             if self.is_done() {
                 // Mitigate overshoot errors by backtracking to the last state and doing a final steps with a smaller timestep.
@@ -68,7 +68,7 @@ impl Simulation {
                 }
 
                 if !log_output {
-                    log.add_row(self.state.get_logrow(), self.state.get_time())
+                    log.add_row(self.state.get_row_log(), self.state.get_time())
                 };
 
                 if print_output {
@@ -107,14 +107,18 @@ impl Simulation {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ode::FixedTimeStep, rocket::Rocket, state::model_1dof::OneDOFModel};
+    use crate::{
+        ode::FixedTimeStep,
+        rocket::{Rocket, RocketProperties},
+        state::model_1dof::OneDOFModel,
+    };
 
     use super::*;
     use approx::assert_abs_diff_eq;
     use nalgebra::Vector2;
 
     fn make_simulation() -> Simulation {
-        let rocket = Rocket {
+        let rocket_properties = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -124,7 +128,10 @@ mod tests {
             cl_a: 0.0,
         };
 
-        let state = State::OneDOF(OneDOFModel::new(Vector2::new(0.0, 100.0), rocket));
+        let state = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.0, 100.0),
+            rocket_properties,
+        ));
 
         let ode_solver = OdeSolver::Euler(FixedTimeStep { dt: 0.1 });
 
@@ -176,7 +183,7 @@ mod tests {
     #[test]
     fn test_exit_condition_apogee_reached() {
         // ApogeeReached should trigger strictly when vertical velocity < 0
-        let rocket = Rocket {
+        let rocket_properties = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -186,7 +193,10 @@ mod tests {
             cl_a: 0.0,
         };
 
-        let state_positive_vel = State::OneDOF(OneDOFModel::new(Vector2::new(0.0, 100.0), rocket));
+        let state_positive_vel = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.0, 100.0),
+            rocket_properties,
+        ));
         let sim_positive_vel = Simulation::new(
             state_positive_vel,
             OdeSolver::Euler(FixedTimeStep { dt: 0.1 }),
@@ -196,7 +206,7 @@ mod tests {
         assert!(!sim_positive_vel.is_done());
 
         // v < 0.0 => done
-        let rocket2 = Rocket {
+        let rocket_properties_2 = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -205,8 +215,10 @@ mod tests {
             stab_margin_dimensional: 0.0,
             cl_a: 0.0,
         };
-        let state_negative_vel =
-            State::OneDOF(OneDOFModel::new(Vector2::new(0.00, -0.01), rocket2));
+        let state_negative_vel = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.00, -0.01),
+            rocket_properties_2,
+        ));
         let sim_negative_vel = Simulation::new(
             state_negative_vel,
             OdeSolver::Euler(FixedTimeStep { dt: 0.1 }),

@@ -84,6 +84,8 @@ impl AdaptiveTimeStep {
         }
     }
 
+    /// Computes the next timestep size based on the current error norm using a common
+    /// adaptive timestep control formula.
     pub fn next_dt(&self, error_norm: f64) -> f64 {
         let dt = self.dt;
 
@@ -138,6 +140,10 @@ impl OdeSolver {
         }
     }
 
+    /// Once we have taken a timestep and find that we have passed apogee, we can use this method to backtrack to the
+    /// actual apogee by using the previous state and the current state to estimate the time fraction at which we
+    /// reached apogee, then we can adjust the timestep accordingly and rerun the timestep to get a more accurate
+    /// estimate of the apogee state.
     pub(crate) fn backtrack_apogee(&mut self, state: &mut State, prev_state: &State) {
         let vertical_rate_of_distance_change_with_time_in_meters_per_second =
             state.get_vertical_velocity();
@@ -147,14 +153,14 @@ impl OdeSolver {
         let tau: f64 = previous_vertical_rate_of_distance_change_with_time_in_meters_per_second
             / (previous_vertical_rate_of_distance_change_with_time_in_meters_per_second
                 - vertical_rate_of_distance_change_with_time_in_meters_per_second);
-        //
+
         // Update the tinestep to be the desired size
         match self {
             OdeSolver::Euler(fixed) => fixed.dt *= tau,
             OdeSolver::RK3(fixed) => fixed.dt *= tau,
             OdeSolver::RK45(ats) => ats.dt *= tau,
         };
-        //
+
         //Rerun the timestep
         let mut tmp_state = *prev_state;
         self.timestep(&mut tmp_state);

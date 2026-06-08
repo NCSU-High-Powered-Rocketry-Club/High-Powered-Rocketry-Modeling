@@ -98,46 +98,28 @@ class AdaptiveTimeStep:
         """
         ...
 
+class RocketProperties:
+    """
+    Internal physical property group for the rocket.
+    Accessible from Python for reading or updating fields dynamically.
+    """
+    mass: float
+    cd: float
+    area_drag: float
+    area_lift: float
+    moment_of_inertia: float
+    stab_margin_dimensional: float
+    cl_a: float
+
 class Rocket:
     """
-    Physical properties of the rocket used in the simulation.
-
-    :param mass: Mass of the rocket in kilograms.
-    :param cd: Drag coefficient.
-    :param area_drag: Reference area for drag in square meters.
-    :param area_lift: Reference area for lift in square meters.
-    :param moment_of_inertia: Moment of inertia about the z-axis in kg·m².
-    :param stab_margin_dimensional: Static stability margin in meters.
-    :param cl_a: Lift coefficient slope per radian.
+    The main class for simulating rocket flight. Contains methods for 1-DOF and 3-DOF simulations, 
+    as well as apogee predictions.
     """
 
-    mass: float
+    rocket_properties: RocketProperties
     """
-    Mass of the rocket in kilograms.
-    """
-    cd: float
-    """
-    Drag coefficient.
-    """
-    area_drag: float
-    """
-    Reference area for drag in square meters.
-    """
-    area_lift: float
-    """
-    Reference area for lift in square meters.
-    """
-    moment_of_inertia: float
-    """
-    Moment of inertia about the z-axis in kg·m².
-    """
-    stab_margin_dimensional: float
-    """
-    Static stability margin in meters.
-    """
-    cl_a: float
-    """
-    Lift coefficient slope per radian.
+    The physical properties of the rocket.
     """
 
     def __init__(
@@ -149,7 +131,20 @@ class Rocket:
         moment_of_inertia: float,
         stab_margin_dimensional: float,
         cl_a: float,
-    ) -> None: ...
+    ) -> None:
+        """
+        Creates a new Rocket instance and initializes its underlying RocketProperties group.
+
+        :param mass: Mass of the rocket in kilograms.
+        :param cd: Drag coefficient.
+        :param area_drag: Reference area for drag in square meters.
+        :param area_lift: Reference area for lift in square meters.
+        :param moment_of_inertia: Moment of inertia about the z-axis in kg·m².
+        :param stab_margin_dimensional: Static stability margin in meters.
+        :param cl_a: Lift coefficient slope per radian.
+        """
+        ...
+    
     def simulate_flight_1dof(
         self,
         initial_height: float,

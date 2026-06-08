@@ -3,10 +3,10 @@ use nalgebra::{SVector, Vector2, Vector3, Vector6};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Data type which represents an actual vector(rust::array) of the state space for a given model. It
-/// is the struct used to hold the state that the simulation is in as well as do the vector math for the 
-/// state space. It contains Log variants of the state vector, which are used to log the state of the 
-/// simulation at each timestep, and contain more information than the state vector used for the actual 
-/// simulation (e.g. the 1DOFLog contains acceleration, which is not needed for the actual simulation, 
+/// is the struct used to hold the state that the simulation is in as well as do the vector math for the
+/// state space. It contains Log variants of the state vector, which are used to log the state of the
+/// simulation at each timestep, and contain more information than the state vector used for the actual
+/// simulation (e.g. the 1DOFLog contains acceleration, which is not needed for the actual simulation,
 /// but is useful for the end user).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum StateVector {

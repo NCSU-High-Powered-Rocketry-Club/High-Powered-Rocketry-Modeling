@@ -1,5 +1,5 @@
 use crate::physics_mod;
-use crate::rocket::Rocket;
+use crate::rocket::{Rocket, RocketProperties};
 use nalgebra::{Rotation2, SVector, Vector2, Vector3, Vector6};
 use std::f64::consts::PI;
 
@@ -12,17 +12,17 @@ pub(crate) struct ThreeDOFModel {
     pub(super) u: Vector6<f64>,
     /// (dxdt,dydt,d_angle_dt,dvxdt,dvydt,d_angular rate_dt)
     pub(super) dudt: Vector6<f64>,
-    pub(crate) rocket: Rocket,
+    pub(crate) rocket_properties: RocketProperties,
     pub(crate) is_current: bool,
     pub(super) time: f64,
 }
 
 impl ThreeDOFModel {
-    pub(crate) fn new(u: Vector6<f64>, rocket: Rocket) -> Self {
+    pub(crate) fn new(u: Vector6<f64>, rocket_properties: RocketProperties) -> Self {
         Self {
             u,
             dudt: Vector6::from_element(f64::NAN),
-            rocket,
+            rocket_properties,
             is_current: false,
             time: 0.0,
         }
@@ -57,7 +57,7 @@ impl ThreeDOFModel {
         );
     }
 
-    pub(super) fn get_logrow(&self) -> SVector<f64, 9> {
+    pub(super) fn get_row_log(&self) -> SVector<f64, 9> {
         let mut row = [0.0; 9];
         row[0..6].copy_from_slice(self.u.as_slice());
         row[6..9].copy_from_slice(&self.dudt.as_slice()[3..6]);
@@ -98,16 +98,17 @@ impl ThreeDOFModel {
 
         // ========== Forces
         //
-        let cd_total = self.rocket.cd + self.rocket.cl_a * alpha.abs(); //crappy estimation for drag increasing with AoA
+        let cd_total = self.rocket_properties.cd + self.rocket_properties.cl_a * alpha.abs(); //crappy estimation for drag increasing with AoA
 
-        let force_drag = physics_mod::calc_drag_force(vmag, cd_total, self.rocket.area_drag);
+        let force_drag =
+            physics_mod::calc_drag_force(vmag, cd_total, self.rocket_properties.area_drag);
         let drag_vec = velocity * (force_drag / vmag);
         //
         let force_lift = physics_mod::calc_lift_force(
             vmag,
-            self.rocket.cl_a,
+            self.rocket_properties.cl_a,
             alpha.abs(),
-            self.rocket.area_drag,
+            self.rocket_properties.area_drag,
         );
         let lift_vec = Rotation2::new(0.5 * PI * alpha_dir) * velocity * (force_lift / vmag);
         //
@@ -115,17 +116,17 @@ impl ThreeDOFModel {
 
         // ========== Moments
         // assuming that all aerodynamic forces are acting on the center of pressure of the rocket
-        let moment_arm = orientation * (self.rocket.stab_margin_dimensional);
+        let moment_arm = orientation * (self.rocket_properties.stab_margin_dimensional);
         let sum_moment = sum_force.perp(&moment_arm);
 
         // ========== 2nd Order Derivatives of ODE System
         //Linear Acceleration
-        let accel = sum_force * (1.0 / self.rocket.mass);
+        let accel = sum_force * (1.0 / self.rocket_properties.mass);
         let dvxdt = accel[0];
         let dvydt = accel[1] + physics_mod::gravity();
 
         //Angular Acceleration
-        let domegadt = sum_moment / self.rocket.moment_of_inertia;
+        let domegadt = sum_moment / self.rocket_properties.moment_of_inertia;
 
         // 1st order terms
         let dxdt = self.u[3];
@@ -163,24 +164,16 @@ mod tests {
         }
     }
 
-    // Makes a rocket with known parameters for 3DOF tests.
-    fn make_rocket() -> Rocket {
-        Rocket {
-            mass: 10.0,
-            cd: 0.6,
-            cl_a: 5.0,
-            area_lift: 0.0,
-            area_drag: 0.02,
-            stab_margin_dimensional: 0.3,
-            moment_of_inertia: 2.5,
-        }
+    /// Makes a RocketProperties with known values for 3DOF tests.
+    fn make_rocket_properties() -> RocketProperties {
+        RocketProperties::new(10.0, 0.6, 0.02, 0.0, 2.5, 0.3, 5.0)
     }
 
     #[test]
     fn new_sets_expected_initial_state() {
         let u0 = Vector6::new(1.0, 2.0, 0.1, 3.0, 4.0, 0.5);
-        let rocket = make_rocket();
-        let dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let dof = ThreeDOFModel::new(u0, rocket_properties);
 
         assert_eq!(dof.u, u0);
 
@@ -196,8 +189,8 @@ mod tests {
     #[test]
     fn getters_return_expected_components() {
         let u0 = Vector6::new(0.0, 123.4, 0.0, -1.0, 9.87, 0.0);
-        let rocket = make_rocket();
-        let dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let dof = ThreeDOFModel::new(u0, rocket_properties);
 
         assert_eq!(dof.get_height(), 123.4);
         assert_eq!(dof.get_y_velocity(), 9.87);
@@ -207,8 +200,8 @@ mod tests {
     #[test]
     fn update_state_advances_u_and_time_and_invalidates_cache() {
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         // Make derivatives current first
         dof.update_state_derivatives();
@@ -228,8 +221,8 @@ mod tests {
     fn update_state_derivatives_is_cached_when_is_current_true() {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 0.0, 0.2, 30.0, 10.0, 0.1);
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         assert!(!dof.is_current);
 
@@ -251,8 +244,8 @@ mod tests {
     fn get_derivs_3dof_always_updates_and_returns_dudt() {
         // Makes a new state and rocket
         let u0 = Vector6::new(0.0, 10.0, 0.0, 40.0, 0.0, 0.0);
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         let d1 = dof.get_derivatives();
         assert!(dof.is_current);
@@ -274,8 +267,8 @@ mod tests {
         // We choose a nonzero angle and both vx,vy nonzero to exercise alpha sign.
         let u0 = Vector6::new(0.0, 100.0, 0.4, 50.0, 20.0, 0.7);
 
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         dof.update_state_derivatives();
         let got = dof.dudt;
@@ -295,24 +288,29 @@ mod tests {
         let vel_comp_in_ori = velocity.dot(&orientation);
         let alpha = (vel_comp_in_ori / vmag).acos() * alpha_dir;
 
-        let cd_total = dof.rocket.cd + dof.rocket.cl_a * alpha.abs();
+        let cd_total = dof.rocket_properties.cd + dof.rocket_properties.cl_a * alpha.abs();
 
-        let force_drag = physics_mod::calc_drag_force(vmag, cd_total, dof.rocket.area_drag);
+        let force_drag =
+            physics_mod::calc_drag_force(vmag, cd_total, dof.rocket_properties.area_drag);
         let drag_vec = velocity * (force_drag / vmag);
 
-        let force_lift =
-            physics_mod::calc_lift_force(vmag, dof.rocket.cl_a, alpha.abs(), dof.rocket.area_drag);
+        let force_lift = physics_mod::calc_lift_force(
+            vmag,
+            dof.rocket_properties.cl_a,
+            alpha.abs(),
+            dof.rocket_properties.area_drag,
+        );
         let lift_vec = Rotation2::new(0.5 * PI * alpha_dir) * velocity * (force_lift / vmag);
 
         let sum_force = lift_vec + drag_vec;
 
-        let moment_arm = orientation * dof.rocket.stab_margin_dimensional;
+        let moment_arm = orientation * dof.rocket_properties.stab_margin_dimensional;
         let sum_moment = sum_force.perp(&moment_arm);
 
-        let accel = sum_force * (1.0 / dof.rocket.mass);
+        let accel = sum_force * (1.0 / dof.rocket_properties.mass);
         let dvxdt = accel[0];
         let dvydt = accel[1] + physics_mod::gravity();
-        let domegadt = sum_moment / dof.rocket.moment_of_inertia;
+        let domegadt = sum_moment / dof.rocket_properties.moment_of_inertia;
 
         let expected = Vector6::new(
             u0[3], // dxdt
@@ -325,15 +323,15 @@ mod tests {
     }
 
     #[test]
-    fn get_logrow_layout_is_correct() {
-        // Test that the logrow contains the expected components in the expected order.
+    fn get_row_log_layout_is_correct() {
+        // Test that the row_log contains the expected components in the expected order.
         let u0 = Vector6::new(1.0, 2.0, 0.3, 4.0, 5.0, 0.6);
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         dof.update_state_derivatives();
 
-        let row = dof.get_logrow();
+        let row = dof.get_row_log();
 
         let expected = SVector::<f64, 9>::from_row_slice(&[
             dof.u[0],
@@ -355,8 +353,8 @@ mod tests {
         // Basic ODE structure checks:
         // dxdt == vx, dydt == vy, d(angle)/dt == omega.
         let u0 = Vector6::new(0.0, 10.0, 1.2, -3.0, 8.0, -0.4);
-        let rocket = make_rocket();
-        let mut dof = ThreeDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties();
+        let mut dof = ThreeDOFModel::new(u0, rocket_properties);
 
         dof.update_state_derivatives();
 

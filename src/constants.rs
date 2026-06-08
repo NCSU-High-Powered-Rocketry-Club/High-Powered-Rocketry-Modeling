@@ -20,7 +20,7 @@ pub mod physics_constants {
 
 pub mod simulation_constants {
     /// Number of data columns in SimulationData (matches StateVector length)
-    pub const DATA_LENGTH: usize = 18;
+    pub const DATA_LENGTH: usize = 9; // TODO: change to 18 when 6DOF is implemented
     /// The initial number of rows to pre-allocate in SimulationData
     pub const INITIAL_DATA_CAPACITY: usize = 1000;
     /// The velocity threshold (m/s) below which the rocket is considered to have reached apogee
