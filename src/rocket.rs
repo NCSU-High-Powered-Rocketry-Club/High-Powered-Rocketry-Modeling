@@ -30,7 +30,7 @@ pub struct RocketProperties {
 
 impl RocketProperties {
     /// Creates a new `RocketProperties` instance with the specified parameters.
-    pub(crate) fn new(
+    pub fn new(
         mass: f64,
         cd: f64,
         area_drag: f64,
@@ -54,13 +54,13 @@ impl RocketProperties {
 #[pyclass(get_all, set_all)]
 #[derive(Clone, Copy, Debug)]
 pub struct Rocket {
-    pub(crate) rocket_properties: RocketProperties,
+    pub rocket_properties: RocketProperties,
 }
 
 #[pymethods]
 impl Rocket {
     #[new]
-    pub(crate) fn new(
+    pub fn new(
         mass: f64,
         cd: f64,
         area_drag: f64,
@@ -85,7 +85,7 @@ impl Rocket {
     #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::type_complexity)]
-    fn simulate_flight_1dof<'py>(
+    pub fn simulate_flight_1dof<'py>(
         &self,
         py: Python<'py>,
         initial_height: f64,
@@ -126,7 +126,7 @@ impl Rocket {
     #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::type_complexity)]
-    fn simulate_flight_3dof<'py>(
+    pub fn simulate_flight_3dof<'py>(
         &self,
         py: Python<'py>,
         initial_height: f64,
@@ -166,7 +166,7 @@ impl Rocket {
 
     #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn predict_apogee_1dof(
+    pub fn predict_apogee_1dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,
@@ -198,7 +198,7 @@ impl Rocket {
 
     #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn predict_apogee_3dof(
+    pub fn predict_apogee_3dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,

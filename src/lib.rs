@@ -10,10 +10,12 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use std::f64::consts::PI;
 
-use crate::ode::{AdaptiveTimeStep, FixedTimeStep, OdeMethod, OdeSolver, TimeStepOptions};
-use crate::rocket::Rocket;
+use crate::ode::OdeSolver;
 use crate::simulation::Simulation;
 use crate::state::{model_1dof::OneDOFModel, model_3dof::ThreeDOFModel, State};
+
+pub use crate::ode::{AdaptiveTimeStep, FixedTimeStep, OdeMethod, TimeStepOptions};
+pub use crate::rocket::{Rocket, RocketProperties};
 
 #[pymodule(gil_used = false)]
 fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {

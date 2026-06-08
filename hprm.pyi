@@ -103,6 +103,7 @@ class RocketProperties:
     Internal physical property group for the rocket.
     Accessible from Python for reading or updating fields dynamically.
     """
+
     mass: float
     cd: float
     area_drag: float
@@ -113,7 +114,7 @@ class RocketProperties:
 
 class Rocket:
     """
-    The main class for simulating rocket flight. Contains methods for 1-DOF and 3-DOF simulations, 
+    The main class for simulating rocket flight. Contains methods for 1-DOF and 3-DOF simulations,
     as well as apogee predictions.
     """
 
@@ -144,7 +145,7 @@ class Rocket:
         :param cl_a: Lift coefficient slope per radian.
         """
         ...
-    
+
     def simulate_flight_1dof(
         self,
         initial_height: float,
