@@ -6,23 +6,27 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 use crate::state::State;
-use crate::OdeMethod;
 
-#[derive(FromPyObject)]
+#[pyclass(eq, eq_int)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// Numerical integration methods for the ODE solver.
+pub enum OdeMethod {
+    /// First-order explicit Euler method.
+    Euler,
+    /// Third-order Runge-Kutta method.
+    RK3,
+    /// Fourth-order Runge-Kutta method with adaptive time stepping.
+    RK45,
+}
+
+#[derive(FromPyObject, Clone, Debug)]
 pub enum TimeStepOptions {
     Fixed(FixedTimeStep),
     Adaptive(AdaptiveTimeStep),
 }
 
-#[derive(Clone)]
-pub(crate) enum OdeSolver {
-    Euler(FixedTimeStep),
-    RK3(FixedTimeStep),
-    RK45(AdaptiveTimeStep),
-}
-
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
+#[pyclass(get_all, set_all)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FixedTimeStep {
     pub dt: f64,
 }
@@ -35,8 +39,8 @@ impl FixedTimeStep {
     }
 }
 
-#[pyclass(dict, get_all, set_all)]
-#[derive(Clone)]
+#[pyclass(get_all, set_all)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AdaptiveTimeStep {
     /// Initial timestep guess
     pub dt: f64,
@@ -97,8 +101,19 @@ impl AdaptiveTimeStep {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum OdeSolver {
+    Euler(FixedTimeStep),
+    RK3(FixedTimeStep),
+    RK45(AdaptiveTimeStep),
+}
+
 impl OdeSolver {
-    pub fn from_method(
+    /// Factory method to create an OdeSolver from a given method and optional timestep configuration.
+    /// If the timestep configuration is not provided, it will use default values based on the method,
+    /// for RK45 it will use the default adaptive timestep configuration, and for Euler and RK3 it will
+    /// use a default fixed timestep of 0.01 seconds.
+    pub(crate) fn from_method(
         method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
     ) -> PyResult<Self> {
@@ -154,9 +169,9 @@ impl OdeSolver {
         }
     }
 
-    /// The Explicit euler method is the most basic, just multiplying th derivative by the timestep
+    /// The Explicit euler method is the most basic, just multiplying the derivative by the timestep
     fn explicit_euler(state: &mut State, dt: f64) {
-        let dudt = state.get_derivs();
+        let dudt = state.get_derivatives();
         let du = dudt.scale(dt);
         state.update(du, dt)
     }
@@ -173,12 +188,12 @@ impl OdeSolver {
         let mut state_rk: State = *state;
 
         //Stage 1       dt = 1 * DT
-        let dudt = state_rk.get_derivs();
+        let dudt = state_rk.get_derivatives();
         let mut du = dudt.clone().scale(dt);
         state_rk.update(du, 0.0);
 
         // Stage 2       dt = 0.5 * DT
-        let dudt2 = state_rk.get_derivs();
+        let dudt2 = state_rk.get_derivatives();
         let coeff: f64 = 0.25 * dt;
         du = dudt.clone().scale(coeff) + dudt2.clone().scale(coeff);
 
@@ -186,7 +201,7 @@ impl OdeSolver {
         state_rk.update(du, 0.0);
 
         // Stage 3
-        let dudt3 = state_rk.get_derivs();
+        let dudt3 = state_rk.get_derivatives();
         let coeff = dt * 1.0 / 6.0;
         du = dudt.scale(coeff);
         du += dudt2.scale(coeff);
@@ -208,14 +223,14 @@ impl OdeSolver {
         // TODO: when we replace vecops, we don't have to have all of these update calls
 
         // ========== Stage 1 ==========
-        let dudt1 = state.get_derivs();
+        let dudt1 = state.get_derivatives();
         let k1 = dudt1.clone().scale(dt);
 
         // ========== Stage 2 ==========
         let mut stage = *state;
         // ut = u + 0.2 * k1
         stage.update(k1.clone().scale(0.2), 0.0);
-        let dudt2 = stage.get_derivs();
+        let dudt2 = stage.get_derivatives();
         let k2 = dudt2.clone().scale(dt);
 
         // ========== Stage 3 ==========
@@ -223,7 +238,7 @@ impl OdeSolver {
         // ut = u + 0.075*k1 + 0.225*k2
         stage.update(k1.clone().scale(0.075), 0.0);
         stage.update(k2.clone().scale(0.225), 0.0);
-        let dudt3 = stage.get_derivs();
+        let dudt3 = stage.get_derivatives();
         let k3 = dudt3.clone().scale(dt);
 
         // ========== Stage 4 ==========
@@ -232,7 +247,7 @@ impl OdeSolver {
         stage.update(k1.clone().scale(44.0 / 45.0), 0.0);
         stage.update(k2.clone().scale(-56.0 / 15.0), 0.0);
         stage.update(k3.clone().scale(32.0 / 9.0), 0.0);
-        let dudt4 = stage.get_derivs();
+        let dudt4 = stage.get_derivatives();
         let k4 = dudt4.clone().scale(dt);
 
         // ========== Stage 5 ==========
@@ -243,7 +258,7 @@ impl OdeSolver {
         stage.update(k2.clone().scale(-25360.0 / 2187.0), 0.0);
         stage.update(k3.clone().scale(64448.0 / 6561.0), 0.0);
         stage.update(k4.clone().scale(-212.0 / 729.0), 0.0);
-        let dudt5 = stage.get_derivs();
+        let dudt5 = stage.get_derivatives();
         let k5 = dudt5.clone().scale(dt);
 
         // ========== Stage 6 ==========
@@ -256,7 +271,7 @@ impl OdeSolver {
         stage.update(k3.clone().scale(46732.0 / 5247.0), 0.0);
         stage.update(k4.clone().scale(49.0 / 176.0), 0.0);
         stage.update(k5.clone().scale(-5103.0 / 18656.0), 0.0);
-        let dudt6 = stage.get_derivs();
+        let dudt6 = stage.get_derivatives();
         let k6 = dudt6.clone().scale(dt);
 
         // ========== Stage 7 (5th-order combination) ==========
@@ -269,7 +284,7 @@ impl OdeSolver {
         stage.update(k4.clone().scale(125.0 / 192.0), 0.0);
         stage.update(k5.clone().scale(-2187.0 / 6784.0), 0.0);
         stage.update(k6.clone().scale(11.0 / 84.0), 0.0);
-        let dudt7 = stage.get_derivs();
+        let dudt7 = stage.get_derivatives();
         let k7 = dudt7.clone().scale(dt);
 
         // ---------- Build 5th-order increment (du5) ----------

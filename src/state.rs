@@ -12,7 +12,15 @@ use crate::state::state_vector::StateVector;
 use std::f64::consts::PI;
 use std::process::exit;
 
-/// The internal simulation state, wrapping either a 1-DOF or 3-DOF model.
+/// The internal simulation state, wrapping either a 1-DOF or 3-DOF model. These models are what
+/// contain the actual state information. The State struct provides a common interface for the ODE 
+/// solver to interact with, while the underlying models handle the specific details of the state.
+/// 
+/// Whenever the ODE solver needs to get information about the state or needs to do an operation on the
+/// state, it will call the appropriate method on the State struct, such as `get_derivatives()`, which 
+/// will get the derivatives of the model represented as a `StateVector`. Then with this `StateVector`, 
+/// the ODE solver can perform its calculations and then call `update()` on the State struct to update
+/// the state with the new values. 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum State {
     OneDOF(OneDOFModel),
@@ -48,23 +56,23 @@ impl State {
 
     pub(crate) fn get_logrow(&self) -> StateVector {
         match self {
-            State::OneDOF(dof1) => StateVector::__1DLOG(dof1.get_logrow()),
-            State::ThreeDOF(dof3) => StateVector::__3DLOG(dof3.get_logrow()),
+            State::OneDOF(dof1) => StateVector::OneDOFLog(dof1.get_logrow()),
+            State::ThreeDOF(dof3) => StateVector::ThreeDOFLog(dof3.get_logrow()),
         }
     }
 
     pub(crate) fn print_state(&self, i: u64) {
         match self {
-            State::OneDOF(dof1) => dof1.print_state_1dof(i),
-            State::ThreeDOF(dof3) => dof3.print_state_3dof(i),
+            State::OneDOF(dof1) => dof1.print_state(i),
+            State::ThreeDOF(dof3) => dof3.print_state(i),
         }
     }
 
     #[allow(dead_code)]
     pub(crate) fn get_state_vec(&self) -> StateVector {
         match self {
-            State::OneDOF(dof1) => StateVector::__1DOF(dof1.u),
-            State::ThreeDOF(dof3) => StateVector::__3DOF(dof3.u),
+            State::OneDOF(dof1) => StateVector::OneDOF(dof1.u),
+            State::ThreeDOF(dof3) => StateVector::ThreeDOF(dof3.u),
         }
     }
 
@@ -85,22 +93,22 @@ impl State {
 
     pub(crate) fn get_time(&self) -> f64 {
         match self {
-            State::OneDOF(dof1) => dof1.get_time_1dof(),
-            State::ThreeDOF(dof3) => dof3.get_time_3dof(),
+            State::OneDOF(dof1) => dof1.get_time(),
+            State::ThreeDOF(dof3) => dof3.get_time(),
         }
     }
 
-    pub(crate) fn get_derivs(&mut self) -> StateVector {
+    pub(crate) fn get_derivatives(&mut self) -> StateVector {
         match self {
-            State::OneDOF(dof1) => StateVector::__1DOF(dof1.get_derivs_1dof()),
-            State::ThreeDOF(dof3) => StateVector::__3DOF(dof3.get_derivs_3dof()),
+            State::OneDOF(dof1) => StateVector::OneDOF(dof1.get_derivates()),
+            State::ThreeDOF(dof3) => StateVector::ThreeDOF(dof3.get_derivatives()),
         }
     }
 
     pub(crate) fn update(&mut self, du_vec: StateVector, dt: f64) {
         match (self, du_vec) {
-            (State::OneDOF(dof1), StateVector::__1DOF(du)) => dof1.update_state(du, dt),
-            (State::ThreeDOF(dof3), StateVector::__3DOF(du)) => dof3.update_state(du, dt),
+            (State::OneDOF(dof1), StateVector::OneDOF(du)) => dof1.update_state(du, dt),
+            (State::ThreeDOF(dof3), StateVector::ThreeDOF(du)) => dof3.update_state(du, dt),
             // This case should *never* happen because increment types match DOF models.
             _ => {
                 println!("Invalid State/update combination");

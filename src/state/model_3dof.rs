@@ -36,20 +36,20 @@ impl ThreeDOFModel {
         self.u[1]
     }
 
-    pub(super) fn get_derivs_3dof(&mut self) -> Vector6<f64> {
+    pub(super) fn get_derivatives(&mut self) -> Vector6<f64> {
         self.update_state_derivatives();
         self.dudt
     }
 
-    pub(super) fn get_time_3dof(&self) -> f64 {
+    pub(super) fn get_time(&self) -> f64 {
         self.time
     }
 
-    pub(super) fn print_state_3dof(&self, i: u64) {
+    pub(super) fn print_state(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    X Velocity:{:8.2}(m/s)    Y Velocity::{:8.2}(m/s)    AngularVelo:{:8.2}(rad/s)",
             i,
-            self.get_time_3dof(),
+            self.get_time(),
             self.get_height(),
             self.u[3],
             self.get_y_velocity(),
@@ -201,7 +201,7 @@ mod tests {
 
         assert_eq!(dof.get_height(), 123.4);
         assert_eq!(dof.get_y_velocity(), 9.87);
-        assert_eq!(dof.get_time_3dof(), 0.0);
+        assert_eq!(dof.get_time(), 0.0);
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod tests {
         let rocket = make_rocket();
         let mut dof = ThreeDOFModel::new(u0, rocket);
 
-        let d1 = dof.get_derivs_3dof();
+        let d1 = dof.get_derivatives();
         assert!(dof.is_current);
         // dh/dt etc shouldn't be NaN
         for i in 0..6 {
@@ -262,7 +262,7 @@ mod tests {
         }
 
         // second call should return identical result (cached)
-        let d2 = dof.get_derivs_3dof();
+        let d2 = dof.get_derivatives();
         assert_vec6_approx(d1, d2, 0.0);
     }
 

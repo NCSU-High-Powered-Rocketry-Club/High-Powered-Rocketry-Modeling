@@ -1,5 +1,5 @@
 use crate::constants::simulation_constants::{DATA_LENGTH, MAX_ITERATIONS};
-use crate::ode::{OdeSolver, TimeStepOptions};
+use crate::ode::{OdeMethod, OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
 use crate::state::State;
@@ -7,22 +7,10 @@ use numpy::{ndarray::Array2, PyArray1, PyArray2, ToPyArray};
 use pyo3::prelude::*;
 use pyo3::Bound;
 
-#[pyclass(eq, eq_int)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-/// Numerical integration methods for the ODE solver.
-pub enum OdeMethod {
-    /// First-order explicit Euler method.
-    Euler,
-    /// Third-order Runge-Kutta method.
-    RK3,
-    /// Fourth-order Runge-Kutta method with adaptive time stepping.
-    RK45,
-}
-
-#[pyclass(dict, get_all, set_all)]
-#[derive(Debug, Clone, Copy)]
+#[pyclass(get_all, set_all)]
+#[derive(Clone, Copy, Debug)]
 /// Represents the physical properties of the rocket used in the simulation.
-pub(crate) struct Rocket {
+pub struct Rocket {
     /// Mass of the rocket (kg)
     pub(crate) mass: f64,
     /// Drag coefficient

@@ -36,20 +36,20 @@ impl OneDOFModel {
         self.u[0]
     }
 
-    pub(super) fn get_derivs_1dof(&mut self) -> Vector2<f64> {
+    pub(super) fn get_derivates(&mut self) -> Vector2<f64> {
         self.update_state_derivatives();
         self.dudt
     }
 
-    pub(super) fn get_time_1dof(&self) -> f64 {
+    pub(super) fn get_time(&self) -> f64 {
         self.time
     }
 
-    pub(super) fn print_state_1dof(&self, i: u64) {
+    pub(super) fn print_state(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
             i,
-            self.get_time_1dof(),
+            self.get_time(),
             self.get_height(),
             self.get_velocity(),
             self.dudt[1]
@@ -136,7 +136,7 @@ mod tests {
 
         assert_eq!(dof.get_height(), 50.0);
         assert_eq!(dof.get_velocity(), 12.34);
-        assert_eq!(dof.get_time_1dof(), 0.0);
+        assert_eq!(dof.get_time(), 0.0);
     }
 
     #[test]
@@ -146,7 +146,7 @@ mod tests {
         let mut dof = OneDOFModel::new(u0, rocket);
 
         // Force derivatives to be current first
-        let _ = dof.get_derivs_1dof();
+        let _ = dof.get_derivates();
         assert!(dof.is_current);
 
         let du = Vector2::new(0.25, 0.5);
@@ -202,13 +202,13 @@ mod tests {
         assert!(dof.dudt[1].is_nan());
 
         // First call should compute
-        let d1 = dof.get_derivs_1dof();
+        let d1 = dof.get_derivates();
         assert!(dof.is_current);
         assert!(!d1[0].is_nan());
         assert!(!d1[1].is_nan());
 
         // Second call should return the same values (cached)
-        let d2 = dof.get_derivs_1dof();
+        let d2 = dof.get_derivates();
         assert_abs_diff_eq!(d1, d2, epsilon = 0.0);
     }
 
@@ -221,14 +221,14 @@ mod tests {
         let rocket = make_rocket(mass, cd, area);
         let mut dof = OneDOFModel::new(Vector2::new(0.0, 10.0), rocket);
 
-        let d_before = dof.get_derivs_1dof();
+        let d_before = dof.get_derivates();
         assert!(dof.is_current);
 
         // Change velocity only; invalidate cache
         dof.update_state(Vector2::new(0.0, 5.0), 0.0);
         assert!(!dof.is_current);
 
-        let d_after = dof.get_derivs_1dof();
+        let d_after = dof.get_derivates();
 
         // dhdt should change because velocity changed
         assert!(d_after[0] != d_before[0]);
