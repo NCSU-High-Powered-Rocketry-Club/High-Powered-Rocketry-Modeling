@@ -324,3 +324,215 @@ impl OdeSolver {
         state.update(du5, dt);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rocket::RocketProperties;
+    use crate::state::State;
+    use approx::{assert_abs_diff_eq, assert_relative_eq};
+
+    fn make_rocket_properties() -> RocketProperties {
+        RocketProperties::new(
+            15.0,
+            0.5,
+            0.02,
+            0.01,
+            0.25,
+            0.10,
+            4.5,
+        )
+    }
+
+    #[test]
+    fn test_euler_1dof() {
+        let rocket_properties = make_rocket_properties();
+        // Start at 100m altitude, climbing straight up at 50 m/s
+        let mut state = State::new_1dof(rocket_properties, 100.0, 50.0);
+        
+        // Setup Euler solver with a fixed timestep of 0.1 seconds
+        let mut solver = OdeSolver::Euler(FixedTimeStep::new(0.1));
+        
+        // Execute a single step
+        solver.timestep(&mut state);
+
+        // For Euler: new_height = old_height + old_velocity * dt
+        // 100.0 + (50.0 * 0.1) = 105.0m
+        assert_abs_diff_eq!(state.get_altitude(), 105.0, epsilon = 1e-12);
+        
+        // Velocity must decrease due to gravity and atmospheric drag acting downwards, but like not too much
+        assert!(state.get_vertical_velocity() < 50.0);
+        assert!(state.get_vertical_velocity() > 45.0);
+        assert_abs_diff_eq!(state.get_time(), 0.1, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn test_euler_3dof() {
+        let rocket_properties = make_rocket_properties(); 
+        
+        // 85 degrees in radians
+        let angle_deg = 85.0_f64;
+        let angle_rad = angle_deg.to_radians();
+        let v_initial = 10.0;
+        let h_initial = 10.0;
+        
+        // Calculate initial x and y velocity components
+        let v_y0 = v_initial * angle_rad.sin(); // ~9.96 m/s
+
+        // 3DOF initialization: height = 0.0, velocity = 10.0, angle = 85 degrees
+        let mut state = State::new_3dof(rocket_properties, h_initial, v_initial, angle_rad);
+        
+        let dt = 0.2;
+        let mut solver = OdeSolver::Euler(FixedTimeStep::new(dt));
+
+        solver.timestep(&mut state);
+
+        // Explicit Euler Kinematics for altitude (y-axis): 
+        // new_altitude = old_altitude + old_y_velocity * dt
+        let expected_altitude = h_initial + (v_y0 * dt);
+        
+        assert_abs_diff_eq!(state.get_time(), dt, epsilon = 1e-12);
+        assert_abs_diff_eq!(state.get_altitude(), expected_altitude, epsilon = 1e-12);
+        
+        // The vertical velocity must decrease due to gravity and drag, but not too much
+        assert!(state.get_vertical_velocity() < v_y0);
+        assert!(state.get_vertical_velocity() > 7.0);
+    }
+
+    /// This test was written assuming the math is correct, using values gotten by actually running the code
+    #[test]
+    fn test_rk3_1dof() {
+        let rocket_properties = make_rocket_properties();
+        let mut state = State::new_1dof(rocket_properties, 0.0, 100.0);
+        
+        let dt = 0.05;
+        let mut solver = OdeSolver::RK3(FixedTimeStep::new(dt));
+
+        solver.timestep(&mut state);
+
+        assert_abs_diff_eq!(state.get_time(), dt, epsilon = 1e-12);
+
+        let expected_altitude = 4.982661071033707;
+        
+        assert_abs_diff_eq!(state.get_altitude(), expected_altitude, epsilon = 1e-6);
+
+        // Velocity decreases due to gravity (~9.81 * 0.05 = ~0.49 m/s) and drag.
+        assert!(state.get_vertical_velocity() < 100.0);
+        assert!(state.get_vertical_velocity() > 95.0);
+    }
+
+    /// This test was written assuming the math is correct, using values gotten by actually running the code
+    #[test]
+    fn test_rk45_1dof() {
+        let rocket_properties = make_rocket_properties();
+        let mut state = State::new_1dof(rocket_properties, 500.0, 300.0);
+        
+        // Configure adaptive steps with an initial step size of 0.1
+        let initial_dt = 0.1;
+        let adaptive_config = AdaptiveTimeStep::new(initial_dt, 0.01, 1.0, 1e-4, 1e-4);
+        let mut solver = OdeSolver::RK45(adaptive_config);
+
+        // Executes exactly 1 step using the initial_dt (0.1s) before adapting
+        solver.timestep(&mut state);
+        
+        // Time must advance precisely by the initial fixed step size
+        assert_abs_diff_eq!(state.get_time(), initial_dt, epsilon = 1e-12);
+
+        let expected_altitude = 529.7690989929642;
+        let expected_velocity = 295.40061606079655;
+        let expected_adapted_dt = 0.2; 
+
+        // Assert exact matches for the state updates
+        assert_abs_diff_eq!(state.get_altitude(), expected_altitude, epsilon = 1e-6);
+        assert_abs_diff_eq!(state.get_vertical_velocity(), expected_velocity, epsilon = 1e-6);
+
+        // Gets internal state of RK45 to verify what it changed the next dt to
+        if let OdeSolver::RK45(ref updated_config) = solver {
+            assert_abs_diff_eq!(updated_config.dt, expected_adapted_dt, epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    fn test_backtrack_apogee_interpolation() {
+        let rocket_properties = make_rocket_properties();
+        
+        // 1. Establish a valid previous state just before apogee.
+        // At 0.45 m/s, it will reach apogee in roughly (0.45 / 9.81) ≈ 0.046 seconds.
+        let prev_state = State::new_1dof(rocket_properties, 1500.0, 0.45);
+        
+        // 2. Compute a physically realistic next state using the solver itself.
+        // A step of 0.1 seconds will naturally push the velocity past zero to approx -0.53 m/s.
+        let mut current_state = prev_state.clone();
+        let mut solver = OdeSolver::RK3(FixedTimeStep::new(0.1));
+        
+        solver.timestep(&mut current_state);
+
+        // 3. Execute backtrack recalculation
+        solver.backtrack_apogee(&mut current_state, &prev_state);
+
+        // Because the states are now mathematically consistent with the underlying gravity/drag,
+        // the backtracked state should land cleanly at the apex point (velocity near 0.0).
+        assert_relative_eq!(current_state.get_vertical_velocity(), 0.0, epsilon = 1e-2);
+        assert!(current_state.get_altitude() >= prev_state.get_altitude());
+    }
+    
+    #[test]
+    fn test_fixed_timestep_initialization() {
+        let expected_dt = 0.05;
+        let config = FixedTimeStep::new(expected_dt);
+
+        assert_abs_diff_eq!(config.dt, expected_dt, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn test_adaptive_timestep_initialization() {
+        let config = AdaptiveTimeStep::new(0.1, 0.01, 1.0, 1e-5, 1e-6);
+        assert_abs_diff_eq!(config.dt, 0.1, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.dt_min, 0.01, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.dt_max, 1.0, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.absolute_error_tolerance, 1e-5, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.relative_error_tolerance, 1e-6, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn test_adaptive_timestep_default() {
+        let config = AdaptiveTimeStep::default();
+        assert_abs_diff_eq!(config.dt, super::DEFAULT_TIMESTEP, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.dt_min, super::DEFAULT_MIN_TIMESTEP, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.dt_max, super::DEFAULT_MAX_TIMESTEP, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.absolute_error_tolerance, super::DEFAULT_TOLERANCE, epsilon = 1e-12);
+        assert_abs_diff_eq!(config.relative_error_tolerance, super::DEFAULT_TOLERANCE, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn test_adaptive_timestep_next_dt() {
+        let config = AdaptiveTimeStep::new(0.1, 0.01, 0.5, 1e-4, 1e-4);
+        let error_norm = 5e-4;
+
+        let dt = config.dt;
+        let expected_dt = (dt * (((config.absolute_error_tolerance + config.relative_error_tolerance * dt)
+            * super::SAFETY_FACTOR
+            / error_norm)
+            .powf(0.25))
+        .clamp(0.5, 2.0))
+        .clamp(config.dt_min, config.dt_max);
+
+        let actual_dt = config.next_dt(error_norm);
+        assert_abs_diff_eq!(actual_dt, expected_dt, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn test_adaptive_timestep_next_dt_zero() {
+        // When error_norm <= 1e-30, next_dt should double the current dt (0.1 -> 0.2)
+        let config = AdaptiveTimeStep::new(0.1, 0.01, 0.5, 1e-4, 1e-4);
+        let next = config.next_dt(0.0);
+        assert_abs_diff_eq!(next, 0.2, epsilon = 1e-12);
+
+        // Verify that the doubling behavior safely respects the dt_max ceiling 
+        // (0.4 * 2.0 = 0.8, which should clamp hard down to 0.5)
+        let config_max_clamp = AdaptiveTimeStep::new(0.4, 0.01, 0.5, 1e-4, 1e-4);
+        let next_clamped = config_max_clamp.next_dt(1e-35);
+        assert_abs_diff_eq!(next_clamped, 0.5, epsilon = 1e-12);
+    }
+    
+}
