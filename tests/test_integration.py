@@ -1,5 +1,21 @@
 import pytest
+import numpy as np
 from hprm import Rocket, OdeMethod, AdaptiveTimeStep, FixedTimeStep
+
+
+def make_rocket() -> Rocket:
+    """
+    Utility factory function to instantiate a Rocket with standard test parameters.
+    """
+    return Rocket(
+        mass=15.0,
+        cd=0.5,
+        area_drag=0.0182,
+        area_lift=0.05,
+        moment_of_inertia=5.0,
+        stab_margin_dimensional=0.5,
+        cl_a=0.2,
+    )
 
 
 @pytest.mark.parametrize(
@@ -24,18 +40,8 @@ def test_simulation_integration_1dof(
     expected_apogee,
 ):
     timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
+    rocket = make_rocket()
 
-    rocket = Rocket(
-        15.0,  # mass kg
-        0.5,  # drag coefficient
-        0.0182,  # cross-sectional reference area
-        0.05,  # lifting-surface reference area
-        5.0,  # Moment of Inertia
-        0.5,  # Dimensional stability margin
-        0.2,  # Derivative of lift coefficient
-    )
-
-    # Calling the dedicated 1-DOF API
     assert rocket.predict_apogee_1dof(
         initial_height,
         initial_velocity,
@@ -67,18 +73,8 @@ def test_simulation_integration_3dof(
     expected_apogee,
 ):
     timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
+    rocket = make_rocket()
 
-    rocket = Rocket(
-        15.0,  # mass kg
-        0.5,  # drag coefficient
-        0.0182,  # cross-sectional reference area
-        0.05,  # lifting-surface reference area
-        5.0,  # Moment of Inertia
-        0.5,  # Dimensional stability margin
-        0.2,  # Derivative of lift coefficient
-    )
-
-    # Calling the dedicated 3-DOF API with initial_angle
     assert rocket.predict_apogee_3dof(
         initial_height,
         initial_velocity,
@@ -86,3 +82,27 @@ def test_simulation_integration_3dof(
         ode_method,
         timestep_config=timestep,
     ) == pytest.approx(expected_apogee)
+
+
+def test_simulate_flight_1dof_format():
+    """
+    Verifies that the NumPy array structures returned by simulate_flight_1dof
+    conform to expected dimensional bounds, shapes, and structural baselines.
+    """
+    rocket = make_rocket()
+
+    time_arr, state_mat = rocket.simulate_flight_1dof(
+        initial_height=10.0,
+        initial_velocity=150.0,
+        integration_method=OdeMethod.Euler,
+        timestep_config=FixedTimeStep(0.1),
+    )
+
+    assert time_arr.ndim == 1
+    assert state_mat.ndim == 2
+    assert time_arr.shape[0] == state_mat.shape[0]
+    assert state_mat.shape[1] >= 2
+
+    assert time_arr[0] == 0.0
+    assert state_mat[0, 0] == pytest.approx(10.0)
+    assert state_mat[0, 1] == pytest.approx(150.0)
