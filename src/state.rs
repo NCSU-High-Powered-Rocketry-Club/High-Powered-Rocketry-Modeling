@@ -3,11 +3,58 @@ pub(crate) mod model_3dof;
 pub(crate) mod state_vector;
 
 use nalgebra::{Vector2, Vector6};
+use pyo3::prelude::*;
 
 use crate::rocket::{Rocket, RocketProperties};
 use crate::state::model_1dof::OneDOFModel;
 use crate::state::model_3dof::ThreeDOFModel;
 use crate::state::state_vector::StateVector;
+
+/// Struct for defining the initial conditions of a 1-DOF simulation.
+#[pyclass(get_all, set_all)]
+#[derive(Debug, Clone, Copy)]
+pub struct InitialState1DOF {
+    pub initial_height: f64,
+    pub initial_velocity: f64,
+}
+
+#[pymethods]
+impl InitialState1DOF {
+    #[new]
+    pub fn new(initial_height: f64, initial_velocity: f64) -> Self {
+        Self {
+            initial_height,
+            initial_velocity,
+        }
+    }
+}
+
+/// Struct for defining the initial conditions of a 3-DOF simulation.
+#[pyclass(get_all, set_all)]
+#[derive(Debug, Clone, Copy)]
+pub struct InitialState3DOF {
+    pub x: f64,
+    pub y: f64,
+    pub angle: f64,
+    pub vx: f64,
+    pub vy: f64,
+    pub angular_rate: f64,
+}
+
+#[pymethods]
+impl InitialState3DOF {
+    #[new]
+    pub fn new(x: f64, y: f64, angle: f64, vx: f64, vy: f64, angular_rate: f64) -> Self {
+        Self {
+            x,
+            y,
+            angle,
+            vx,
+            vy,
+            angular_rate,
+        }
+    }
+}
 
 /// The internal simulation state, wrapping either a 1-DOF or 3-DOF model. These models are what
 /// contain the actual state information. The State struct provides a common interface for the ODE
@@ -28,29 +75,26 @@ impl State {
     /// Makes a new state for the 1-DOF model, given the rocket parameters and initial conditions.
     pub(crate) fn new_1dof(
         rocket_properties: RocketProperties,
-        initial_height: f64,
-        initial_velocity: f64,
+        initial_state: InitialState1DOF,
     ) -> Self {
-        let u1 = Vector2::new(initial_height, initial_velocity);
+        let u1 = Vector2::new(initial_state.initial_height, initial_state.initial_velocity);
         State::OneDOF(OneDOFModel::new(u1, rocket_properties))
     }
 
     /// Makes a new state for the 3-DOF model, given the rocket parameters and initial conditions.
     pub(crate) fn new_3dof(
         rocket_properties: RocketProperties,
-        initial_height: f64,
-        initial_velocity: f64,
-        initial_angle: f64,
+        initial_state: InitialState3DOF,
     ) -> Self {
         // u3 = [x, y, theta, vx, vy, omega]
         // PI/2 means pointing up
         let u3 = Vector6::new(
-            0.0,
-            initial_height,
-            initial_angle,
-            0.0,
-            initial_velocity,
-            0.0,
+            initial_state.x,
+            initial_state.y,
+            initial_state.angle,
+            initial_state.vx,
+            initial_state.vy,
+            initial_state.angular_rate,
         );
         State::ThreeDOF(ThreeDOFModel::new(u3, rocket_properties))
     }

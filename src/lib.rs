@@ -12,6 +12,7 @@ use std::f64::consts::PI;
 
 use crate::ode::OdeSolver;
 use crate::simulation::Simulation;
+use crate::state::{InitialState1DOF, InitialState3DOF};
 use crate::state::{model_1dof::OneDOFModel, model_3dof::ThreeDOFModel, State};
 
 pub use crate::ode::{AdaptiveTimeStep, FixedTimeStep, OdeMethod, TimeStepOptions};
@@ -23,5 +24,7 @@ fn hprm(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Rocket>()?;
     m.add_class::<FixedTimeStep>()?;
     m.add_class::<AdaptiveTimeStep>()?;
+    m.add_class::<InitialState1DOF>()?;
+    m.add_class::<InitialState3DOF>()?;
     Ok(())
 }

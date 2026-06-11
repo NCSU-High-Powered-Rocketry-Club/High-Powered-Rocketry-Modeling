@@ -1,6 +1,12 @@
 import pytest
-from hprm import Rocket, OdeMethod, AdaptiveTimeStep, FixedTimeStep
-
+from hprm import (
+    Rocket,
+    OdeMethod,
+    AdaptiveTimeStep,
+    FixedTimeStep,
+    InitialState1DOF,
+    InitialState3DOF,
+)
 
 pytestmark = pytest.mark.benchmark
 
@@ -22,10 +28,10 @@ def test_bench_1dof_euler(benchmark):
     """Benchmarks the 1-DOF explicit Euler solver (Fixed Step)."""
     rocket = make_bench_rocket()
     timestep = FixedTimeStep(0.01)
+    state = InitialState1DOF(initial_height=0.0, initial_velocity=150.0)
     benchmark(
         rocket.predict_apogee_1dof,
-        initial_height=0.0,
-        initial_velocity=150.0,
+        initial_state=state,
         integration_method=OdeMethod.Euler,
         timestep_config=timestep,
     )
@@ -35,10 +41,10 @@ def test_bench_1dof_rk3(benchmark):
     """Benchmarks the 1-DOF RK3 solver (Fixed Step)."""
     rocket = make_bench_rocket()
     timestep = FixedTimeStep(0.01)
+    state = InitialState1DOF(initial_height=0.0, initial_velocity=150.0)
     benchmark(
         rocket.predict_apogee_1dof,
-        initial_height=0.0,
-        initial_velocity=150.0,
+        initial_state=state,
         integration_method=OdeMethod.RK3,
         timestep_config=timestep,
     )
@@ -48,10 +54,10 @@ def test_bench_1dof_rk45(benchmark):
     """Benchmarks the 1-DOF adaptive RK45 solver (Adaptive Step)."""
     rocket = make_bench_rocket()
     timestep = AdaptiveTimeStep.default()
+    state = InitialState1DOF(initial_height=0.0, initial_velocity=150.0)
     benchmark(
         rocket.predict_apogee_1dof,
-        initial_height=0.0,
-        initial_velocity=150.0,
+        initial_state=state,
         integration_method=OdeMethod.RK45,
         timestep_config=timestep,
     )
@@ -61,11 +67,10 @@ def test_bench_3dof_rk45(benchmark):
     """Benchmarks the 3-DOF adaptive RK45 solver (Heaviest Combined Loop)."""
     rocket = make_bench_rocket()
     timestep = AdaptiveTimeStep.default()
+    state = InitialState3DOF(x=0.0, y=0.0, angle=1.57079, vx=0.0, vy=150.0, angular_rate=0.0)
     benchmark(
         rocket.predict_apogee_3dof,
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=1.57079,
+        initial_state=state,
         integration_method=OdeMethod.RK45,
         timestep_config=timestep,
     )

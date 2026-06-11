@@ -1,6 +1,13 @@
 import pytest
 import numpy as np
-from hprm import Rocket, OdeMethod, AdaptiveTimeStep, FixedTimeStep
+from hprm import (
+    Rocket,
+    OdeMethod,
+    AdaptiveTimeStep,
+    FixedTimeStep,
+    InitialState1DOF,
+    InitialState3DOF,
+)
 
 
 def make_rocket() -> Rocket:
@@ -41,10 +48,10 @@ def test_simulation_integration_1dof(
 ):
     timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
     rocket = make_rocket()
+    state = InitialState1DOF(initial_height, initial_velocity)
 
     assert rocket.predict_apogee_1dof(
-        initial_height,
-        initial_velocity,
+        state,
         ode_method,
         timestep_config=timestep,
     ) == pytest.approx(expected_apogee)
@@ -75,10 +82,12 @@ def test_simulation_integration_3dof(
     timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
     rocket = make_rocket()
 
+    # Matching previous internal construction logic:
+    # x=0, y=height, angle=angle, vx=0, vy=velocity, omega=0
+    state = InitialState3DOF(0.0, initial_height, initial_angle, 0.0, initial_velocity, 0.0)
+
     assert rocket.predict_apogee_3dof(
-        initial_height,
-        initial_velocity,
-        initial_angle,
+        state,
         ode_method,
         timestep_config=timestep,
     ) == pytest.approx(expected_apogee)
@@ -90,10 +99,10 @@ def test_simulate_flight_1dof_format():
     conform to expected dimensional bounds, shapes, and structural baselines.
     """
     rocket = make_rocket()
+    state = InitialState1DOF(initial_height=10.0, initial_velocity=150.0)
 
     time_arr, state_mat = rocket.simulate_flight_1dof(
-        initial_height=10.0,
-        initial_velocity=150.0,
+        initial_state=state,
         integration_method=OdeMethod.Euler,
         timestep_config=FixedTimeStep(0.1),
     )

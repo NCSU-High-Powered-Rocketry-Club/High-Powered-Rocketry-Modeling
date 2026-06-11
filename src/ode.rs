@@ -73,6 +73,7 @@ impl AdaptiveTimeStep {
         }
     }
 
+    #[allow(clippy::should_implement_trait)] // PyO3 won't like it if we make it a trait
     #[staticmethod]
     pub fn default() -> Self {
         Self {
@@ -329,7 +330,7 @@ impl OdeSolver {
 mod tests {
     use super::*;
     use crate::rocket::RocketProperties;
-    use crate::state::State;
+    use crate::state::{InitialState1DOF, InitialState3DOF, State};
     use approx::{assert_abs_diff_eq, assert_relative_eq};
 
     fn make_rocket_properties() -> RocketProperties {
@@ -340,7 +341,7 @@ mod tests {
     fn test_euler_1dof() {
         let rocket_properties = make_rocket_properties();
         // Start at 100m altitude, climbing straight up at 50 m/s
-        let mut state = State::new_1dof(rocket_properties, 100.0, 50.0);
+        let mut state = State::new_1dof(rocket_properties, InitialState1DOF::new(100.0, 50.0));
 
         // Setup Euler solver with a fixed timestep of 0.1 seconds
         let mut solver = OdeSolver::Euler(FixedTimeStep::new(0.1));
@@ -365,14 +366,16 @@ mod tests {
         // 85 degrees in radians
         let angle_deg = 85.0_f64;
         let angle_rad = angle_deg.to_radians();
-        let v_initial = 10.0;
+
+        let vx_initial = 5.0;
+        let vy_initial = 10.0;
+        let x_initial = 0.0;
         let h_initial = 10.0;
 
-        // Calculate initial x and y velocity components
-        let v_y0 = v_initial * angle_rad.sin(); // ~9.96 m/s
-
-        // 3DOF initialization: height = 0.0, velocity = 10.0, angle = 85 degrees
-        let mut state = State::new_3dof(rocket_properties, h_initial, v_initial, angle_rad);
+        let mut state = State::new_3dof(
+            rocket_properties,
+            InitialState3DOF::new(x_initial, h_initial, angle_rad, vx_initial, vy_initial, 0.0),
+        );
 
         let dt = 0.2;
         let mut solver = OdeSolver::Euler(FixedTimeStep::new(dt));
@@ -381,13 +384,19 @@ mod tests {
 
         // Explicit Euler Kinematics for altitude (y-axis):
         // new_altitude = old_altitude + old_y_velocity * dt
-        let expected_altitude = h_initial + (v_y0 * dt);
+        let expected_altitude = h_initial + (vy_initial * dt);
+        let expected_x = x_initial + (vx_initial * dt);
 
         assert_abs_diff_eq!(state.get_time(), dt, epsilon = 1e-12);
         assert_abs_diff_eq!(state.get_altitude(), expected_altitude, epsilon = 1e-12);
+        assert_abs_diff_eq!(
+            state.get_state_vec().as_array()[0],
+            expected_x,
+            epsilon = 1e-12
+        );
 
         // The vertical velocity must decrease due to gravity and drag, but not too much
-        assert!(state.get_vertical_velocity() < v_y0);
+        assert!(state.get_vertical_velocity() < vy_initial);
         assert!(state.get_vertical_velocity() > 7.0);
     }
 
@@ -395,7 +404,7 @@ mod tests {
     #[test]
     fn test_rk3_1dof() {
         let rocket_properties = make_rocket_properties();
-        let mut state = State::new_1dof(rocket_properties, 0.0, 100.0);
+        let mut state = State::new_1dof(rocket_properties, InitialState1DOF::new(0.0, 100.0));
 
         let dt = 0.05;
         let mut solver = OdeSolver::RK3(FixedTimeStep::new(dt));
@@ -417,7 +426,7 @@ mod tests {
     #[test]
     fn test_rk45_1dof() {
         let rocket_properties = make_rocket_properties();
-        let mut state = State::new_1dof(rocket_properties, 500.0, 300.0);
+        let mut state = State::new_1dof(rocket_properties, InitialState1DOF::new(500.0, 300.0));
 
         // Configure adaptive steps with an initial step size of 0.1
         let initial_dt = 0.1;
@@ -454,7 +463,7 @@ mod tests {
 
         // 1. Establish a valid previous state just before apogee.
         // At 0.45 m/s, it will reach apogee in roughly (0.45 / 9.81) ≈ 0.046 seconds.
-        let prev_state = State::new_1dof(rocket_properties, 1500.0, 0.45);
+        let prev_state = State::new_1dof(rocket_properties, InitialState1DOF::new(1500.0, 0.45));
 
         // 2. Compute a physically realistic next state using the solver itself.
         // A step of 0.1 seconds will naturally push the velocity past zero to approx -0.53 m/s.

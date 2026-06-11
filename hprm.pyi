@@ -98,6 +98,38 @@ class AdaptiveTimeStep:
         """
         ...
 
+class InitialState1DOF:
+    """
+    Defines the initial conditions of a 1-DOF simulation.
+    """
+
+    initial_height: float
+    initial_velocity: float
+
+    def __init__(self, initial_height: float, initial_velocity: float) -> None: ...
+
+class InitialState3DOF:
+    """
+    Defines the initial conditions of a 3-DOF simulation.
+    """
+
+    x: float
+    y: float
+    angle: float
+    vx: float
+    vy: float
+    angular_rate: float
+
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        angle: float,
+        vx: float,
+        vy: float,
+        angular_rate: float,
+    ) -> None: ...
+
 class RocketProperties:
     """
     Internal physical property group for the rocket.
@@ -148,8 +180,7 @@ class Rocket:
 
     def simulate_flight_1dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
+        initial_state: InitialState1DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -158,8 +189,7 @@ class Rocket:
         """
         Simulate the rocket's flight using a 1-DOF model (vertical motion only).
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param initial_state: The initial height and velocity of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -170,9 +200,7 @@ class Rocket:
 
     def simulate_flight_3dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
-        initial_angle: float,
+        initial_state: InitialState3DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -181,9 +209,7 @@ class Rocket:
         """
         Simulate the rocket's flight using a 3-DOF model (2D translation and rotation).
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
-        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
+        :param initial_state: The initial 6-DOF condition of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -194,8 +220,7 @@ class Rocket:
 
     def predict_apogee_1dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
+        initial_state: InitialState1DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -204,8 +229,7 @@ class Rocket:
         """
         Predict the apogee (maximum altitude) using a 1-DOF model.
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param initial_state: The initial height and velocity of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -216,9 +240,7 @@ class Rocket:
 
     def predict_apogee_3dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
-        initial_angle: float,
+        initial_state: InitialState3DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -227,9 +249,7 @@ class Rocket:
         """
         Predict the apogee (maximum altitude) using a 3-DOF model.
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
-        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
+        :param initial_state: The initial 6-DOF condition of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
