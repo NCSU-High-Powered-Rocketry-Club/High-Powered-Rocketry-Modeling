@@ -104,9 +104,23 @@ class InitialState1DOF:
     """
 
     initial_height: float
-    initial_velocity: float
+    """
+    Initial altitude of the rocket in meters (m).
+    """
 
-    def __init__(self, initial_height: float, initial_velocity: float) -> None: ...
+    initial_velocity: float
+    """
+    Initial vertical velocity of the rocket in meters per second (m/s).
+    """
+
+    def __init__(self, initial_height: float, initial_velocity: float) -> None:
+        """
+        Create a new 1-DOF initial state.
+
+        :param initial_height: Initial altitude in meters (m).
+        :param initial_velocity: Initial vertical velocity in meters per second (m/s).
+        """
+        ...
 
 class InitialState3DOF:
     """
@@ -114,11 +128,34 @@ class InitialState3DOF:
     """
 
     x: float
+    """
+    Initial horizontal position in meters (m).
+    """
+
     y: float
+    """
+    Initial vertical position (altitude) in meters (m).
+    """
+
     angle: float
+    """
+    Initial orientation angle in radians (rad). Pi / 2 means pointing straight up.
+    """
+
     vx: float
+    """
+    Initial horizontal velocity in meters per second (m/s).
+    """
+
     vy: float
+    """
+    Initial vertical velocity in meters per second (m/s).
+    """
+
     angular_rate: float
+    """
+    Initial angular velocity in radians per second (rad/s).
+    """
 
     def __init__(
         self,
@@ -128,7 +165,18 @@ class InitialState3DOF:
         vx: float,
         vy: float,
         angular_rate: float,
-    ) -> None: ...
+    ) -> None:
+        """
+        Create a new 3-DOF initial state.
+
+        :param x: Initial horizontal position in meters (m).
+        :param y: Initial vertical position (altitude) in meters (m).
+        :param angle: Initial orientation angle in radians (rad).
+        :param vx: Initial horizontal velocity in meters per second (m/s).
+        :param vy: Initial vertical velocity in meters per second (m/s).
+        :param angular_rate: Initial angular velocity in radians per second (rad/s).
+        """
+        ...
 
 class RocketProperties:
     """
@@ -137,12 +185,39 @@ class RocketProperties:
     """
 
     mass: float
+    """
+    Mass of the rocket in kilograms (kg).
+    """
+
     cd: float
+    """
+    Drag coefficient (dimensionless).
+    """
+
     area_drag: float
+    """
+    Reference area for drag in square meters (m²).
+    """
+
     area_lift: float
+    """
+    Reference area for lift in square meters (m²).
+    """
+
     moment_of_inertia: float
+    """
+    Moment of inertia about the z-axis in kilogram square meters (kg·m²).
+    """
+
     stab_margin_dimensional: float
+    """
+    Static stability margin in meters (m).
+    """
+
     cl_a: float
+    """
+    Lift coefficient slope per radian (1/rad).
+    """
 
 class Rocket:
     """
