@@ -44,7 +44,7 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          uv run pytest tests/test_benchmark.py \
+          uv run pytest tests/test_benchmarks.py \
             --benchmark-min-time=1.0 \
             --benchmark-json=benchmark.json
 
