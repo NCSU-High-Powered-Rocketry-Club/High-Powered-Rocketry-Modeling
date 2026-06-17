@@ -1,18 +1,9 @@
+use crate::constants::simulation_constants::MAX_ITERATIONS;
 use crate::ode::{OdeSolver, TimeStepOptions};
 use crate::simdata_mod::SimulationData;
 use crate::simulation::{Simulation, SimulationExitCondition};
 use crate::state::State;
 use pyo3::prelude::*;
-
-#[pyclass(eq, eq_int)]
-#[derive(Clone, Copy, PartialEq, Debug)]
-/// Represents the type of dynamic model used for the simulation.
-pub enum ModelType {
-    /// One degree of freedom model, modeling the rocket as only going up and down (y).
-    OneDOF,
-    /// Three degrees of freedom model, modeling the rocket in 2D space with rotation (x, y, theta).
-    ThreeDOF,
-}
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -69,71 +60,115 @@ impl Rocket {
         }
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false, log_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn simulate_flight(
+    fn simulate_flight_1dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,
-        model_type: ModelType,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
-        initial_angle: Option<f64>,
+        max_iterations: u64,
         print_output: bool,
         log_output: bool,
     ) -> PyResult<SimulationData> {
         let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
 
-        let state = State::from_model_type(
-            model_type,
-            *self,
-            initial_height,
-            initial_velocity,
-            initial_angle,
-        );
+        let state = State::new_1dof(*self, initial_height, initial_velocity);
 
-        const MAXITER: u64 = 1e5 as u64;
         let mut simulation = Simulation::new(
             state,
             ode_solver,
             SimulationExitCondition::ApogeeReached,
-            MAXITER,
+            max_iterations,
         );
         let mut log = SimulationData::new();
         simulation.run(&mut log, print_output, log_output);
         Ok(log)
     }
 
-    #[pyo3(signature = (initial_height, initial_velocity, model_type, integration_method, timestep_config=None, initial_angle=None, print_output=false))]
+    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false, log_output=false))]
     #[allow(clippy::too_many_arguments)]
-    fn predict_apogee(
+    fn simulate_flight_3dof(
         &self,
         initial_height: f64,
         initial_velocity: f64,
-        model_type: ModelType,
+        initial_angle: f64,
         integration_method: OdeMethod,
         timestep_config: Option<TimeStepOptions>,
-        initial_angle: Option<f64>,
+        max_iterations: u64,
+        print_output: bool,
+        log_output: bool,
+    ) -> PyResult<SimulationData> {
+        let ode_solver = OdeSolver::from_method(integration_method, timestep_config)?;
+
+        let state = State::new_3dof(*self, initial_height, initial_velocity, initial_angle);
+
+        let mut simulation = Simulation::new(
+            state,
+            ode_solver,
+            SimulationExitCondition::ApogeeReached,
+            max_iterations,
+        );
+        let mut log = SimulationData::new();
+        simulation.run(&mut log, print_output, log_output);
+        Ok(log)
+    }
+
+    #[pyo3(signature = (initial_height, initial_velocity, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
+    #[allow(clippy::too_many_arguments)]
+    fn predict_apogee_1dof(
+        &self,
+        initial_height: f64,
+        initial_velocity: f64,
+        integration_method: OdeMethod,
+        timestep_config: Option<TimeStepOptions>,
+        max_iterations: u64,
         print_output: bool,
     ) -> PyResult<f64> {
-        let log = self.simulate_flight(
+        let log = self.simulate_flight_1dof(
             initial_height,
             initial_velocity,
-            model_type,
             integration_method,
             timestep_config,
-            initial_angle,
+            max_iterations,
             print_output,
             false,
         )?;
 
-        // Gets the height column based on model type
-        let height_col = match model_type {
-            ModelType::OneDOF => 1,
-            ModelType::ThreeDOF => 2,
-        };
+        const HEIGHT_COL: usize = 1;
 
-        let max_height = log.get_val((log.len as usize) - 1, height_col);
+        let max_height = log.get_val((log.len as usize) - 1, HEIGHT_COL);
+
+        Ok(max_height)
+    }
+
+    #[pyo3(signature = (initial_height, initial_velocity, initial_angle, integration_method, timestep_config=None, max_iterations=MAX_ITERATIONS, print_output=false))]
+    #[allow(clippy::too_many_arguments)]
+    fn predict_apogee_3dof(
+        &self,
+        initial_height: f64,
+        initial_velocity: f64,
+        initial_angle: f64,
+        integration_method: OdeMethod,
+        timestep_config: Option<TimeStepOptions>,
+        max_iterations: u64,
+        print_output: bool,
+    ) -> PyResult<f64> {
+        let log = self.simulate_flight_3dof(
+            initial_height,
+            initial_velocity,
+            initial_angle,
+            integration_method,
+            timestep_config,
+            max_iterations,
+            print_output,
+            false,
+        )?;
+
+        const HEIGHT_COL: usize = 2;
+
+        let max_height = log.get_val((log.len as usize) - 1, HEIGHT_COL);
 
         Ok(max_height)
     }
