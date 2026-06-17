@@ -1,28 +1,19 @@
 use crate::constants::simulation_constants::{DATA_LENGTH, INITIAL_DATA_CAPACITY};
 use crate::state::state_vector::StateVector;
-use numpy::{PyArray1, PyArray2, ToPyArray};
-use pyo3::prelude::*;
 
-#[pyclass(dict, get_all, set_all)]
 #[derive(Clone, Debug)]
 pub(crate) struct SimulationData {
     pub(crate) len: u64,
-    time: Vec<f64>,
-    data: Vec<[f64; DATA_LENGTH]>,
-    index: usize,
-    col: usize,
+    pub(crate) time_log: Vec<f64>,
+    pub(crate) state_log: Vec<[f64; DATA_LENGTH]>,
 }
 
-#[pymethods]
 impl SimulationData {
-    #[new]
     pub(crate) fn new() -> Self {
         Self {
             len: 0,
-            time: Vec::with_capacity(INITIAL_DATA_CAPACITY),
-            data: Vec::with_capacity(INITIAL_DATA_CAPACITY),
-            index: 0,
-            col: 0,
+            time_log: Vec::with_capacity(INITIAL_DATA_CAPACITY),
+            state_log: Vec::with_capacity(INITIAL_DATA_CAPACITY),
         }
     }
 
@@ -32,21 +23,17 @@ impl SimulationData {
         }
 
         if col == 0 {
-            self.time[index]
+            self.time_log[index]
         } else {
-            self.data[index][col - 1]
+            self.state_log[index][col - 1]
         }
-    }
-
-    pub(crate) fn get_len(&self) -> usize {
-        self.time.len()
     }
 }
 
 impl SimulationData {
     pub(crate) fn add_row(&mut self, row: StateVector, time: f64) {
         self.len += 1; // Can maybe speed up by adding this at very end (simulation iter #)
-        self.time.push(time);
+        self.time_log.push(time);
         let rowdata = row.as_array();
         let mut rowvec = rowdata.to_vec();
         if rowdata.len() < DATA_LENGTH {
@@ -54,7 +41,7 @@ impl SimulationData {
                 rowvec.push(0.0);
             }
         }
-        self.data
+        self.state_log
             .push(<[f64; DATA_LENGTH]>::try_from(rowvec).unwrap());
     }
 }

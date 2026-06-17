@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import numpy as np
 
 from hprm import AdaptiveTimeStep, OdeMethod, Rocket
 
@@ -30,7 +31,7 @@ def main() -> None:
     ats.relative_error_tolerance = 1e-3
 
     # IMPORTANT: log_output=True gives you the full timeseries (otherwise you only get the final row).
-    simdata = rocket.simulate_flight_3dof(
+    time, state = rocket.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
@@ -40,15 +41,15 @@ def main() -> None:
         log_output=True,
     )
 
-    n = simdata.get_len()
+    n = len(time)
 
     # ThreeDOF log columns (see src/state/model_3dof.rs::get_logrow)
-    t = [float(simdata.get_val(i, 0)) for i in range(n)]
-    x = [float(simdata.get_val(i, 1)) for i in range(n)]
-    y = [float(simdata.get_val(i, 2)) for i in range(n)]
-    vy = [float(simdata.get_val(i, 5)) for i in range(n)]
+    t = time
+    x = state[:, 0]
+    y = state[:, 1]
+    vy = state[:, 4]
 
-    apogee_i = max(range(len(y)), key=y.__getitem__)
+    apogee_i = np.argmax(y)
     apogee_t = t[apogee_i]
     apogee_x = x[apogee_i]
     apogee_y = y[apogee_i]

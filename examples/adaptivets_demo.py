@@ -33,7 +33,7 @@ def main():
     ats.absolute_error_tolerance = 1.0e-0
     ats.relative_error_tolerance = 1.0e-0
     tstart = perf_counter()
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
@@ -42,20 +42,21 @@ def main():
     )
     tend = perf_counter()
     t1 = tend - tstart
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
         OdeMethod.RK45,
         ats,
-        True,
+        False,  # print_output
+        True,  # log_output
     )
 
     # Run the simulation
     ats.absolute_error_tolerance = 1.0e-2
     ats.relative_error_tolerance = 1.0e-2
     tstart = perf_counter()
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
@@ -64,12 +65,13 @@ def main():
     )
     tend = perf_counter()
     t2 = tend - tstart
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
         OdeMethod.RK45,
         ats,
+        False,
         True,
     )
 
@@ -77,7 +79,7 @@ def main():
     ats.absolute_error_tolerance = 1.0e-4
     ats.relative_error_tolerance = 1.0e-4
     tstart = perf_counter()
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
@@ -86,12 +88,13 @@ def main():
     )
     tend = perf_counter()
     t3 = tend - tstart
-    test_vehicle.simulate_flight_3dof(
+    _ = test_vehicle.simulate_flight_3dof(
         initial_height,
         initial_velocity,
         initial_angle,
         OdeMethod.RK45,
         ats,
+        False,
         True,
     )
 
