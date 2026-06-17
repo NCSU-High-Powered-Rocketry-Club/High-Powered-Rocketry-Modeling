@@ -172,7 +172,8 @@ impl OdeSolver {
         match self {
             OdeSolver::Euler(fixed) => Self::explicit_euler(state, fixed.dt),
             OdeSolver::RK3(fixed) => Self::runge_kutta_3(state, fixed.dt),
-            OdeSolver::RK45(a) => Self::runge_kutta_45(state, a),
+            // It's &mut self because RK45 needs to update the adaptive timestep configuration after calculating the error
+            OdeSolver::RK45(ats) => Self::runge_kutta_45(state, ats),
         }
     }
 

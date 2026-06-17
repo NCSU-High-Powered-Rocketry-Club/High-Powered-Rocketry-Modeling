@@ -4,7 +4,7 @@ to compare their results, giving each subplot its own isolated legend box."""
 import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from hprm import Rocket, OdeMethod
+from hprm import InitialState3DOF, Rocket, OdeMethod
 
 
 rocket = Rocket(
@@ -15,6 +15,15 @@ rocket = Rocket(
     moment_of_inertia=11.5,
     stab_margin_dimensional=0.5,
     cl_a=0.2,
+)
+
+initial_state = InitialState3DOF(
+    x=0.0,
+    y=0.0,
+    angle=math.radians(88),
+    vx=0,
+    vy=150.0,
+    angular_rate=0.0,
 )
 
 # These are the integration methods we currently support.
@@ -29,9 +38,7 @@ fig = make_subplots(
 # Plots the position and velocity for each integration method
 for method in methods_to_compare:
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(88),
+        initial_state=initial_state,
         integration_method=method,
     )
 

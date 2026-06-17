@@ -3,7 +3,7 @@ simulation speeds and the total number of generated data points."""
 
 import math
 from time import perf_counter
-from hprm import Rocket, AdaptiveTimeStep, OdeMethod
+from hprm import InitialState3DOF, Rocket, AdaptiveTimeStep, OdeMethod
 
 
 rocket = Rocket(
@@ -31,10 +31,18 @@ ats.relative_error_tolerance = 1.0
 
 # Profile execution speed by running without data logging active
 start_time = perf_counter()
+
+initial_state = InitialState3DOF(
+    x=0.0,
+    y=initial_height,
+    angle=initial_angle,
+    vx=0,
+    vy=initial_velocity,
+    angular_rate=0.0,
+)
+
 rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
@@ -42,9 +50,7 @@ duration_1 = perf_counter() - start_time
 
 # Run a second time with data logging to check the final array size
 time_steps_1, _ = rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
@@ -56,18 +62,14 @@ ats.relative_error_tolerance = 1.0e-2
 
 start_time = perf_counter()
 rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
 duration_2 = perf_counter() - start_time
 
 time_steps_2, _ = rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
@@ -79,18 +81,14 @@ ats.relative_error_tolerance = 1.0e-4
 
 start_time = perf_counter()
 rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
 duration_3 = perf_counter() - start_time
 
 time_steps_3, _ = rocket.simulate_flight_3dof(
-    initial_height=initial_height,
-    initial_velocity=initial_velocity,
-    initial_angle=initial_angle,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45,
     timestep_config=ats,
 )
