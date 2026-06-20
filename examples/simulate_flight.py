@@ -4,7 +4,7 @@ and displays every single plot on a single page using a unified subplot layout."
 import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from hprm import Rocket, OdeMethod
+from hprm import Rocket, OdeMethod, InitialState1DOF, InitialState3DOF
 
 
 # Create your rocket, this is roughly what a heavier 6-inch diameter rocket might look like, but you
@@ -19,11 +19,15 @@ rocket = Rocket(
     cl_a=0.2,
 )
 
+initial_state_1dof = InitialState1DOF(
+    initial_height=0.0,
+    initial_velocity=150.0,
+)
+
 # Runs a 1dof simulation and returns the time steps and state matrix as NumPy arrays.
 # The state matrix has 2 columns: [altitude, velocity]
 time_1dof, state_1dof = rocket.simulate_flight_1dof(
-    initial_height=0.0,
-    initial_velocity=150.0,
+    initial_state=initial_state_1dof,
     integration_method=OdeMethod.RK45,
 )
 
@@ -31,13 +35,20 @@ time_1dof, state_1dof = rocket.simulate_flight_1dof(
 alt_1dof = state_1dof[:, 0]
 vel_1dof = state_1dof[:, 1]
 
-# Runs a 3DOF simulation. We launch at 88 degrees (tilted 2 degrees) so we # can actually see the
+initial_state_3dof = InitialState3DOF(
+    x=0.0,
+    y=0.0,
+    angle=math.radians(88),
+    vx=0.0,
+    vy=150.0,
+    angular_rate=0.0,
+)
+
+# Runs a 3DOF simulation. We launch at 88 degrees (tilted 2 degrees) so we can actually see the
 # horizontal and rotational elements react.
 # The state matrix has 6 columns: [x, y, theta, vx, vy, omega]
 time_3dof, state_3dof = rocket.simulate_flight_3dof(
-    initial_height=0.0,
-    initial_velocity=150.0,
-    initial_angle=math.radians(88),
+    initial_state=initial_state_3dof,
     integration_method=OdeMethod.RK45,
 )
 
@@ -64,6 +75,7 @@ fig = make_subplots(
         "3DOF: Angular Velocity omega (rad/s)",
     ),
 )
+
 fig.add_trace(go.Scatter(x=time_1dof, y=alt_1dof, mode="lines", name="1DOF Alt"), row=1, col=1)
 fig.add_trace(go.Scatter(x=time_1dof, y=vel_1dof, mode="lines", name="1DOF Vel"), row=1, col=2)
 fig.add_trace(go.Scatter(x=time_3dof, y=x_3dof, mode="lines", name="3DOF x"), row=2, col=1)
@@ -72,7 +84,11 @@ fig.add_trace(go.Scatter(x=time_3dof, y=vx_3dof, mode="lines", name="3DOF vx"), 
 fig.add_trace(go.Scatter(x=time_3dof, y=vy_3dof, mode="lines", name="3DOF vy"), row=3, col=2)
 fig.add_trace(go.Scatter(x=time_3dof, y=theta_3dof, mode="lines", name="3DOF theta"), row=4, col=1)
 fig.add_trace(go.Scatter(x=time_3dof, y=omega_3dof, mode="lines", name="3DOF omega"), row=4, col=2)
+
 fig.update_layout(
-    title_text="Comprehensive 1DOF vs 3DOF Flight Profile Analysis", height=1100, showlegend=False
+    title_text="Comprehensive 1DOF vs 3DOF Flight Profile Analysis",
+    height=1100,
+    showlegend=False,
 )
+
 fig.show()

@@ -11,8 +11,13 @@ env:
 
 jobs:
   pytest:
-    name: Pytest (uv)
+    name: Tests + Benchmarks
     runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,12 +32,54 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Install Python dependencies
-        run: uv sync --group dev
+      - name: Install dependencies
+        run: uv sync --all-groups --all-extras
 
-      - name: Build Python extension (maturin develop)
+      - name: Build extension
         run: uv run maturin develop
 
-      - name: Run pytest
-        run: uv run pytest -q
-        
+      - name: Run unit tests
+        run: |
+          uv run pytest -q -m "not benchmark"
+
+      - name: Run benchmarks
+        run: |
+          uv run pytest tests/test_benchmarks.py \
+            --benchmark-min-time=1.0 \
+            --benchmark-json=benchmark.json
+
+      #
+      # Download baseline from latest successful run on main.
+      #
+      - name: Download benchmark baseline
+        if: github.event_name == 'pull_request'
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          workflow: python-tests.yml
+          branch: main
+          name: benchmark-results
+          path: baseline-artifact
+
+      - name: Move baseline file
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -f baseline-artifact/benchmark.json ]; then
+            cp baseline-artifact/benchmark.json baseline-benchmark.json
+          fi
+
+      - name: Compare benchmarks
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/check_benchmarks.py
+
+      #
+      # Save latest benchmark when main passes.
+      #
+      - name: Upload benchmark artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.json
+          

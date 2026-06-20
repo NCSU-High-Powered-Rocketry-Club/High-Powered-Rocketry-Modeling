@@ -1,6 +1,6 @@
 //use crate::math::vec_ops::MathVector;
 use crate::physics_mod;
-use crate::rocket::Rocket;
+use crate::rocket::{Rocket, RocketProperties};
 use nalgebra::{Vector2, Vector3};
 
 #[derive(Debug, Clone, Copy)]
@@ -12,17 +12,17 @@ pub(crate) struct OneDOFModel {
     pub(super) u: Vector2<f64>,
     /// (d_height/dt, d_velocity/dt)
     pub(super) dudt: Vector2<f64>,
-    rocket: Rocket,
+    rocket_properties: RocketProperties,
     is_current: bool,
     pub(super) time: f64,
 }
 
 impl OneDOFModel {
-    pub(crate) fn new(u: Vector2<f64>, rocket: Rocket) -> Self {
+    pub(crate) fn new(u: Vector2<f64>, rocket_properties: RocketProperties) -> Self {
         Self {
             u,
             dudt: Vector2::new(f64::NAN, f64::NAN),
-            rocket,
+            rocket_properties,
             is_current: false,
             time: 0.0,
         }
@@ -36,27 +36,27 @@ impl OneDOFModel {
         self.u[0]
     }
 
-    pub(super) fn get_derivs_1dof(&mut self) -> Vector2<f64> {
+    pub(super) fn get_derivatives(&mut self) -> Vector2<f64> {
         self.update_state_derivatives();
         self.dudt
     }
 
-    pub(super) fn get_time_1dof(&self) -> f64 {
+    pub(super) fn get_time(&self) -> f64 {
         self.time
     }
 
-    pub(super) fn print_state_1dof(&self, i: u64) {
+    pub(super) fn print_state(&self, i: u64) {
         println!(
             "Iter:{:6},    Time:{:5.2}(s),    Altitude:{:8.2}(m),    Velocity:{:8.2}(m/s)    Acceleration:{:8.2}(m/ss)",
             i,
-            self.get_time_1dof(),
+            self.get_time(),
             self.get_height(),
             self.get_velocity(),
             self.dudt[1]
         );
     }
 
-    pub(super) fn get_logrow(&self) -> Vector3<f64> {
+    pub(super) fn get_row_log(&self) -> Vector3<f64> {
         Vector3::new(self.u[0], self.u[1], self.dudt[1])
     }
 
@@ -72,15 +72,18 @@ impl OneDOFModel {
             return;
         }
 
-        let force_drag =
-            physics_mod::calc_drag_force(self.u[1], self.rocket.cd, self.rocket.area_drag);
+        let force_drag = physics_mod::calc_drag_force(
+            self.u[1],
+            self.rocket_properties.cd,
+            self.rocket_properties.area_drag,
+        );
         let g = physics_mod::gravity();
 
         // dhdt = velocity
         let dhdt = self.u[1];
 
         //a = F/m + g
-        let dvdt = force_drag / self.rocket.mass + g;
+        let dvdt = force_drag / self.rocket_properties.mass + g;
 
         self.dudt = Vector2::new(dhdt, dvdt);
         self.is_current = true;
@@ -93,25 +96,17 @@ mod tests {
     use approx::assert_abs_diff_eq;
     use nalgebra::Vector2;
 
-    /// Makes a rocket with known parameters for 1DOF tests.
-    fn make_rocket(mass: f64, cd: f64, area_drag: f64) -> Rocket {
-        Rocket {
-            mass,
-            cd,
-            area_drag,
-            area_lift: 0.0,
-            moment_of_inertia: 0.0,
-            stab_margin_dimensional: 0.0,
-            cl_a: 0.0,
-        }
+    /// Makes a rocket_properties with known values for 1DOF tests.
+    fn make_rocket_properties(mass: f64, cd: f64, area_drag: f64) -> RocketProperties {
+        RocketProperties::new(mass, cd, area_drag, 0.0, 0.0, 0.0, 0.0)
     }
 
     #[test]
     fn new_sets_expected_initial_state() {
         let u0 = Vector2::new(123.0, 4.5);
-        let rocket = make_rocket(10.0, 0.6, 0.01);
+        let rocket_properties = make_rocket_properties(10.0, 0.6, 0.01);
 
-        let dof = OneDOFModel::new(u0, rocket);
+        let dof = OneDOFModel::new(u0, rocket_properties);
 
         // State
         assert_eq!(dof.u, u0);
@@ -130,23 +125,23 @@ mod tests {
     #[test]
     fn getters_return_components() {
         let u0 = Vector2::new(50.0, 12.34);
-        let rocket = make_rocket(5.0, 0.5, 0.02);
+        let rocket_properties = make_rocket_properties(5.0, 0.5, 0.02);
 
-        let dof = OneDOFModel::new(u0, rocket);
+        let dof = OneDOFModel::new(u0, rocket_properties);
 
         assert_eq!(dof.get_height(), 50.0);
         assert_eq!(dof.get_velocity(), 12.34);
-        assert_eq!(dof.get_time_1dof(), 0.0);
+        assert_eq!(dof.get_time(), 0.0);
     }
 
     #[test]
     fn update_state_advances_u_and_time_and_invalidates_derivs() {
         let u0 = Vector2::new(1.0, 1.0);
-        let rocket = make_rocket(5.0, 0.5, 0.02);
-        let mut dof = OneDOFModel::new(u0, rocket);
+        let rocket_properties = make_rocket_properties(5.0, 0.5, 0.02);
+        let mut dof = OneDOFModel::new(u0, rocket_properties);
 
         // Force derivatives to be current first
-        let _ = dof.get_derivs_1dof();
+        let _ = dof.get_derivatives();
         assert!(dof.is_current);
 
         let du = Vector2::new(0.25, 0.5);
@@ -168,8 +163,8 @@ mod tests {
         let cd = 0.75;
         let area = 0.02;
 
-        let rocket = make_rocket(mass, cd, area);
-        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
+        let rocket_properties = make_rocket_properties(mass, cd, area);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket_properties);
 
         dof.update_state_derivatives();
 
@@ -193,8 +188,8 @@ mod tests {
         let cd = 0.5;
         let area = 0.01;
 
-        let rocket = make_rocket(mass, cd, area);
-        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
+        let rocket_properties = make_rocket_properties(mass, cd, area);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket_properties);
 
         // Initially stale
         assert!(!dof.is_current);
@@ -202,13 +197,13 @@ mod tests {
         assert!(dof.dudt[1].is_nan());
 
         // First call should compute
-        let d1 = dof.get_derivs_1dof();
+        let d1 = dof.get_derivatives();
         assert!(dof.is_current);
         assert!(!d1[0].is_nan());
         assert!(!d1[1].is_nan());
 
         // Second call should return the same values (cached)
-        let d2 = dof.get_derivs_1dof();
+        let d2 = dof.get_derivatives();
         assert_abs_diff_eq!(d1, d2, epsilon = 0.0);
     }
 
@@ -218,17 +213,17 @@ mod tests {
         let cd = 0.8;
         let area = 0.015;
 
-        let rocket = make_rocket(mass, cd, area);
-        let mut dof = OneDOFModel::new(Vector2::new(0.0, 10.0), rocket);
+        let rocket_properties = make_rocket_properties(mass, cd, area);
+        let mut dof = OneDOFModel::new(Vector2::new(0.0, 10.0), rocket_properties);
 
-        let d_before = dof.get_derivs_1dof();
+        let d_before = dof.get_derivatives();
         assert!(dof.is_current);
 
         // Change velocity only; invalidate cache
         dof.update_state(Vector2::new(0.0, 5.0), 0.0);
         assert!(!dof.is_current);
 
-        let d_after = dof.get_derivs_1dof();
+        let d_after = dof.get_derivatives();
 
         // dhdt should change because velocity changed
         assert!(d_after[0] != d_before[0]);
@@ -238,16 +233,16 @@ mod tests {
     }
 
     #[test]
-    fn get_logrow_returns_h_v_a() {
+    fn get_row_log_returns_h_v_a() {
         let h = 42.0;
         let v = -7.0;
-        let rocket = make_rocket(5.0, 0.5, 0.02);
-        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket);
+        let rocket_properties = make_rocket_properties(5.0, 0.5, 0.02);
+        let mut dof = OneDOFModel::new(Vector2::new(h, v), rocket_properties);
 
-        // Ensure dudt is computed so logrow isn't using NaN accel
+        // Ensure dudt is computed so row_log isn't using NaN accel
         dof.update_state_derivatives();
 
-        let row = dof.get_logrow();
+        let row = dof.get_row_log();
         assert_abs_diff_eq!(row[0], h, epsilon = 1e-12);
         assert_abs_diff_eq!(row[1], v, epsilon = 1e-12);
         assert_abs_diff_eq!(row[2], dof.dudt[1], epsilon = 1e-12);

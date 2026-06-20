@@ -98,46 +98,136 @@ class AdaptiveTimeStep:
         """
         ...
 
-class Rocket:
+class InitialState1DOF:
     """
-    Physical properties of the rocket used in the simulation.
+    Defines the initial conditions of a 1-DOF simulation.
+    """
 
-    :param mass: Mass of the rocket in kilograms.
-    :param cd: Drag coefficient.
-    :param area_drag: Reference area for drag in square meters.
-    :param area_lift: Reference area for lift in square meters.
-    :param moment_of_inertia: Moment of inertia about the z-axis in kg·m².
-    :param stab_margin_dimensional: Static stability margin in meters.
-    :param cl_a: Lift coefficient slope per radian.
+    initial_height: float
+    """
+    Initial altitude of the rocket in meters (m).
+    """
+
+    initial_velocity: float
+    """
+    Initial vertical velocity of the rocket in meters per second (m/s).
+    """
+
+    def __init__(self, initial_height: float, initial_velocity: float) -> None:
+        """
+        Create a new 1-DOF initial state.
+
+        :param initial_height: Initial altitude in meters (m).
+        :param initial_velocity: Initial vertical velocity in meters per second (m/s).
+        """
+        ...
+
+class InitialState3DOF:
+    """
+    Defines the initial conditions of a 3-DOF simulation.
+    """
+
+    x: float
+    """
+    Initial horizontal position in meters (m).
+    """
+
+    y: float
+    """
+    Initial vertical position (altitude) in meters (m).
+    """
+
+    angle: float
+    """
+    Initial orientation angle in radians (rad). Pi / 2 means pointing straight up.
+    """
+
+    vx: float
+    """
+    Initial horizontal velocity in meters per second (m/s).
+    """
+
+    vy: float
+    """
+    Initial vertical velocity in meters per second (m/s).
+    """
+
+    angular_rate: float
+    """
+    Initial angular velocity in radians per second (rad/s).
+    """
+
+    def __init__(
+        self,
+        x: float,
+        y: float,
+        angle: float,
+        vx: float,
+        vy: float,
+        angular_rate: float,
+    ) -> None:
+        """
+        Create a new 3-DOF initial state.
+
+        :param x: Initial horizontal position in meters (m).
+        :param y: Initial vertical position (altitude) in meters (m).
+        :param angle: Initial orientation angle in radians (rad).
+        :param vx: Initial horizontal velocity in meters per second (m/s).
+        :param vy: Initial vertical velocity in meters per second (m/s).
+        :param angular_rate: Initial angular velocity in radians per second (rad/s).
+        """
+        ...
+
+class RocketProperties:
+    """
+    Internal physical property group for the rocket.
+    Accessible from Python for reading or updating fields dynamically.
     """
 
     mass: float
     """
-    Mass of the rocket in kilograms.
+    Mass of the rocket in kilograms (kg).
     """
+
     cd: float
     """
-    Drag coefficient.
+    Drag coefficient (dimensionless).
     """
+
     area_drag: float
     """
-    Reference area for drag in square meters.
+    Reference area for drag in square meters (m²).
     """
+
     area_lift: float
     """
-    Reference area for lift in square meters.
+    Reference area for lift in square meters (m²).
     """
+
     moment_of_inertia: float
     """
-    Moment of inertia about the z-axis in kg·m².
+    Moment of inertia about the z-axis in kilogram square meters (kg·m²).
     """
+
     stab_margin_dimensional: float
     """
-    Static stability margin in meters.
+    Static stability margin in meters (m).
     """
+
     cl_a: float
     """
-    Lift coefficient slope per radian.
+    Lift coefficient slope per radian (1/rad).
+    """
+
+class Rocket:
+    """
+    The main class for simulating rocket flight. Contains methods for 1-DOF and 3-DOF simulations,
+    as well as apogee predictions.
+    """
+
+    rocket_properties: RocketProperties
+    """
+    The physical properties of the rocket.
     """
 
     def __init__(
@@ -149,11 +239,23 @@ class Rocket:
         moment_of_inertia: float,
         stab_margin_dimensional: float,
         cl_a: float,
-    ) -> None: ...
+    ) -> None:
+        """
+        Creates a new Rocket instance and initializes its underlying RocketProperties group.
+
+        :param mass: Mass of the rocket in kilograms.
+        :param cd: Drag coefficient.
+        :param area_drag: Reference area for drag in square meters.
+        :param area_lift: Reference area for lift in square meters.
+        :param moment_of_inertia: Moment of inertia about the z-axis in kg·m².
+        :param stab_margin_dimensional: Static stability margin in meters.
+        :param cl_a: Lift coefficient slope per radian.
+        """
+        ...
+
     def simulate_flight_1dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
+        initial_state: InitialState1DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -162,8 +264,7 @@ class Rocket:
         """
         Simulate the rocket's flight using a 1-DOF model (vertical motion only).
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param initial_state: The initial height and velocity of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -174,9 +275,7 @@ class Rocket:
 
     def simulate_flight_3dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
-        initial_angle: float,
+        initial_state: InitialState3DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -185,9 +284,7 @@ class Rocket:
         """
         Simulate the rocket's flight using a 3-DOF model (2D translation and rotation).
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
-        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
+        :param initial_state: The initial 6-DOF condition of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -198,8 +295,7 @@ class Rocket:
 
     def predict_apogee_1dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
+        initial_state: InitialState1DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -208,8 +304,7 @@ class Rocket:
         """
         Predict the apogee (maximum altitude) using a 1-DOF model.
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
+        :param initial_state: The initial height and velocity of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.
@@ -220,9 +315,7 @@ class Rocket:
 
     def predict_apogee_3dof(
         self,
-        initial_height: float,
-        initial_velocity: float,
-        initial_angle: float,
+        initial_state: InitialState3DOF,
         integration_method: OdeMethod,
         timestep_config: Optional[FixedTimeStep | AdaptiveTimeStep] = None,
         max_iterations: int = 100000,
@@ -231,9 +324,7 @@ class Rocket:
         """
         Predict the apogee (maximum altitude) using a 3-DOF model.
 
-        :param initial_height: Initial altitude of the rocket in meters.
-        :param initial_velocity: Initial vertical velocity in meters per second.
-        :param initial_angle: Initial orientation in radians. Pi / 2 means pointing straight up.
+        :param initial_state: The initial 6-DOF condition of the rocket.
         :param integration_method: Numerical integration method to use.
         :param timestep_config: Time step configuration (fixed or adaptive), or None for defaults.
         :param max_iterations: Maximum integration iterations allowed.

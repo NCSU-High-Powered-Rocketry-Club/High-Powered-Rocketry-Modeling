@@ -4,7 +4,7 @@
 import math
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from hprm import Rocket, OdeMethod
+from hprm import Rocket, OdeMethod, InitialState3DOF
 
 # We will sweep across five different parameters to see how they affect flight performance.
 mass_values = [12.0, 17.0, 22.0]
@@ -25,6 +25,15 @@ fig = make_subplots(
     ),
 )
 
+initial_state = InitialState3DOF(
+    x=0.0,
+    y=0.0,
+    angle=math.radians(85),
+    vx=0.0,
+    vy=150.0,
+    angular_rate=0.0,
+)
+
 # Sweep 1: Mass. We hold all other parameters at their baseline values.
 for mass in mass_values:
     rocket = Rocket(
@@ -37,9 +46,7 @@ for mass in mass_values:
         cl_a=11.0,
     )
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(85),
+        initial_state=initial_state,
         integration_method=OdeMethod.RK45,
     )
 
@@ -64,9 +71,7 @@ for cd in cd_values:
         cl_a=11.0,
     )
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(85),
+        initial_state=initial_state,
         integration_method=OdeMethod.RK45,
     )
 
@@ -91,9 +96,7 @@ for margin in margin_values:
         cl_a=11.0,
     )
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(85),
+        initial_state=initial_state,
         integration_method=OdeMethod.RK45,
     )
 
@@ -122,9 +125,7 @@ for moi in moi_values:
         cl_a=11.0,
     )
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(85),
+        initial_state=initial_state,
         integration_method=OdeMethod.RK45,
     )
 
@@ -149,9 +150,7 @@ for cla in cla_values:
         cl_a=cla,
     )
     time_steps, state_matrix = rocket.simulate_flight_3dof(
-        initial_height=0.0,
-        initial_velocity=150.0,
-        initial_angle=math.radians(85),
+        initial_state=initial_state,
         integration_method=OdeMethod.RK45,
     )
 

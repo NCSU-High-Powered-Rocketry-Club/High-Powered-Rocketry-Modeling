@@ -3,11 +3,10 @@ use crate::ode::OdeSolver;
 use crate::simdata_mod::SimulationData;
 use crate::state::State;
 
-use std::ops::Not;
-
 /// Enum defining the various exit conditions for the simulation. Eventually, more exit
 /// conditions, such as ground impact, can be added here.
-pub enum SimulationExitCondition {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SimulationExitCondition {
     ApogeeReached,
     // TODO: Add more exit conditions as needed
 }
@@ -15,6 +14,7 @@ pub enum SimulationExitCondition {
 /// Struct used to coordinate the execution of a simulation. It is supplied with a
 /// State space/model, and a timestepping method, and will carry out iterations until a stopping
 /// criterea is reached, or the maximum number of iterations have been carried out.
+#[derive(Debug, Clone)]
 pub(crate) struct Simulation {
     state: State,
     ode: OdeSolver,
@@ -29,7 +29,7 @@ impl Simulation {
         ode: OdeSolver,
         exit_condition: SimulationExitCondition,
         max_iterations: u64,
-    ) -> Simulation {
+    ) -> Self {
         Simulation {
             state,
             ode,
@@ -39,13 +39,7 @@ impl Simulation {
         }
     }
 
-    /// Run the simulation until the exit condition is met or the maximum number of iterations is reached.
-    ///
-    /// # Arguments
-    ///
-    /// - `&mut self` (`undefined`) - Describe this parameter.
-    /// - `log` (`&mut SimulationData`) - Describe this parameter.
-    /// - `print_output` (`bool`) - Describe this parameter.
+    /// Runs the simulation until the exit condition is met or the maximum number of iterations is reached.
     pub(crate) fn run(&mut self, log: &mut SimulationData, print_output: bool, log_output: bool) {
         // Executes the simulation
         for i in 0..self.max_iterations {
@@ -53,7 +47,7 @@ impl Simulation {
 
             self.current_iteration = i;
             if log_output {
-                log.add_row(self.state.get_logrow(), self.state.get_time())
+                log.add_row(self.state.get_row_log(), self.state.get_time())
             };
 
             // Output simulation info to terminal
@@ -61,22 +55,22 @@ impl Simulation {
                 self.state.print_state(i);
             }
 
-            // Advance the calculation
+            // Does the next iteration of the simulation
             self.ode.timestep(&mut self.state);
-            //
+
             // Check Exit Condition
             if self.is_done() {
-                // Mitigate overshoot errors
+                // Mitigate overshoot errors by backtracking to the last state and doing a final steps with a smaller timestep.
                 match self.exit_condition {
                     SimulationExitCondition::ApogeeReached => {
                         self.ode.backtrack_apogee(&mut self.state, &old_state)
                     }
                 }
-                //
-                if log_output.not() {
-                    log.add_row(self.state.get_logrow(), self.state.get_time())
+
+                if !log_output {
+                    log.add_row(self.state.get_row_log(), self.state.get_time())
                 };
-                //
+
                 if print_output {
                     println!("\n==================== Calculation complete! ================================================================================");
                     self.state.print_state(i + 1);
@@ -113,14 +107,18 @@ impl Simulation {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ode::FixedTimeStep, rocket::Rocket, state::model_1dof::OneDOFModel};
+    use crate::{
+        ode::FixedTimeStep,
+        rocket::{Rocket, RocketProperties},
+        state::model_1dof::OneDOFModel,
+    };
 
     use super::*;
     use approx::assert_abs_diff_eq;
     use nalgebra::Vector2;
 
     fn make_simulation() -> Simulation {
-        let rocket = Rocket {
+        let rocket_properties = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -130,7 +128,10 @@ mod tests {
             cl_a: 0.0,
         };
 
-        let state = State::OneDOF(OneDOFModel::new(Vector2::new(0.0, 100.0), rocket));
+        let state = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.0, 100.0),
+            rocket_properties,
+        ));
 
         let ode_solver = OdeSolver::Euler(FixedTimeStep { dt: 0.1 });
 
@@ -182,7 +183,7 @@ mod tests {
     #[test]
     fn test_exit_condition_apogee_reached() {
         // ApogeeReached should trigger strictly when vertical velocity < 0
-        let rocket = Rocket {
+        let rocket_properties = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -192,7 +193,10 @@ mod tests {
             cl_a: 0.0,
         };
 
-        let state_positive_vel = State::OneDOF(OneDOFModel::new(Vector2::new(0.0, 100.0), rocket));
+        let state_positive_vel = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.0, 100.0),
+            rocket_properties,
+        ));
         let sim_positive_vel = Simulation::new(
             state_positive_vel,
             OdeSolver::Euler(FixedTimeStep { dt: 0.1 }),
@@ -202,7 +206,7 @@ mod tests {
         assert!(!sim_positive_vel.is_done());
 
         // v < 0.0 => done
-        let rocket2 = Rocket {
+        let rocket_properties_2 = RocketProperties {
             mass: 50.0,
             cd: 0.75,
             area_drag: 0.03,
@@ -211,8 +215,10 @@ mod tests {
             stab_margin_dimensional: 0.0,
             cl_a: 0.0,
         };
-        let state_negative_vel =
-            State::OneDOF(OneDOFModel::new(Vector2::new(0.00, -0.01), rocket2));
+        let state_negative_vel = State::OneDOF(OneDOFModel::new(
+            Vector2::new(0.00, -0.01),
+            rocket_properties_2,
+        ));
         let sim_negative_vel = Simulation::new(
             state_negative_vel,
             OdeSolver::Euler(FixedTimeStep { dt: 0.1 }),
