@@ -23,11 +23,7 @@ def test_simulation_integration_1dof(
     ode_method,
     expected_apogee,
 ):
-    timestep = (
-        AdaptiveTimeStep.default()
-        if ode_method == OdeMethod.RK45
-        else FixedTimeStep(0.1)
-    )
+    timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
 
     rocket = Rocket(
         15.0,  # mass kg
@@ -70,11 +66,7 @@ def test_simulation_integration_3dof(
     ode_method,
     expected_apogee,
 ):
-    timestep = (
-        AdaptiveTimeStep.default()
-        if ode_method == OdeMethod.RK45
-        else FixedTimeStep(0.1)
-    )
+    timestep = AdaptiveTimeStep.default() if ode_method == OdeMethod.RK45 else FixedTimeStep(0.1)
 
     rocket = Rocket(
         15.0,  # mass kg
