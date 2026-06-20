@@ -19,10 +19,12 @@ rocket = Rocket(
     cl_a=0.2,
 )
 
+# Define your rocket's initial state
+initial_state = InitialState1DOF(initial_height=0.0, initial_velocity=150.0)
+
 # Very fast apogee prediction using a 1DOF model
 apogee = rocket.predict_apogee_1dof(
-    initial_height=0.0,
-    initial_velocity=150.0,
+    initial_state=initial_state,
     integration_method=OdeMethod.RK45
 )
 ```
