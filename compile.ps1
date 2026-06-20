@@ -44,8 +44,6 @@ function Build-Wheel {
     Invoke-Uv $uvArgs
 }
 
-
-
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Host 'uv not found in PATH'
     exit 1
@@ -53,7 +51,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 
 $installedPythons = Get-InstalledPythons
 
-# x86_64 builds
+# Native host builds (e.g., Windows x86_64)
 Build-Wheel -AbiTag '3.14t' -Major 3 -Minor 14 -Variant 'freethreaded' -ExtraArgs @()
 Build-Wheel -AbiTag '3.14'  -Major 3 -Minor 14 -Variant 'default'      -ExtraArgs @()
 Build-Wheel -AbiTag '3.13'  -Major 3 -Minor 13 -Variant 'default'      -ExtraArgs @()
@@ -61,7 +59,15 @@ Build-Wheel -AbiTag '3.12'  -Major 3 -Minor 12 -Variant 'default'      -ExtraArg
 Build-Wheel -AbiTag '3.11'  -Major 3 -Minor 11 -Variant 'default'      -ExtraArgs @()
 Build-Wheel -AbiTag '3.10'  -Major 3 -Minor 10 -Variant 'default'      -ExtraArgs @()
 
-# aarch64 builds (requires zig)
+# x86_64 linux builds (requires zig)
+Build-Wheel -AbiTag '3.14t' -Major 3 -Minor 14 -Variant 'freethreaded' -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.14t'
+Build-Wheel -AbiTag '3.14'  -Major 3 -Minor 14 -Variant 'default'      -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.14'
+Build-Wheel -AbiTag '3.13'  -Major 3 -Minor 13 -Variant 'default'      -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.13'
+Build-Wheel -AbiTag '3.12'  -Major 3 -Minor 12 -Variant 'default'      -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.12'
+Build-Wheel -AbiTag '3.11'  -Major 3 -Minor 11 -Variant 'default'      -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.11'
+Build-Wheel -AbiTag '3.10'  -Major 3 -Minor 10 -Variant 'default'      -ExtraArgs @('--target','x86_64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.10'
+
+# aarch64 linux builds (requires zig)
 Build-Wheel -AbiTag '3.14t' -Major 3 -Minor 14 -Variant 'freethreaded' -ExtraArgs @('--target','aarch64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.14t'
 Build-Wheel -AbiTag '3.14'  -Major 3 -Minor 14 -Variant 'default'      -ExtraArgs @('--target','aarch64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.14'
 Build-Wheel -AbiTag '3.13'  -Major 3 -Minor 13 -Variant 'default'      -ExtraArgs @('--target','aarch64-unknown-linux-gnu','--zig') -MaturinInterpreterArg '3.13'
